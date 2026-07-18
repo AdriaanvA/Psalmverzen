@@ -33,8 +33,6 @@ Personaliseer de app volledig naar jouw wens via het instellingenmenu:
 |:---:|:---:|
 | ![Hoofdscherm](screenshots/main_screen.png) | ![Bladmuziek](screenshots/music_screen.png) |
 
-*(Sla de afbeeldingen uit de chat op in de map `screenshots/` als `main_screen.png` en `music_screen.png` om deze zichtbaar te maken in de README)*
-
 ## Ontwikkeling
 Dit project is gebouwd met de volgende Android-technieken:
 - **Kotlin** voor robuuste logica.
