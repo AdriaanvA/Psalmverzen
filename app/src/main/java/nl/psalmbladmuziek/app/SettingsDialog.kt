@@ -10,7 +10,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SwitchCompat
 
 /** Bestemming van de 'Steun de app'-knop (tip jar). */
-private const val SUPPORT_URL = "https://www.buymeacoffee.com/arianva"
+private const val SUPPORT_URL = "https://github.com/hidinker/Psalmverzen"
 
 /**
  * Eén gedeeld instellingen-menu voor zowel het overzicht (MainActivity) als de
