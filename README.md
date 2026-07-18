@@ -29,9 +29,11 @@ Personaliseer de app volledig naar jouw wens via het instellingenmenu:
 
 ## Screenshots
 
-| Hoofdscherm | Bladmuziek Weergave |
+| 1. Hoofdscherm | 2. Psalm selectie |
 |:---:|:---:|
-| ![Hoofdscherm](screenshots/main_screen.png) | ![Bladmuziek](screenshots/music_screen.png) |
+| ![Hoofdscherm](screenshots/main_screen.png) | ![Psalm selectie](screenshots/psalmselect_screen.png) |
+| **3. Bladmuziek** | **4. Donkere modus** |
+| ![Bladmuziek](screenshots/music_screen.png) | ![Donkere modus](screenshots/music_screen_darkandfullscreenmode.png) |
 
 ## Ontwikkeling
 Dit project is gebouwd met de volgende Android-technieken:
