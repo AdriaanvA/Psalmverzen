@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Donkere varianten voor de blader-schermen. Het 'blad' (bladmuziek + verstekst)
+         blijft altijd licht en gebruikt deze kleuren bewust NIET. -->
+    <color name="psalm_toolbar">#455A64</color>
+    <color name="app_bg">#121212</color>
+    <color name="app_surface">#1E1E1E</color>
+    <color name="app_text_primary">#E8EAED</color>
+    <color name="app_text_secondary">#9AA0A6</color>
+    <color name="app_divider">#2C2C2C</color>
+    <color name="panel_bg">#232323</color>
+    <color name="tab_selected">#9FBF97</color>
+    <color name="tab_unselected">#9AA0A6</color>
+    <color name="psalm_book_accent">#181D20</color>
+</resources>

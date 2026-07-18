@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="purple_200">#FFBB86FC</color>
+    <color name="purple_500">#FF6200EE</color>
+    <color name="purple_700">#FF3700B3</color>
+    <color name="psalm_toolbar">#607D8B</color>
+    <color name="teal_200">#FF03DAC5</color>
+    <color name="teal_700">#FF018786</color>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+
+    <!-- Semantische kleuren voor de blader-schermen (lijsten, zoeken, versoverzicht).
+         Donkere varianten in values-night/colors.xml. Het 'blad' (bladmuziek + verstekst)
+         blijft altijd licht en gebruikt deze kleuren bewust NIET. -->
+    <color name="app_bg">#FFFFFF</color>
+    <color name="app_surface">#FFFFFF</color>
+    <color name="app_text_primary">#222222</color>
+    <color name="app_text_secondary">#5F6368</color>
+    <color name="app_divider">#EEEEEE</color>
+    <color name="panel_bg">#F7F7F7</color>
+    <color name="tab_selected">#4B6748</color>
+    <color name="tab_unselected">#5F6368</color>
+    <!-- Subtiele accentachtergrond voor de 2e en 4e 'rol' van de Hebreeuwse
+         Psalter (Ps 42-72 en 90-106), zodat de 5-boekenindeling zichtbaar is. -->
+    <color name="psalm_book_accent">#F6F7F8</color>
+</resources>

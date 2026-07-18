@@ -1,0 +1,33 @@
+# Built objects
+bin/
+gen/
+out/
+build/
+
+# Gradle
+.gradle/
+
+# Local configuration file (sdk path, etc)
+local.properties
+
+# Log Files
+*.log
+
+# Android Studio / IntelliJ
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Keystores and sensitive data
+*.jks
+*.p12
+*.key
+keystore.properties
+
+# Artifacts directory (if you don't want AI notes on GitHub)
+.artifacts/
+
+# OS Files
+.DS_Store
+Thumbs.db

@@ -1,0 +1,649 @@
+{
+  "book": "psalms",
+  "number": 17,
+  "composer": "Bourgois 1551",
+  "divisions": 2,
+  "fifths": 2,
+  "melody": {
+    "lines": [
+      [
+        {
+          "duration": 4,
+          "type": "half",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "G",
+          "octave": 4
+        },
+        {
+          "duration": 4,
+          "type": "half",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "F",
+          "alter": 1,
+          "octave": 4
+        },
+        {
+          "duration": 4,
+          "type": "half",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "A",
+          "octave": 4
+        },
+        {
+          "duration": 2,
+          "type": "quarter",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "B",
+          "octave": 4
+        },
+        {
+          "duration": 2,
+          "type": "quarter",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "A",
+          "octave": 4
+        },
+        {
+          "duration": 2,
+          "type": "quarter",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "G",
+          "octave": 4
+        },
+        {
+          "duration": 2,
+          "type": "quarter",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "E",
+          "octave": 4
+        },
+        {
+          "duration": 4,
+          "type": "half",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "F",
+          "alter": 1,
+          "octave": 4
+        },
+        {
+          "duration": 4,
+          "type": "half",
+          "rest": true,
+          "lyricSlot": true
+        }
+      ],
+      [
+        {
+          "duration": 4,
+          "type": "half",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "D",
+          "octave": 4
+        },
+        {
+          "duration": 2,
+          "type": "quarter",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "A",
+          "octave": 4
+        },
+        {
+          "duration": 2,
+          "type": "quarter",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "A",
+          "octave": 4
+        },
+        {
+          "duration": 4,
+          "type": "half",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "B",
+          "octave": 4
+        },
+        {
+          "duration": 4,
+          "type": "half",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "B",
+          "octave": 4
+        },
+        {
+          "duration": 2,
+          "type": "quarter",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "D",
+          "octave": 5
+        },
+        {
+          "duration": 2,
+          "type": "quarter",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "D",
+          "octave": 5
+        },
+        {
+          "duration": 4,
+          "type": "half",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "C",
+          "alter": 1,
+          "octave": 5
+        },
+        {
+          "duration": 4,
+          "type": "half",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "B",
+          "octave": 4
+        },
+        {
+          "duration": 4,
+          "type": "half",
+          "rest": true,
+          "lyricSlot": true
+        }
+      ],
+      [
+        {
+          "duration": 4,
+          "type": "half",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "F",
+          "alter": 1,
+          "octave": 4
+        },
+        {
+          "duration": 2,
+          "type": "quarter",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "B",
+          "octave": 4
+        },
+        {
+          "duration": 2,
+          "type": "quarter",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "B",
+          "octave": 4
+        },
+        {
+          "duration": 4,
+          "type": "half",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "A",
+          "octave": 4
+        },
+        {
+          "duration": 4,
+          "type": "half",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "D",
+          "octave": 5
+        },
+        {
+          "duration": 2,
+          "type": "quarter",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "D",
+          "octave": 5
+        },
+        {
+          "duration": 2,
+          "type": "quarter",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "C",
+          "alter": 1,
+          "octave": 5
+        },
+        {
+          "duration": 4,
+          "type": "half",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "B",
+          "octave": 4
+        },
+        {
+          "duration": 4,
+          "type": "half",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "A",
+          "octave": 4
+        },
+        {
+          "duration": 4,
+          "type": "half",
+          "rest": true,
+          "lyricSlot": true
+        }
+      ],
+      [
+        {
+          "duration": 4,
+          "type": "half",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "F",
+          "alter": 1,
+          "octave": 4
+        },
+        {
+          "duration": 2,
+          "type": "quarter",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "E",
+          "octave": 4
+        },
+        {
+          "duration": 2,
+          "type": "quarter",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "D",
+          "octave": 4
+        },
+        {
+          "duration": 4,
+          "type": "half",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "E",
+          "octave": 4
+        },
+        {
+          "duration": 4,
+          "type": "half",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "F",
+          "alter": 1,
+          "octave": 4
+        },
+        {
+          "duration": 2,
+          "type": "quarter",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "G",
+          "octave": 4
+        },
+        {
+          "duration": 2,
+          "type": "quarter",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "G",
+          "octave": 4
+        },
+        {
+          "duration": 4,
+          "type": "half",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "F",
+          "alter": 1,
+          "octave": 4
+        },
+        {
+          "duration": 4,
+          "type": "half",
+          "rest": true,
+          "lyricSlot": true
+        }
+      ],
+      [
+        {
+          "duration": 4,
+          "type": "half",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "A",
+          "octave": 4
+        },
+        {
+          "duration": 4,
+          "type": "half",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "B",
+          "octave": 4
+        },
+        {
+          "duration": 4,
+          "type": "half",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "D",
+          "octave": 5
+        },
+        {
+          "duration": 2,
+          "type": "quarter",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "B",
+          "octave": 4
+        },
+        {
+          "duration": 2,
+          "type": "quarter",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "G",
+          "octave": 4
+        },
+        {
+          "duration": 2,
+          "type": "quarter",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "A",
+          "octave": 4
+        },
+        {
+          "duration": 2,
+          "type": "quarter",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "A",
+          "octave": 4
+        },
+        {
+          "duration": 4,
+          "type": "half",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "G",
+          "octave": 4
+        },
+        {
+          "duration": 4,
+          "type": "half",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "F",
+          "alter": 1,
+          "octave": 4
+        },
+        {
+          "duration": 4,
+          "type": "half",
+          "rest": true,
+          "lyricSlot": true
+        }
+      ],
+      [
+        {
+          "duration": 4,
+          "type": "half",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "F",
+          "alter": 1,
+          "octave": 4
+        },
+        {
+          "duration": 2,
+          "type": "quarter",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "E",
+          "octave": 4
+        },
+        {
+          "duration": 2,
+          "type": "quarter",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "D",
+          "octave": 4
+        },
+        {
+          "duration": 2,
+          "type": "quarter",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "G",
+          "octave": 4
+        },
+        {
+          "duration": 2,
+          "type": "quarter",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "G",
+          "octave": 4
+        },
+        {
+          "duration": 4,
+          "type": "half",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "F",
+          "alter": 1,
+          "octave": 4
+        },
+        {
+          "duration": 4,
+          "type": "half",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "E",
+          "octave": 4
+        },
+        {
+          "duration": 4,
+          "type": "half",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "D",
+          "octave": 4
+        },
+        {
+          "duration": 4,
+          "type": "half",
+          "rest": true,
+          "lyricSlot": true
+        }
+      ],
+      [
+        {
+          "duration": 4,
+          "type": "half",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "D",
+          "octave": 4
+        },
+        {
+          "duration": 2,
+          "type": "quarter",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "E",
+          "octave": 4
+        },
+        {
+          "duration": 2,
+          "type": "quarter",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "G",
+          "octave": 4
+        },
+        {
+          "duration": 2,
+          "type": "quarter",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "F",
+          "alter": 1,
+          "octave": 4
+        },
+        {
+          "duration": 2,
+          "type": "quarter",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "D",
+          "octave": 4
+        },
+        {
+          "duration": 4,
+          "type": "half",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "E",
+          "octave": 4
+        },
+        {
+          "duration": 4,
+          "type": "half",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "E",
+          "octave": 4
+        },
+        {
+          "duration": 4,
+          "type": "half",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "F",
+          "alter": 1,
+          "octave": 4
+        },
+        {
+          "duration": 4,
+          "type": "half",
+          "rest": true,
+          "lyricSlot": true
+        }
+      ],
+      [
+        {
+          "duration": 4,
+          "type": "half",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "A",
+          "octave": 4
+        },
+        {
+          "duration": 4,
+          "type": "half",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "B",
+          "octave": 4
+        },
+        {
+          "duration": 4,
+          "type": "half",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "A",
+          "octave": 4
+        },
+        {
+          "duration": 2,
+          "type": "quarter",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "G",
+          "octave": 4
+        },
+        {
+          "duration": 2,
+          "type": "quarter",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "E",
+          "octave": 4
+        },
+        {
+          "duration": 2,
+          "type": "quarter",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "F",
+          "alter": 1,
+          "octave": 4
+        },
+        {
+          "duration": 2,
+          "type": "quarter",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "A",
+          "octave": 4
+        },
+        {
+          "duration": 4,
+          "type": "half",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "G",
+          "octave": 4
+        },
+        {
+          "duration": 8,
+          "type": "whole",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "F",
+          "alter": 1,
+          "octave": 4
+        }
+      ]
+    ]
+  },
+  "sourceItems": [
+    {
+      "book": "psalms",
+      "number": 17,
+      "title": "Psalm 17"
+    },
+    {
+      "book": "psalms",
+      "number": 63,
+      "title": "Psalm 63"
+    },
+    {
+      "book": "psalms",
+      "number": 70,
+      "title": "Psalm 70"
+    }
+  ],
+  "composers": [
+    "Bourgois 1551",
+    "Genève 1554 / Bourgois 1551"
+  ]
+}

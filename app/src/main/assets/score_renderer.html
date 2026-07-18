@@ -1,0 +1,973 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            background: #ffffff;
+            color: #16110a;
+            font-family: "Roboto", sans-serif;
+        }
+        /* Bladmuziek meelaten met donker thema (instelling): keer het hele blad om,
+           met behoud van kleurtinten. */
+        html.dark, body.dark { background: #121212; }
+        .dark #root { background: #ffffff; filter: invert(1) hue-rotate(180deg); }
+        #root {
+            padding: 0;
+            box-sizing: border-box;
+        }
+        #main {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+        #controls-bottom {
+            margin-top: auto;
+        }
+        #score {
+            width: 100%;
+            display: block;
+        }
+        .verse-matrix {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 3px;
+            padding: 8px 10px 8px;
+            background: #ffffff;
+        }
+        .verse-matrix button {
+            width: 34px;
+            height: 30px;
+            border: none;
+            background: transparent;
+            color: #8a8f8a;
+            border-radius: 15px;
+            font: 400 14px sans-serif;
+        }
+        .verse-matrix button.current {
+            background: #4b6748;
+            color: #ffffff;
+            font-weight: 600;
+        }
+        .nav-row {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            padding: 8px 10px 6px;
+            background: #ffffff;
+        }
+        .nav-row button {
+            flex: 1;
+            max-width: 220px;
+            height: 44px;
+            border: 1px solid #d5d9d2;
+            background: #ffffff;
+            color: #4a4f4a;
+            border-radius: 4px;
+            font: 600 15px sans-serif;
+        }
+        .nav-row button:disabled {
+            color: #b0b0b0;
+            background: #f0f0f0;
+        }
+        .ctrl-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 7px 10px;
+            background: #ffffff;
+        }
+        .ctrl-row .label {
+            width: 96px;
+            font: 600 15px sans-serif;
+            color: #4a4f4a;
+        }
+        .ctrl-row .value {
+            min-width: 56px;
+            text-align: center;
+            font: 600 15px sans-serif;
+            color: #4a4f4a;
+        }
+        .ctrl-row button {
+            width: 52px;
+            height: 42px;
+            border: 1px solid #d5d9d2;
+            background: #ffffff;
+            color: #4a4f4a;
+            border-radius: 4px;
+            font: 700 20px sans-serif;
+        }
+        .error {
+            color: #b00020;
+            padding: 20px;
+            font-family: sans-serif;
+        }
+    </style>
+</head>
+<body>
+    <div id="root">
+        <div id="controls-top"></div>
+        <div id="main">
+            <svg id="score" xmlns="http://www.w3.org/2000/svg"></svg>
+            <div id="controls-bottom"></div>
+        </div>
+        <div id="verse-section"></div>
+    </div>
+
+    <script>
+    "use strict";
+
+    var SVGNS = "http://www.w3.org/2000/svg";
+    var STEP_INDEX = { C: 0, D: 1, E: 2, F: 3, G: 4, A: 5, B: 6 };
+
+    // --- Geometrie (in SVG-pixels). S en lettergrootte schalen mee met de zoom-knoppen. ---
+    var BASE_S = 8;            // basis-afstand tussen twee balklijnen (compacte balk)
+    var BASE_FONT = 12;       // basis lettergrootte (voor de tekst-zoom); genormaliseerd zodat korte-regel psalmen niet te groot worden
+    var MAX_STRETCH = 1.8;    // maximale horizontale rek van een regel (voorkomt te grote woordafstand)
+    var S = BASE_S;
+    var FONT_SIZE = BASE_FONT;
+    var ASCENT = 4.6 * S;     // ruimte boven de balk (hoge noten/stokken)
+    var DESCENT = 3.6 * S;    // ruimte onder de balk (lage noten/stokken)
+    var TEXT_GAP = 9;         // ruimte tussen balk en tekst (tekst iets lager)
+    var LINE_GAP = 2;         // ruimte tussen frase-regels
+    var LEFT_MARGIN = 8;
+    var RIGHT_MARGIN = 10;
+    var CLEF_WIDTH = 26;      // gereserveerde ruimte voor sleutel + voortekening
+    var WORD_GAP = S * 1.3;   // ruimte tussen woorden
+    var LARGE_TEXT = false;   // 'grote letters'-modus: minimale woordafstand
+    var ALLOW_WRAP = false;   // 'regelafbreking toestaan': lange regel over 2 rijen
+    var SHOW_LYRICS = true;   // weergave 'noten': tekst onder de noten verbergen
+    var HAS_EIGHTH_NOTES = false; // bij achtste-noten-muziek geen kwart-cursief en rusten altijd tonen
+    var SYL_GAP = S * 0.12;   // minieme ruimte binnen een woord
+    var MIN_SLOT = S * 1.1;
+    var NOTE_STEP = S * 2.25; // minimale afstand tussen melisma-noten binnen één lettergreep
+
+    var STAFF_LINE_TOP = 38;    // diatonische waarde bovenste balklijn (F5)
+    var STAFF_LINE_MID = 34;    // middelste balklijn (B4)
+    var STAFF_LINE_BOTTOM = 30; // onderste balklijn (E4)
+
+    function recomputeGeometry(noteScale, textScale) {
+        S = BASE_S * noteScale;
+        FONT_SIZE = BASE_FONT * textScale;
+        ASCENT = 4.6 * S;
+        DESCENT = 3.6 * S;
+        WORD_GAP = FONT_SIZE * (LARGE_TEXT ? 0.42 : 0.55);
+        SYL_GAP = FONT_SIZE * 0.02;
+        MIN_SLOT = S * 1.1;
+        NOTE_STEP = S * 2.25;
+    }
+
+    function readNumber(fn, fallback) {
+        try {
+            var v = Number(fn());
+            return isFinite(v) && v > 0 ? v : fallback;
+        } catch (e) {
+            return fallback;
+        }
+    }
+
+    var measureCanvas = document.createElement("canvas").getContext("2d");
+
+    function diatonic(step, octave) {
+        return octave * 7 + (STEP_INDEX[step] || 0);
+    }
+
+    function measureText(text, italic, font) {
+        measureCanvas.font = (italic ? "italic " : "") + (font || FONT_SIZE) + "px 'Roboto', sans-serif";
+        return measureCanvas.measureText(text || "").width;
+    }
+
+    function keyAlterForStep(step, fifths) {
+        var flats = ["B", "E", "A", "D", "G", "C", "F"];
+        var sharps = ["F", "C", "G", "D", "A", "E", "B"];
+        if (fifths < 0) {
+            return flats.slice(0, -fifths).indexOf(step) !== -1 ? -1 : 0;
+        }
+        if (fifths > 0) {
+            return sharps.slice(0, fifths).indexOf(step) !== -1 ? 1 : 0;
+        }
+        return 0;
+    }
+
+    // Standaard diatonische posities voor de voortekening (vioolsleutel).
+    var FLAT_POSITIONS = [34, 37, 33, 36, 32, 35, 31];   // B E A D G C F
+    var SHARP_POSITIONS = [38, 35, 39, 36, 33, 37, 34];  // F C G D A E B
+
+    function el(name, attrs) {
+        var node = document.createElementNS(SVGNS, name);
+        if (attrs) {
+            Object.keys(attrs).forEach(function(key) {
+                node.setAttribute(key, attrs[key]);
+            });
+        }
+        return node;
+    }
+
+    function renderScore() { renderScoreInternal(true); }
+    function updateScore() { renderScoreInternal(false); }
+
+    // Rusten: standaard aan het EIND van de vorige regel (niet vóór een zin). Wanneer
+    // rusten uitstaan worden ze volledig weggelaten.
+    function preprocessRests(model, showRests) {
+        var lines = model.lines || [];
+        if (!showRests) {
+            for (var i = 0; i < lines.length; i++) {
+                lines[i].slots = (lines[i].slots || []).filter(function(s) { return !s.rest; });
+            }
+            return;
+        }
+        for (var j = 1; j < lines.length; j++) {
+            var slots = lines[j].slots || [];
+            while (slots.length && slots[0].rest) {
+                var moved = slots.shift();
+                lines[j - 1].slots = (lines[j - 1].slots || []);
+                lines[j - 1].slots.push(moved);
+            }
+            lines[j].slots = slots;
+        }
+    }
+
+    function modelHasEighthNotes(model) {
+        var lines = model.lines || [];
+        for (var i = 0; i < lines.length; i++) {
+            var slots = lines[i].slots || [];
+            for (var j = 0; j < slots.length; j++) {
+                var notes = slots[j].notes || [];
+                for (var k = 0; k < notes.length; k++) {
+                    if (notes[k].type === "eighth") {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    function renderScoreInternal(scrollToScore) {
+        var previousScroll = window.scrollY || window.pageYOffset || 0;
+        var svg = document.getElementById("score");
+        while (svg.firstChild) {
+            svg.removeChild(svg.firstChild);
+        }
+
+        // Dubbeltik op de notenbalk/tekst = volledig scherm aan/uit (NIET op de knoppen,
+        // want die zitten buiten dit SVG). Eén keer aankoppelen.
+        if (!window.__dtapAttached) {
+            window.__dtapAttached = true;
+            var lastTouchEnd = 0;
+            svg.addEventListener("touchend", function(ev) {
+                var now = Date.now();
+                if (lastTouchEnd && (now - lastTouchEnd) < 350) {
+                    ev.preventDefault();
+                    lastTouchEnd = 0;
+                    try { Android.toggleFullscreen(); } catch (e) {}
+                } else {
+                    lastTouchEnd = now;
+                }
+            }, { passive: false });
+        }
+
+        var model;
+        try {
+            model = JSON.parse(Android.getScoreModel());
+        } catch (e) {
+            showError("Kon het notenmodel niet lezen: " + e);
+            return;
+        }
+        if (model && model.error) {
+            showError("Kon dit vers niet laden: " + model.error);
+            return;
+        }
+        if (!model || !model.lines || !model.lines.length) {
+            showError("Geen noten gevonden voor dit vers.");
+            return;
+        }
+
+        var showRests = true;
+        try { showRests = (Android.getShowRests() !== false); } catch (e) { showRests = true; }
+    HAS_EIGHTH_NOTES = modelHasEighthNotes(model);
+    if (HAS_EIGHTH_NOTES) { showRests = true; }
+        preprocessRests(model, showRests);
+
+        var TEXT_ALIGN = 1; // 0=links, 1=centrisch, 2=vullend
+        try { TEXT_ALIGN = Android.getTextAlign(); } catch (e) { TEXT_ALIGN = 1; }
+
+        var width = document.getElementById("root").clientWidth || window.innerWidth || 360;
+        var fifths = model.fifths || 0;
+        var noteScale = readNumber(function() { return Android.getScoreVerticalScale(); }, 1);
+        var textScale = readNumber(function() { return Android.getLyricTextScale(); }, 1);
+        try { LARGE_TEXT = (Android.getLargeText() === true); } catch (e) { LARGE_TEXT = false; }
+        try { ALLOW_WRAP = (Android.getAllowLineWrap() === true); } catch (e) { ALLOW_WRAP = false; }
+        try { SHOW_LYRICS = (Android.getShowLyrics() !== false); } catch (e) { SHOW_LYRICS = true; }
+        var COMBINE_LINES = false;
+        try { COMBINE_LINES = (Android.getCombineLines() === true); } catch (e) { COMBINE_LINES = false; }
+        try { document.documentElement.classList.toggle("dark", Android.getSheetDark() === true); } catch (e) {}
+        recomputeGeometry(noteScale, textScale);
+
+        // Per regel de werkelijke verticale ruimte (noten + stokken) bepalen,
+        // zodat er geen vaste, grote witruimte boven/onder de balk overblijft.
+        var TOP_PAD = 3;
+
+        // Regel 1 heeft de sleutel (meer inspring); regels 2+ schuiven naar links
+        // en gebruiken de vrijgekomen ruimte.
+        function staffStartXFor(showClef) {
+            var keysigWidth = Math.abs(fifths) * 8;
+            return showClef
+                ? LEFT_MARGIN + CLEF_WIDTH + keysigWidth + 6
+                : LEFT_MARGIN + keysigWidth + 8;
+        }
+
+        var baseMetrics = { font: FONT_SIZE, wordGap: WORD_GAP, sylGap: SYL_GAP, minSlot: MIN_SLOT };
+
+        // Fysieke rijen: normaal 1 rij per modelregel. Met 'regelafbreking toestaan'
+        // wordt een te lange regel over 2 rijen verdeeld (2e rij rechts uitgelijnd),
+        // zodat de tekst groter kan blijven i.p.v. sterk terug te schalen.
+        function buildRows() {
+            var rows = [];
+            // 'Twee zinnen op één regel': combineer opeenvolgende regels (max 2) als ze
+            // samen op de breedte passen (handig in landscape/op tablets).
+            if (COMBINE_LINES) {
+                var k = 0;
+                while (k < model.lines.length) {
+                    var showClefK = (k === 0);
+                    var availK = Math.max(1, width - staffStartXFor(showClefK) - RIGHT_MARGIN);
+                    var slotsK = (model.lines[k].slots || []).slice();
+                    if (k + 1 < model.lines.length) {
+                        var combinedK = slotsK.concat(model.lines[k + 1].slots || []);
+                        var natK = computeLayout({ slots: combinedK }, baseMetrics).naturalWidth;
+                        if (natK <= availK) {
+                            rows.push({ slots: combinedK, showClef: showClefK, cont: false });
+                            k += 2;
+                            continue;
+                        }
+                    }
+                    rows.push({ slots: slotsK, showClef: showClefK, cont: false });
+                    k += 1;
+                }
+                return rows;
+            }
+            for (var i = 0; i < model.lines.length; i++) {
+                var slots = model.lines[i].slots || [];
+                var showClefLine = (i === 0);
+                var avail = Math.max(1, width - staffStartXFor(showClefLine) - RIGHT_MARGIN);
+                var natural = computeLayout(model.lines[i], baseMetrics).naturalWidth;
+                if (ALLOW_WRAP && natural > avail && slots.length >= 4) {
+                    var half = slots.length / 2;
+                    var best = -1, bestd = 1e9;
+                    for (var s = 1; s < slots.length; s++) {
+                        if (startsNewWord(slots[s])) {
+                            var dd = Math.abs(s - half);
+                            if (dd < bestd) { bestd = dd; best = s; }
+                        }
+                    }
+                    if (best > 0 && best < slots.length) {
+                        rows.push({ slots: slots.slice(0, best), showClef: showClefLine, cont: false });
+                        rows.push({ slots: slots.slice(best), showClef: false, cont: true });
+                        continue;
+                    }
+                }
+                rows.push({ slots: slots, showClef: showClefLine, cont: false });
+            }
+            return rows;
+        }
+        var rows = buildRows();
+
+        var extents = rows.map(function(r) { return lineVerticalExtent({ slots: r.slots }); });
+        var staffTops = [];
+        var y = 4;
+        for (var idx = 0; idx < rows.length; idx++) {
+            var ext = extents[idx];
+            staffTops.push(y + TOP_PAD + ext.above);
+            y += TOP_PAD + ext.above + 4 * S + ext.below + TEXT_GAP + FONT_SIZE + LINE_GAP;
+        }
+        var totalHeight = y + 4;
+
+        svg.setAttribute("width", width);
+        svg.setAttribute("height", totalHeight);
+        svg.setAttribute("viewBox", "0 0 " + width + " " + totalHeight);
+
+        // Transparant vlak zodat de HELE notenbalk-/tekstzone dubbeltikken opvangt
+        // (ook lege plekken tussen de noten), voor volledig scherm.
+        svg.appendChild(el("rect", {
+            x: 0, y: 0, width: width, height: totalHeight,
+            fill: "transparent", "pointer-events": "all"
+        }));
+
+        // Kies één consistente schaal zodat elke rij binnen zijn eigen ruimte past.
+        var minRatio = 1;
+        rows.forEach(function(r) {
+            var avail = Math.max(1, width - staffStartXFor(r.showClef) - RIGHT_MARGIN);
+            var natural = computeLayout({ slots: r.slots }, baseMetrics).naturalWidth;
+            minRatio = Math.min(minRatio, avail / natural);
+        });
+        var globalScale = Math.min(1, minRatio);
+        var metrics = {
+            font: FONT_SIZE * globalScale,
+            wordGap: WORD_GAP * globalScale,
+            sylGap: SYL_GAP * globalScale,
+            minSlot: MIN_SLOT * globalScale
+        };
+
+        // Links-modus: de LANGSTE regel vult de breedte; diezelfde spatiering geldt voor
+        // alle regels (kortere regels blijven zichtbaar korter, maar niet te dicht opeen).
+        var leftFillStretch = 1;
+        if (TEXT_ALIGN === 0) {
+            var maxNat = 0, availAtMax = 1;
+            rows.forEach(function(r) {
+                if (r.cont) return;
+                var av = Math.max(1, width - staffStartXFor(r.showClef) - RIGHT_MARGIN);
+                var nat = computeLayout({ slots: r.slots }, metrics).naturalWidth;
+                if (nat > maxNat) { maxNat = nat; availAtMax = av; }
+            });
+            leftFillStretch = maxNat > 0 ? Math.max(1, availAtMax / maxNat) : 1;
+        }
+
+        rows.forEach(function(r, index) {
+            var showClef = r.showClef;
+            var staffStartX = staffStartXFor(showClef);
+            var available = Math.max(1, width - staffStartX - RIGHT_MARGIN);
+            var layout = computeLayout({ slots: r.slots }, metrics);
+            var rawStretch = layout.naturalWidth > 0 ? available / layout.naturalWidth : 1;
+            var stretch, xOffset;
+            if (r.cont) {
+                // 2e rij van een afgebroken regel: niet oprekken, rechts uitlijnen.
+                stretch = Math.min(1, rawStretch);
+                xOffset = Math.max(0, available - layout.naturalWidth * stretch);
+            } else if (TEXT_ALIGN === 2) {
+                // Vullend: rek elke regel op tot de volle breedte.
+                stretch = rawStretch;
+                xOffset = 0;
+            } else if (TEXT_ALIGN === 0) {
+                // Links: langste regel vult de breedte; kortere regels korter (zelfde spatiering).
+                stretch = Math.min(leftFillStretch, rawStretch);
+                xOffset = 0;
+            } else {
+                // Centrisch (standaard): licht oprekken en centreren.
+                stretch = Math.min(rawStretch, MAX_STRETCH);
+                xOffset = Math.max(0, (available - layout.naturalWidth * stretch) / 2);
+            }
+            renderLine(svg, layout, stretch, xOffset, staffTops[index], extents[index].below, width, fifths, staffStartX, metrics.font, showClef);
+        });
+
+        window.__hasModel = true;
+        renderControls();
+
+        // Knoppen staan boven de balk. Bij openen/vers-wissel scrollen we voorbij
+        // de bovenste knoppen (muziek bovenaan); bij knop-aanpassingen behouden we de positie.
+        // De onderste knoppen staan via de flex-layout (#main min-height:100vh +
+        // margin-top:auto) onderaan het scherm, of na de muziek bij lange verzen.
+        window.requestAnimationFrame(function() {
+            var top = document.getElementById("controls-top");
+            var topH = top ? top.offsetHeight : 0;
+            if (scrollToScore) {
+                window.scrollTo(0, topH);
+            } else {
+                window.scrollTo(0, previousScroll);
+            }
+        });
+    }
+
+    // Werkelijke verticale ruimte boven/onder de balk voor deze regel (in px).
+    function lineVerticalExtent(line) {
+        var above = 0.4 * S;
+        var below = 0.4 * S;
+        var stem = 3.3 * S;
+        var half = 0.5 * S;
+        (line.slots || []).forEach(function(slot) {
+            (slot.notes || []).forEach(function(note) {
+                if (note.rest) {
+                    return;
+                }
+                var dia = diatonic(note.step, note.octave);
+                var aboveOffset = (dia - STAFF_LINE_TOP) * (S / 2);
+                var belowOffset = (STAFF_LINE_BOTTOM - dia) * (S / 2);
+                var stemUp = dia < STAFF_LINE_MID;
+                var top = aboveOffset + half;
+                if (stemUp) {
+                    top = Math.max(top, aboveOffset + stem);
+                }
+                var bottom = belowOffset + half;
+                if (!stemUp) {
+                    bottom = Math.max(bottom, belowOffset + stem);
+                }
+                if (top > above) { above = top; }
+                if (bottom > below) { below = bottom; }
+            });
+        });
+        return { above: above, below: below };
+    }
+
+    // Bepaalt per slot de breedte en de natuurlijke (ongerekte) x-positie.
+    function computeLayout(line, metrics) {
+        var slots = line.slots || [];
+        var items = [];
+        var cursor = 0;
+        slots.forEach(function(slot, i) {
+            var isRest = !!slot.rest;
+            var italic = isQuarterSlot(slot);
+            var textW = slot.text ? measureText(slot.text, italic, metrics.font) : 0;
+            var noteCount = (slot.notes || []).length;
+            var noteSpan = noteCount > 1 ? (noteCount - 1) * NOTE_STEP + S * 1.5 : S * 1.5;
+            // Rust = smal, zodat hij weinig horizontale ruimte inneemt (meer plek voor tekst).
+            var slotW = isRest ? (S * 0.85) : Math.max(textW, noteSpan, metrics.minSlot);
+            if (i > 0) {
+                // Rust dicht tegen de omringende noot (kleine tussenruimte).
+                if (isRest || slots[i - 1].rest) {
+                    cursor += metrics.sylGap * 0.5;
+                } else {
+                    cursor += startsNewWord(slot) ? metrics.wordGap : metrics.sylGap;
+                }
+            }
+            items.push({ slot: slot, center: cursor + slotW / 2, width: slotW, italic: italic });
+            cursor += slotW;
+        });
+        return { items: items, naturalWidth: cursor || 1 };
+    }
+
+    function renderLine(svg, layout, stretch, xOffset, staffTopY, belowStaff, width, fifths, staffStartX, font, showClef) {
+        var midY = staffTopY + 2 * S;
+
+        // y-positie uit een diatonische waarde
+        function yFor(dia) {
+            return midY - (dia - STAFF_LINE_MID) * (S / 2);
+        }
+
+        // 5 balklijnen over de volle breedte
+        for (var i = 0; i < 5; i++) {
+            var ly = staffTopY + i * S;
+            svg.appendChild(el("line", {
+                x1: LEFT_MARGIN, y1: ly, x2: width - RIGHT_MARGIN, y2: ly,
+                stroke: "#16110a", "stroke-width": 1
+            }));
+        }
+
+        // Vioolsleutel (alleen op de eerste regel)
+        if (showClef) {
+            var clef = el("text", {
+                x: LEFT_MARGIN + 2,
+                y: staffTopY + 4.15 * S,
+                "font-size": 3.5 * S,
+                "font-family": "Bravura, 'Noto Music', Georgia, serif",
+                fill: "#16110a"
+            });
+            clef.textContent = "\uD834\uDD1E"; // 𝄞
+            svg.appendChild(clef);
+        }
+
+        // Voortekening (op elke regel, muzikaal correct). Op regels zonder sleutel
+        // begint de voortekening links (de sleutelruimte vervalt).
+        var keysigStartX = showClef ? (LEFT_MARGIN + CLEF_WIDTH) : (LEFT_MARGIN + 2);
+        var positions = (fifths < 0 ? FLAT_POSITIONS : SHARP_POSITIONS).slice(0, Math.abs(fifths));
+        var accGlyph = fifths < 0 ? "\u266D" : "\u266F";
+        positions.forEach(function(dia, k) {
+            var acc = el("text", {
+                x: keysigStartX + k * 8,
+                y: yFor(dia) + S * 0.6,
+                "font-size": 2.2 * S,
+                "font-family": "Georgia, serif",
+                fill: "#16110a"
+            });
+            acc.textContent = accGlyph;
+            svg.appendChild(acc);
+        });
+
+        // Noten per lettergreep (verspreid over de balk). Eerst alle notenkoppen
+        // tekenen en de posities verzamelen, daarna stokken + balken (gebonden achtsten).
+        var lineNotes = [];
+        // Eerst alle lettergreep-centra bepalen (nodig om melisma-noten gelijkmatig
+        // tussen deze en de volgende lettergreepnoot te kunnen verdelen).
+        layout.items.forEach(function(item) {
+            item.cx = staffStartX + xOffset + item.center * stretch;
+        });
+        layout.items.forEach(function(item, idx) {
+            var notes = item.slot.notes || [];
+            var cnt = notes.length;
+            var step = NOTE_STEP * stretch;
+            var melismaStart = cnt > 1 ? item.cx - step * (cnt - 1) / 2 : item.cx;
+            notes.forEach(function(note, ni) {
+                // Melisma-noten blijven binnen hun eigen slot: ruim genoeg voor de
+                // vervolgnoten, maar nooit voorbij de volgende lettergreepnoot.
+                var nx = cnt > 1 ? melismaStart + step * ni : item.cx;
+                if (note.rest) {
+                    drawRest(svg, note, nx, staffTopY);
+                    lineNotes.push({ rest: true });
+                    return;
+                }
+                var head = drawNoteHead(svg, note, nx, staffTopY, yFor, fifths);
+                lineNotes.push({ note: note, x: nx, dia: head.dia, y: head.y });
+            });
+        });
+        drawStemsAndBeams(svg, lineNotes);
+
+        // Weergave 'noten': geen lettergrepen onder de noten tekenen.
+        if (!SHOW_LYRICS) return;
+
+        // Tekst per heel woord: lettergrepen aaneengesloten, gecentreerd onder de noten.
+        // Anti-overlap: elk woord komt minstens een kleine marge na het vorige woord.
+        var i = 0;
+        var prevRight = -Infinity;
+        var minWordGap = font * 0.32;
+        while (i < layout.items.length) {
+            var j = i;
+            while (j + 1 < layout.items.length && !startsNewWord(layout.items[j + 1].slot)) {
+                j++;
+            }
+            var syllables = [];
+            for (var k = i; k <= j; k++) {
+                var kSlot = layout.items[k].slot;
+                if (kSlot.rest) { continue; }
+                var t = kSlot.text || "";
+                if (t) {
+                    // Cursief per lettergreep; lettergrepen blijven aaneengesloten.
+                    syllables.push({ text: t, italic: layout.items[k].italic });
+                    // Melisma via MEERDERE noten op één lettergreep (lyricSlot=false in de
+                    // melodie): een liggend streepje per vervolgnoot (bv. gezangen).
+                    var extraNotes = (kSlot.notes || []).length - 1;
+                    for (var mm = 0; mm < extraNotes; mm++) {
+                        syllables.push({ text: "\u2009\u2013\u2009", italic: false, dash: true });
+                    }
+                } else if (syllables.length) {
+                    // Lege lettergreep = melisma-vervolgnoot (psalm-model met lege tokens):
+                    // toon een liggend streepje onder de vervolgnoot. Alleen in de
+                    // notenweergave; tekst-only toont het hele woord (bv. "weldadig").
+                    syllables.push({ text: "\u2009\u2013\u2009", italic: false, dash: true });
+                }
+            }
+            if (syllables.length) {
+                var wordW = 0;
+                for (var w = 0; w < syllables.length; w++) {
+                    wordW += measureText(syllables[w].text, syllables[w].italic, font);
+                }
+                var cxMid = (layout.items[i].cx + layout.items[j].cx) / 2;
+                // Zo nodig naar rechts schuiven zodat het niet over het vorige woord valt.
+                if (cxMid - wordW / 2 < prevRight + minWordGap) {
+                    cxMid = prevRight + minWordGap + wordW / 2;
+                }
+                drawWordText(svg, syllables, cxMid, staffTopY, belowStaff, font);
+                prevRight = cxMid + wordW / 2;
+            }
+            i = j + 1;
+        }
+    }
+
+    // Stokken en balken. Opeenvolgende achtste noten (zonder rust ertussen)
+    // worden 'gebonden' met een gezamenlijke balk; losse achtsten krijgen een vlag.
+    function drawStemsAndBeams(svg, lineNotes) {
+        var i = 0;
+        while (i < lineNotes.length) {
+            var n = lineNotes[i];
+            if (n.rest || !n.note) { i++; continue; }
+            if (n.note.type === "eighth") {
+                var j = i;
+                while (j + 1 < lineNotes.length &&
+                       lineNotes[j + 1].note && !lineNotes[j + 1].rest &&
+                       lineNotes[j + 1].note.type === "eighth") {
+                    j++;
+                }
+                if (j > i) {
+                    drawBeamGroup(svg, lineNotes, i, j);
+                    i = j + 1;
+                    continue;
+                }
+                drawSingleStem(svg, n, true);
+                i++;
+                continue;
+            }
+            if (n.note.type !== "whole") {
+                drawSingleStem(svg, n, false);
+            }
+            i++;
+        }
+    }
+
+    function drawSingleStem(svg, n, withFlag) {
+        var stemUp = n.dia < STAFF_LINE_MID;
+        var stemX = stemUp ? n.x + S * 0.58 : n.x - S * 0.58;
+        var stemY2 = stemUp ? n.y - 3.3 * S : n.y + 3.3 * S;
+        svg.appendChild(el("line", {
+            x1: stemX, y1: n.y, x2: stemX, y2: stemY2,
+            stroke: "#16110a", "stroke-width": 1.5
+        }));
+        // Vlag bij losse achtste noten (rechts van de stok, krult naar de kop toe)
+        if (withFlag) {
+            var d = stemUp ? 1 : -1;
+            svg.appendChild(el("path", {
+                d: "M " + stemX + " " + stemY2 +
+                   " Q " + (stemX + S * 1.5) + " " + (stemY2 + d * S * 0.8) + " " +
+                           (stemX + S * 0.6) + " " + (stemY2 + d * S * 2.1) +
+                   " Q " + (stemX + S * 1.0) + " " + (stemY2 + d * S * 0.9) + " " +
+                           stemX + " " + (stemY2 + d * S * 0.7) + " Z",
+                fill: "#16110a"
+            }));
+        }
+    }
+
+    // Balkgroep: één gezamenlijke stokrichting en een horizontale balk.
+    function drawBeamGroup(svg, lineNotes, a, b) {
+        var sum = 0;
+        for (var k = a; k <= b; k++) { sum += lineNotes[k].dia; }
+        var stemUp = (sum / (b - a + 1)) < STAFF_LINE_MID;
+        var stemLen = 3.3 * S;
+        var beamY;
+        if (stemUp) {
+            beamY = Infinity;
+            for (k = a; k <= b; k++) { beamY = Math.min(beamY, lineNotes[k].y - stemLen); }
+        } else {
+            beamY = -Infinity;
+            for (k = a; k <= b; k++) { beamY = Math.max(beamY, lineNotes[k].y + stemLen); }
+        }
+        var xs = [];
+        for (k = a; k <= b; k++) {
+            var stemX = stemUp ? lineNotes[k].x + S * 0.58 : lineNotes[k].x - S * 0.58;
+            xs.push(stemX);
+            svg.appendChild(el("line", {
+                x1: stemX, y1: lineNotes[k].y, x2: stemX, y2: beamY,
+                stroke: "#16110a", "stroke-width": 1.5
+            }));
+        }
+        var beamThick = S * 0.55;
+        var xLeft = xs[0];
+        var xRight = xs[xs.length - 1];
+        svg.appendChild(el("rect", {
+            x: Math.min(xLeft, xRight),
+            y: beamY - beamThick / 2,
+            width: Math.abs(xRight - xLeft),
+            height: beamThick,
+            fill: "#16110a"
+        }));
+    }
+
+    function drawWordText(svg, syllables, cxMid, staffTopY, belowStaff, font) {
+        var textY = staffTopY + 4 * S + belowStaff + TEXT_GAP + font * 0.5;
+        var text = el("text", {
+            x: cxMid,
+            y: textY,
+            "text-anchor": "middle",
+            "font-size": font,
+            "font-family": "'Roboto', sans-serif",
+            fill: "#16110a"
+        });
+        // Lettergrepen aaneengesloten binnen het woord (cursief per lettergreep).
+        syllables.forEach(function(syl) {
+            var tspan = el("tspan", { "font-style": syl.italic ? "italic" : "normal" });
+            // Melisma-streepje iets kleiner dan de tekst.
+            if (syl.dash) { tspan.setAttribute("font-size", (font * 0.7).toFixed(2)); }
+            tspan.textContent = syl.text;
+            text.appendChild(tspan);
+        });
+        svg.appendChild(text);
+    }
+
+    function drawNoteHead(svg, note, x, staffTopY, yFor, fifths) {
+        var dia = diatonic(note.step, note.octave);
+        var y = yFor(dia);
+        var open = note.type === "half" || note.type === "whole";
+
+        // Hulplijntjes (ledger lines)
+        drawLedgerLines(svg, dia, x, yFor);
+
+        // Voorteken indien afwijkend van de sleutel
+        var keyAlter = keyAlterForStep(note.step, fifths);
+        if (note.alter !== keyAlter) {
+            var glyph = note.alter > 0 ? "\u266F" : (note.alter < 0 ? "\u266D" : "\u266E");
+            var acc = el("text", {
+                x: x - S * 1.1, y: y + S * 0.55,
+                "text-anchor": "middle",
+                "font-size": 2.2 * S,
+                "font-family": "Georgia, serif",
+                fill: "#16110a"
+            });
+            acc.textContent = glyph;
+            svg.appendChild(acc);
+        }
+
+        // Notenkop
+        svg.appendChild(el("ellipse", {
+            cx: x, cy: y,
+            rx: S * 0.62, ry: S * 0.48,
+            transform: "rotate(-18 " + x + " " + y + ")",
+            fill: open ? "none" : "#16110a",
+            stroke: "#16110a",
+            "stroke-width": open ? 1.6 : 1
+        }));
+
+        // Punt (dotted)
+        if (note.dot) {
+            svg.appendChild(el("circle", {
+                cx: x + S * 0.95, cy: y - S * 0.15, r: S * 0.16, fill: "#16110a"
+            }));
+        }
+
+        return { dia: dia, y: y };
+    }
+
+    // Rust-symbool (achtste/kwart/half/hele) op de balk, met het muzieklettertype.
+    function drawRest(svg, note, x, staffTopY) {
+        var midY = staffTopY + 2 * S;
+        var glyph, y;
+        if (note.type === "whole") { glyph = "\uD834\uDD3B"; y = staffTopY + 1.9 * S; }
+        else if (note.type === "half") { glyph = "\uD834\uDD3C"; y = staffTopY + 2.8 * S; }
+        else if (note.type === "eighth") { glyph = "\uD834\uDD3E"; y = midY + 0.9 * S; }
+        else { glyph = "\uD834\uDD3D"; y = midY + 1.15 * S; }
+        var t = el("text", {
+            x: x, y: y,
+            "text-anchor": "middle",
+            "font-size": 3.0 * S,
+            "font-family": "Bravura, 'Noto Music', Georgia, serif",
+            fill: "#16110a"
+        });
+        t.textContent = glyph;
+        svg.appendChild(t);
+    }
+
+    function drawLedgerLines(svg, dia, x, yFor) {
+        var half = S * 0.95;
+        if (dia > STAFF_LINE_TOP) {
+            for (var lv = STAFF_LINE_TOP + 2; lv <= dia; lv += 2) {
+                var yy = yFor(lv);
+                svg.appendChild(el("line", {
+                    x1: x - half, y1: yy, x2: x + half, y2: yy,
+                    stroke: "#16110a", "stroke-width": 1
+                }));
+            }
+        } else if (dia < STAFF_LINE_BOTTOM) {
+            for (var lw = STAFF_LINE_BOTTOM - 2; lw >= dia; lw -= 2) {
+                var yb = yFor(lw);
+                svg.appendChild(el("line", {
+                    x1: x - half, y1: yb, x2: x + half, y2: yb,
+                    stroke: "#16110a", "stroke-width": 1
+                }));
+            }
+        }
+    }
+
+    function startsNewWord(slot) {
+        if (slot.rest) { return true; }        // een rust breekt het woord altijd af
+        if (!slot.text) { return false; }      // lege melisma-slot hoort bij het vorige woord (wordt een dash)
+        var syl = slot.syllabic || "single";
+        return syl === "single" || syl === "begin";
+    }
+
+    function isQuarterSlot(slot) {
+        if (HAS_EIGHTH_NOTES) { return false; }
+        var notes = slot.notes || [];
+        return notes.length === 1 && notes[0].type === "quarter";
+    }
+
+    function renderControls() {
+        var top = document.getElementById("controls-top");
+        var bottom = document.getElementById("controls-bottom");
+        var section = document.getElementById("verse-section");
+        top.innerHTML = "";
+        bottom.innerHTML = "";
+        section.innerHTML = "";
+
+        // Boven de balk: instellen vóór het zingen (Toonsoort / Tekst / Noten).
+        top.appendChild(stepperRow("Toonsoort", safeCall(function() { return Android.getTranspositionLabel(); }, "0"),
+            function() { Android.transposeBy(-1); },
+            function() { Android.transposeBy(1); }));
+        top.appendChild(stepperRow("Tekst", safeCall(function() { return Android.getTextScaleLabel(); }, ""),
+            function() { Android.adjustTextScale(-0.2); },
+            function() { Android.adjustTextScale(0.2); }));
+        var notenRow = stepperRow("Noten", safeCall(function() { return Android.getNoteScaleLabel(); }, ""),
+            function() { Android.adjustNoteScale(-0.1); },
+            function() { Android.adjustNoteScale(0.1); });
+        top.appendChild(notenRow);
+
+        // Onder de balk: gebruik ná de muziek/zang (Vorige/Volgende + versnummers).
+        var items = [];
+        try {
+            items = JSON.parse(Android.getVerseMatrixItems());
+        } catch (e) {
+            items = [];
+        }
+
+        var nav = document.createElement("div");
+        nav.className = "nav-row";
+        var prev = document.createElement("button");
+        prev.textContent = "Vorige";
+        prev.disabled = !Android.hasPreviousVerse();
+        prev.addEventListener("click", function() { Android.openPreviousVerse(); });
+        var next = document.createElement("button");
+        next.textContent = "Volgende";
+        next.disabled = !Android.hasNextVerse();
+        next.addEventListener("click", function() { Android.openNextVerse(); });
+        nav.appendChild(prev);
+        nav.appendChild(next);
+        bottom.appendChild(nav);
+
+        if (items.length) {
+            var matrix = document.createElement("div");
+            matrix.className = "verse-matrix";
+            items.forEach(function(item) {
+                var button = document.createElement("button");
+                button.textContent = String(item.verse);
+                if (item.current) {
+                    button.className = "current";
+                    button.disabled = true;
+                } else {
+                    button.addEventListener("click", function() {
+                        Android.openVerseFile(item.fileName);
+                    });
+                }
+                matrix.appendChild(button);
+            });
+            section.appendChild(matrix);
+        }
+    }
+
+    function stepperRow(label, value, onMinus, onPlus) {
+        var row = document.createElement("div");
+        row.className = "ctrl-row";
+
+        var name = document.createElement("div");
+        name.className = "label";
+        name.textContent = label;
+
+        var minus = document.createElement("button");
+        minus.textContent = "\u2212";
+        minus.addEventListener("click", onMinus);
+
+        var val = document.createElement("div");
+        val.className = "value";
+        val.textContent = value;
+
+        var plus = document.createElement("button");
+        plus.textContent = "+";
+        plus.addEventListener("click", onPlus);
+
+        row.appendChild(name);
+        row.appendChild(minus);
+        row.appendChild(val);
+        row.appendChild(plus);
+        return row;
+    }
+
+    function safeCall(fn, fallback) {
+        try {
+            return fn();
+        } catch (e) {
+            return fallback;
+        }
+    }
+
+    function showError(message) {
+        document.getElementById("controls").innerHTML =
+            '<div class="error">' + message + "</div>";
+    }
+
+    window.renderScore = renderScore;
+    window.updateScore = updateScore;
+    window.addEventListener("resize", function() {
+        if (window.__hasModel) {
+            renderScore();
+        }
+    });
+    </script>
+</body>
+</html>

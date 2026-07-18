@@ -1,0 +1,750 @@
+{
+  "book": "gezangen",
+  "number": 10,
+  "composer": "Online-Bijbel MIDI (rechterhand)",
+  "divisions": 24,
+  "fifths": 2,
+  "melody": {
+    "lines": [
+      [
+        {
+          "duration": 48,
+          "type": "half",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "A",
+          "alter": null,
+          "octave": 4
+        },
+        {
+          "duration": 24,
+          "type": "quarter",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "B",
+          "alter": null,
+          "octave": 4
+        },
+        {
+          "duration": 24,
+          "type": "quarter",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "B",
+          "alter": null,
+          "octave": 4
+        },
+        {
+          "duration": 48,
+          "type": "half",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "A",
+          "alter": null,
+          "octave": 4
+        },
+        {
+          "duration": 48,
+          "type": "half",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "D",
+          "alter": null,
+          "octave": 5
+        },
+        {
+          "duration": 24,
+          "type": "quarter",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "D",
+          "alter": null,
+          "octave": 5
+        },
+        {
+          "duration": 24,
+          "type": "quarter",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "C",
+          "alter": 1,
+          "octave": 5
+        },
+        {
+          "duration": 48,
+          "type": "half",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "D",
+          "alter": null,
+          "octave": 5
+        },
+        {
+          "duration": 96,
+          "type": "whole",
+          "rest": true,
+          "lyricSlot": false,
+          "hidden": true
+        }
+      ],
+      [
+        {
+          "duration": 48,
+          "type": "half",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "D",
+          "alter": null,
+          "octave": 5
+        },
+        {
+          "duration": 24,
+          "type": "quarter",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "B",
+          "alter": null,
+          "octave": 4
+        },
+        {
+          "duration": 24,
+          "type": "quarter",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "C",
+          "alter": 1,
+          "octave": 5
+        },
+        {
+          "duration": 24,
+          "type": "quarter",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "A",
+          "alter": null,
+          "octave": 4
+        },
+        {
+          "duration": 24,
+          "type": "quarter",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "B",
+          "alter": null,
+          "octave": 4
+        },
+        {
+          "duration": 24,
+          "type": "quarter",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "D",
+          "alter": null,
+          "octave": 5
+        },
+        {
+          "duration": 24,
+          "type": "quarter",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "C",
+          "alter": 1,
+          "octave": 5
+        },
+        {
+          "duration": 48,
+          "type": "half",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "B",
+          "alter": null,
+          "octave": 4
+        },
+        {
+          "duration": 24,
+          "type": "quarter",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "G",
+          "alter": null,
+          "octave": 4
+        },
+        {
+          "duration": 48,
+          "type": "half",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "A",
+          "alter": null,
+          "octave": 4
+        },
+        {
+          "duration": 72,
+          "type": "half",
+          "rest": true,
+          "lyricSlot": false,
+          "dot": true,
+          "hidden": true
+        }
+      ],
+      [
+        {
+          "duration": 48,
+          "type": "half",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "A",
+          "alter": null,
+          "octave": 4
+        },
+        {
+          "duration": 24,
+          "type": "quarter",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "B",
+          "alter": null,
+          "octave": 4
+        },
+        {
+          "duration": 24,
+          "type": "quarter",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "B",
+          "alter": null,
+          "octave": 4
+        },
+        {
+          "duration": 48,
+          "type": "half",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "A",
+          "alter": null,
+          "octave": 4
+        },
+        {
+          "duration": 48,
+          "type": "half",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "D",
+          "alter": null,
+          "octave": 5
+        },
+        {
+          "duration": 24,
+          "type": "quarter",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "D",
+          "alter": null,
+          "octave": 5
+        },
+        {
+          "duration": 24,
+          "type": "quarter",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "C",
+          "alter": 1,
+          "octave": 5
+        },
+        {
+          "duration": 48,
+          "type": "half",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "D",
+          "alter": null,
+          "octave": 5
+        },
+        {
+          "duration": 96,
+          "type": "whole",
+          "rest": true,
+          "lyricSlot": false,
+          "hidden": true
+        }
+      ],
+      [
+        {
+          "duration": 48,
+          "type": "half",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "A",
+          "alter": null,
+          "octave": 4
+        },
+        {
+          "duration": 24,
+          "type": "quarter",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "B",
+          "alter": null,
+          "octave": 4
+        },
+        {
+          "duration": 24,
+          "type": "quarter",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "A",
+          "alter": null,
+          "octave": 4
+        },
+        {
+          "duration": 24,
+          "type": "quarter",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "G",
+          "alter": null,
+          "octave": 4
+        },
+        {
+          "duration": 24,
+          "type": "quarter",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "F",
+          "alter": 1,
+          "octave": 4
+        },
+        {
+          "duration": 24,
+          "type": "quarter",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "G",
+          "alter": null,
+          "octave": 4
+        },
+        {
+          "duration": 24,
+          "type": "quarter",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "F",
+          "alter": 1,
+          "octave": 4
+        },
+        {
+          "duration": 48,
+          "type": "half",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "E",
+          "alter": null,
+          "octave": 4
+        },
+        {
+          "duration": 24,
+          "type": "quarter",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "C",
+          "alter": 1,
+          "octave": 4
+        },
+        {
+          "duration": 96,
+          "type": "whole",
+          "rest": true,
+          "lyricSlot": false,
+          "hidden": true
+        },
+        {
+          "duration": 24,
+          "type": "quarter",
+          "rest": true,
+          "lyricSlot": false,
+          "hidden": true
+        }
+      ],
+      [
+        {
+          "duration": 48,
+          "type": "half",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "D",
+          "alter": null,
+          "octave": 4
+        },
+        {
+          "duration": 48,
+          "type": "half",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "D",
+          "alter": null,
+          "octave": 4
+        },
+        {
+          "duration": 24,
+          "type": "quarter",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "F",
+          "alter": 1,
+          "octave": 4
+        },
+        {
+          "duration": 24,
+          "type": "quarter",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "G",
+          "alter": null,
+          "octave": 4
+        },
+        {
+          "duration": 24,
+          "type": "quarter",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "A",
+          "alter": null,
+          "octave": 4
+        },
+        {
+          "duration": 24,
+          "type": "quarter",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "F",
+          "alter": 1,
+          "octave": 4
+        },
+        {
+          "duration": 24,
+          "type": "quarter",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "G",
+          "alter": null,
+          "octave": 4
+        },
+        {
+          "duration": 24,
+          "type": "quarter",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "A",
+          "alter": null,
+          "octave": 4
+        },
+        {
+          "duration": 48,
+          "type": "half",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "B",
+          "alter": null,
+          "octave": 4
+        },
+        {
+          "duration": 96,
+          "type": "whole",
+          "rest": true,
+          "lyricSlot": false,
+          "hidden": true
+        }
+      ],
+      [
+        {
+          "duration": 48,
+          "type": "half",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "A",
+          "alter": null,
+          "octave": 4
+        },
+        {
+          "duration": 48,
+          "type": "half",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "A",
+          "alter": null,
+          "octave": 4
+        },
+        {
+          "duration": 24,
+          "type": "quarter",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "D",
+          "alter": null,
+          "octave": 5
+        },
+        {
+          "duration": 24,
+          "type": "quarter",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "C",
+          "alter": 1,
+          "octave": 5
+        },
+        {
+          "duration": 24,
+          "type": "quarter",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "B",
+          "alter": null,
+          "octave": 4
+        },
+        {
+          "duration": 24,
+          "type": "quarter",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "A",
+          "alter": null,
+          "octave": 4
+        },
+        {
+          "duration": 48,
+          "type": "half",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "G",
+          "alter": null,
+          "octave": 4
+        },
+        {
+          "duration": 48,
+          "type": "half",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "F",
+          "alter": 1,
+          "octave": 4
+        },
+        {
+          "duration": 48,
+          "type": "half",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "E",
+          "alter": null,
+          "octave": 4
+        },
+        {
+          "duration": 48,
+          "type": "half",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "E",
+          "alter": null,
+          "octave": 4
+        }
+      ],
+      [
+        {
+          "duration": 24,
+          "type": "quarter",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "F",
+          "alter": 1,
+          "octave": 4
+        },
+        {
+          "duration": 24,
+          "type": "quarter",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "G",
+          "alter": null,
+          "octave": 4
+        },
+        {
+          "duration": 24,
+          "type": "quarter",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "A",
+          "alter": null,
+          "octave": 4
+        },
+        {
+          "duration": 24,
+          "type": "quarter",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "F",
+          "alter": 1,
+          "octave": 4
+        },
+        {
+          "duration": 24,
+          "type": "quarter",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "G",
+          "alter": null,
+          "octave": 4
+        },
+        {
+          "duration": 24,
+          "type": "quarter",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "A",
+          "alter": null,
+          "octave": 4
+        },
+        {
+          "duration": 48,
+          "type": "half",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "B",
+          "alter": null,
+          "octave": 4
+        },
+        {
+          "duration": 24,
+          "type": "quarter",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "G",
+          "alter": 1,
+          "octave": 4
+        },
+        {
+          "duration": 48,
+          "type": "half",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "A",
+          "alter": null,
+          "octave": 4
+        },
+        {
+          "duration": 48,
+          "type": "half",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "F",
+          "alter": 1,
+          "octave": 4
+        },
+        {
+          "duration": 72,
+          "type": "half",
+          "rest": true,
+          "lyricSlot": false,
+          "dot": true,
+          "hidden": true
+        }
+      ],
+      [
+        {
+          "duration": 24,
+          "type": "quarter",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "A",
+          "alter": null,
+          "octave": 4
+        },
+        {
+          "duration": 24,
+          "type": "quarter",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "G",
+          "alter": null,
+          "octave": 4
+        },
+        {
+          "duration": 24,
+          "type": "quarter",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "F",
+          "alter": 1,
+          "octave": 4
+        },
+        {
+          "duration": 24,
+          "type": "quarter",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "E",
+          "alter": null,
+          "octave": 4
+        },
+        {
+          "duration": 48,
+          "type": "half",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "D",
+          "alter": null,
+          "octave": 4
+        },
+        {
+          "duration": 48,
+          "type": "half",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "E",
+          "alter": null,
+          "octave": 4
+        },
+        {
+          "duration": 24,
+          "type": "quarter",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "C",
+          "alter": 1,
+          "octave": 4
+        },
+        {
+          "duration": 48,
+          "type": "half",
+          "rest": false,
+          "lyricSlot": true,
+          "step": "D",
+          "alter": null,
+          "octave": 4
+        },
+        {
+          "duration": 96,
+          "type": "whole",
+          "rest": true,
+          "lyricSlot": false,
+          "hidden": true
+        },
+        {
+          "duration": 24,
+          "type": "quarter",
+          "rest": true,
+          "lyricSlot": false,
+          "hidden": true
+        }
+      ]
+    ]
+  },
+  "sourceItems": [
+    {
+      "book": "gezangen",
+      "number": 10,
+      "title": "Bedezang voor het eten"
+    }
+  ],
+  "composers": [
+    "Online-Bijbel MIDI (rechterhand)"
+  ]
+}
