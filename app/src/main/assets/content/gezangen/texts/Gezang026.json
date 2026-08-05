@@ -1,165 +1,184 @@
 {
   "book": "gezangen",
   "number": 26,
-  "title": "Lied van Mozes en het Lam",
-  "about": "Deze berijming van Openbaring 15:3-4 is primair gebaseerd op de Statenvertaling, met aandacht voor de oudtestamentische lofzangtaal van het gedeelte.\n\nHet lied wordt in de tekst zelf aangeduid als het gezang van Mozes en het gezang des Lams. Daarom is gekozen voor een woordkeus die aansluit bij de taal van de liederen uit het Oude Testament.\n\nHet doel was een zingbare Schriftberijming te maken in de stijl van de Psalmberijming van 1773 en de Enige Gezangen, op de wijs van Psalm 98.\n\nBijbelse kernwoorden en beelden zijn zoveel mogelijk behouden. Betekenis ging daarbij vóór rijm.\n\nEr is bewust vermeden om nieuwe gedachten, uitleg of toepassingen toe te voegen. Waar de brontekst weinig woorden bevatte, is gekozen voor herhaling van bestaande kernwoorden of parallelismen uit hetzelfde Schriftgedeelte.\n\nDeze berijming beoogt het lied van Mozes en het Lam uit Openbaring 15 zo getrouw mogelijk zingbaar weer te geven binnen de Nederlandse gereformeerde psalm- en gezangtraditie.",
-  "melodyFile": "content/melodies/Psalm066.json",
+  "title": "Ere zij God",
+  "melodyFile": "content/melodies/Gezang026.json",
   "verses": [
     {
       "number": 1,
       "lines": [
         {
-          "raw": "Groot, wonderlijk zijn Uwe werken;",
-          "display": "Groot, wonderlijk zijn Uwe werken;",
+          "raw": "Ere zij God, Ere zij God",
+          "display": "Ere zij God, Ere zij God",
           "tokens": [
             {
-              "text": "Groot,",
-              "syllabic": "single"
-            },
-            {
-              "text": "won",
+              "text": "E",
               "syllabic": "begin"
             },
             {
-              "text": "der",
-              "syllabic": "middle"
-            },
-            {
-              "text": "lijk",
+              "text": "re",
               "syllabic": "end"
             },
             {
-              "text": "zijn",
+              "text": "zij",
               "syllabic": "single"
             },
             {
-              "text": "U",
+              "text": "God,",
+              "syllabic": "single"
+            },
+            {
+              "text": "E",
               "syllabic": "begin"
             },
             {
-              "text": "we",
+              "text": "re",
               "syllabic": "end"
             },
             {
-              "text": "wer",
-              "syllabic": "begin"
-            },
-            {
-              "text": "ken;",
-              "syllabic": "end"
-            }
-          ]
-        },
-        {
-          "raw": "O HEER’, Gij zijt almachtig God;",
-          "display": "O HEER’, Gij zijt almachtig God;",
-          "tokens": [
-            {
-              "text": "O",
+              "text": "zij",
               "syllabic": "single"
             },
             {
-              "text": "HEER’,",
-              "syllabic": "single"
-            },
-            {
-              "text": "Gij",
-              "syllabic": "single"
-            },
-            {
-              "text": "zijt",
-              "syllabic": "single"
-            },
-            {
-              "text": "al",
-              "syllabic": "begin"
-            },
-            {
-              "text": "mach",
-              "syllabic": "middle"
-            },
-            {
-              "text": "tig",
-              "syllabic": "end"
-            },
-            {
-              "text": "God;",
+              "text": "God",
               "syllabic": "single"
             }
           ]
         },
         {
-          "raw": "Rechtvaardig, waarachtig Uw wegen;",
-          "display": "Rechtvaardig, waarachtig Uw wegen;",
+          "raw": "In de hoge, in de hoge, in de hoge",
+          "display": "In de hoge, in de hoge, in de hoge",
           "tokens": [
             {
-              "text": "Recht",
-              "syllabic": "begin"
-            },
-            {
-              "text": "vaar",
-              "syllabic": "middle"
-            },
-            {
-              "text": "dig,",
-              "syllabic": "end"
-            },
-            {
-              "text": "waar",
-              "syllabic": "begin"
-            },
-            {
-              "text": "ach",
-              "syllabic": "middle"
-            },
-            {
-              "text": "tig",
-              "syllabic": "end"
-            },
-            {
-              "text": "Uw",
+              "text": "In",
               "syllabic": "single"
             },
             {
-              "text": "we",
+              "text": "de",
+              "syllabic": "single"
+            },
+            {
+              "text": "ho",
               "syllabic": "begin"
             },
             {
-              "text": "gen;",
+              "text": "ge,",
+              "syllabic": "end"
+            },
+            {
+              "text": "in",
+              "syllabic": "single"
+            },
+            {
+              "text": "de",
+              "syllabic": "single"
+            },
+            {
+              "text": "ho",
+              "syllabic": "begin"
+            },
+            {
+              "text": "ge,",
+              "syllabic": "end"
+            },
+            {
+              "text": "in",
+              "syllabic": "single"
+            },
+            {
+              "text": "de",
+              "syllabic": "single"
+            },
+            {
+              "text": "ho",
+              "syllabic": "begin"
+            },
+            {
+              "text": "ge",
               "syllabic": "end"
             }
           ]
         },
         {
-          "raw": "Gij zijt Koning der heiligen.",
-          "display": "Gij zijt Koning der heiligen.",
+          "raw": "Vrede op aarde, vrede op aarde",
+          "display": "Vrede op aarde, vrede op aarde",
           "tokens": [
             {
-              "text": "Gij",
-              "syllabic": "single"
-            },
-            {
-              "text": "zijt",
-              "syllabic": "single"
-            },
-            {
-              "text": "Ko",
+              "text": "Vre",
               "syllabic": "begin"
             },
             {
-              "text": "ning",
+              "text": "de",
               "syllabic": "end"
             },
             {
-              "text": "der",
+              "text": "op",
               "syllabic": "single"
             },
             {
-              "text": "hei",
+              "text": "aar",
               "syllabic": "begin"
             },
             {
-              "text": "li",
+              "text": "de,",
+              "syllabic": "end"
+            },
+            {
+              "text": "vre",
+              "syllabic": "begin"
+            },
+            {
+              "text": "de",
+              "syllabic": "end"
+            },
+            {
+              "text": "op",
+              "syllabic": "single"
+            },
+            {
+              "text": "aar",
+              "syllabic": "begin"
+            },
+            {
+              "text": "de",
+              "syllabic": "end"
+            }
+          ]
+        },
+        {
+          "raw": "In de mensen een welbehagen.",
+          "display": "In de mensen een welbehagen.",
+          "tokens": [
+            {
+              "text": "In",
+              "syllabic": "single"
+            },
+            {
+              "text": "de",
+              "syllabic": "single"
+            },
+            {
+              "text": "mens",
+              "syllabic": "begin"
+            },
+            {
+              "text": "en",
+              "syllabic": "end"
+            },
+            {
+              "text": "een",
+              "syllabic": "single"
+            },
+            {
+              "text": "wel",
+              "syllabic": "begin"
+            },
+            {
+              "text": "be",
+              "syllabic": "middle"
+            },
+            {
+              "text": "ha",
               "syllabic": "middle"
             },
             {
@@ -169,161 +188,491 @@
           ]
         },
         {
-          "raw": "Wie vreest U niet, HEER’, wie eert Uw Naam?",
-          "display": "Wie vreest U niet, HEER’, wie eert Uw Naam?",
+          "raw": "Ere zij God in de hoge",
+          "display": "Ere zij God in de hoge",
           "tokens": [
             {
-              "text": "Wie",
-              "syllabic": "single"
-            },
-            {
-              "text": "vreest",
-              "syllabic": "single"
-            },
-            {
-              "text": "U",
-              "syllabic": "single"
-            },
-            {
-              "text": "niet,",
-              "syllabic": "single"
-            },
-            {
-              "text": "HEER’,",
-              "syllabic": "single"
-            },
-            {
-              "text": "wie",
-              "syllabic": "single"
-            },
-            {
-              "text": "eert",
-              "syllabic": "single"
-            },
-            {
-              "text": "Uw",
-              "syllabic": "single"
-            },
-            {
-              "text": "Naam?",
-              "syllabic": "single"
-            }
-          ]
-        },
-        {
-          "raw": "Gij alleen zijt heilig, HEERE;",
-          "display": "Gij alleen zijt heilig, HEERE;",
-          "tokens": [
-            {
-              "text": "Gij",
-              "syllabic": "single"
-            },
-            {
-              "text": "al",
+              "text": "E",
               "syllabic": "begin"
             },
             {
-              "text": "leen",
+              "text": "re",
               "syllabic": "end"
             },
             {
-              "text": "zijt",
+              "text": "zij",
               "syllabic": "single"
             },
             {
-              "text": "hei",
+              "text": "God",
+              "syllabic": "single"
+            },
+            {
+              "text": "in",
+              "syllabic": "single"
+            },
+            {
+              "text": "de",
+              "syllabic": "single"
+            },
+            {
+              "text": "ho",
               "syllabic": "begin"
             },
             {
-              "text": "lig,",
-              "syllabic": "end"
-            },
-            {
-              "text": "HEE",
-              "syllabic": "begin"
-            },
-            {
-              "text": "RE;",
+              "text": "ge",
               "syllabic": "end"
             }
           ]
         },
         {
-          "raw": "Alle volken komen aanbidden;",
-          "display": "Alle volken komen aanbidden;",
+          "raw": "Ere zij God in de hoge",
+          "display": "Ere zij God in de hoge",
           "tokens": [
             {
-              "text": "Al",
+              "text": "E",
               "syllabic": "begin"
             },
             {
-              "text": "le",
+              "text": "re",
               "syllabic": "end"
             },
             {
-              "text": "vol",
+              "text": "zij",
+              "syllabic": "single"
+            },
+            {
+              "text": "God",
+              "syllabic": "single"
+            },
+            {
+              "text": "in",
+              "syllabic": "single"
+            },
+            {
+              "text": "de",
+              "syllabic": "single"
+            },
+            {
+              "text": "ho",
               "syllabic": "begin"
             },
             {
-              "text": "ken",
-              "syllabic": "end"
-            },
-            {
-              "text": "ko",
-              "syllabic": "begin"
-            },
-            {
-              "text": "men",
-              "syllabic": "end"
-            },
-            {
-              "text": "aan",
-              "syllabic": "begin"
-            },
-            {
-              "text": "bid",
-              "syllabic": "middle"
-            },
-            {
-              "text": "den;",
+              "text": "ge",
               "syllabic": "end"
             }
           ]
         },
         {
-          "raw": "Uw oordelen zijn openbaar.",
-          "display": "Uw oordelen zijn openbaar.",
+          "raw": "Vrede op aarde, vrede op aarde",
+          "display": "Vrede op aarde, vrede op aarde",
           "tokens": [
             {
-              "text": "Uw",
-              "syllabic": "single"
-            },
-            {
-              "text": "oor",
+              "text": "Vre",
               "syllabic": "begin"
             },
             {
               "text": "de",
-              "syllabic": "middle"
-            },
-            {
-              "text": "len",
               "syllabic": "end"
             },
             {
-              "text": "zijn",
+              "text": "op",
               "syllabic": "single"
             },
             {
-              "text": "o",
+              "text": "aar",
               "syllabic": "begin"
             },
             {
-              "text": "pen",
+              "text": "de",
+              "syllabic": "end"
+            },
+            {
+              "text": "vre",
+              "syllabic": "begin"
+            },
+            {
+              "text": "de",
+              "syllabic": "end"
+            },
+            {
+              "text": "op",
+              "syllabic": "single"
+            },
+            {
+              "text": "aar",
+              "syllabic": "begin"
+            },
+            {
+              "text": "de",
+              "syllabic": "end"
+            }
+          ]
+        },
+        {
+          "raw": "Vrede op aarde, vrede op aarde",
+          "display": "Vrede op aarde, vrede op aarde",
+          "tokens": [
+            {
+              "text": "Vre",
+              "syllabic": "begin"
+            },
+            {
+              "text": "de",
+              "syllabic": "end"
+            },
+            {
+              "text": "op",
+              "syllabic": "single"
+            },
+            {
+              "text": "aar",
+              "syllabic": "begin"
+            },
+            {
+              "text": "de",
+              "syllabic": "end"
+            },
+            {
+              "text": "vre",
+              "syllabic": "begin"
+            },
+            {
+              "text": "de",
+              "syllabic": "end"
+            },
+            {
+              "text": "op",
+              "syllabic": "single"
+            },
+            {
+              "text": "aar",
+              "syllabic": "begin"
+            },
+            {
+              "text": "de",
+              "syllabic": "end"
+            }
+          ]
+        },
+        {
+          "raw": "In de mensen, in de mensen een welbehagen",
+          "display": "In de mensen, in de mensen een welbehagen",
+          "tokens": [
+            {
+              "text": "In",
+              "syllabic": "single"
+            },
+            {
+              "text": "de",
+              "syllabic": "single"
+            },
+            {
+              "text": "men",
+              "syllabic": "begin"
+            },
+            {
+              "text": "sen,",
+              "syllabic": "end"
+            },
+            {
+              "text": "in",
+              "syllabic": "single"
+            },
+            {
+              "text": "de",
+              "syllabic": "single"
+            },
+            {
+              "text": "men",
+              "syllabic": "begin"
+            },
+            {
+              "text": "sen",
+              "syllabic": "end"
+            },
+            {
+              "text": "een",
+              "syllabic": "single"
+            },
+            {
+              "text": "wel",
+              "syllabic": "begin"
+            },
+            {
+              "text": "be",
               "syllabic": "middle"
             },
             {
-              "text": "baar.",
+              "text": "ha",
+              "syllabic": "middle"
+            },
+            {
+              "text": "gen",
+              "syllabic": "end"
+            }
+          ]
+        },
+        {
+          "raw": "In de mensen een welbehagen, een welbehagen",
+          "display": "In de mensen een welbehagen, een welbehagen",
+          "tokens": [
+            {
+              "text": "In",
+              "syllabic": "single"
+            },
+            {
+              "text": "de",
+              "syllabic": "single"
+            },
+            {
+              "text": "men",
+              "syllabic": "begin"
+            },
+            {
+              "text": "sen",
+              "syllabic": "end"
+            },
+            {
+              "text": "een",
+              "syllabic": "single"
+            },
+            {
+              "text": "wel",
+              "syllabic": "begin"
+            },
+            {
+              "text": "be",
+              "syllabic": "middle"
+            },
+            {
+              "text": "ha",
+              "syllabic": "middle"
+            },
+            {
+              "text": "gen,",
+              "syllabic": "end"
+            },
+            {
+              "text": "een",
+              "syllabic": "single"
+            },
+            {
+              "text": "wel",
+              "syllabic": "begin"
+            },
+            {
+              "text": "be",
+              "syllabic": "middle"
+            },
+            {
+              "text": "ha",
+              "syllabic": "middle"
+            },
+            {
+              "text": "gen",
+              "syllabic": "end"
+            }
+          ]
+        },
+        {
+          "raw": "Ere zij God, ere zij God",
+          "display": "Ere zij God, ere zij God",
+          "tokens": [
+            {
+              "text": "E",
+              "syllabic": "begin"
+            },
+            {
+              "text": "re",
+              "syllabic": "end"
+            },
+            {
+              "text": "zij",
+              "syllabic": "single"
+            },
+            {
+              "text": "God,",
+              "syllabic": "single"
+            },
+            {
+              "text": "e",
+              "syllabic": "begin"
+            },
+            {
+              "text": "re",
+              "syllabic": "end"
+            },
+            {
+              "text": "zij",
+              "syllabic": "single"
+            },
+            {
+              "text": "God",
+              "syllabic": "single"
+            }
+          ]
+        },
+        {
+          "raw": "In de hoge, in de hoge, in de hoge",
+          "display": "In de hoge, in de hoge, in de hoge",
+          "tokens": [
+            {
+              "text": "In",
+              "syllabic": "single"
+            },
+            {
+              "text": "de",
+              "syllabic": "single"
+            },
+            {
+              "text": "ho",
+              "syllabic": "begin"
+            },
+            {
+              "text": "ge,",
+              "syllabic": "end"
+            },
+            {
+              "text": "in",
+              "syllabic": "single"
+            },
+            {
+              "text": "de",
+              "syllabic": "single"
+            },
+            {
+              "text": "ho",
+              "syllabic": "begin"
+            },
+            {
+              "text": "ge,",
+              "syllabic": "end"
+            },
+            {
+              "text": "in",
+              "syllabic": "single"
+            },
+            {
+              "text": "de",
+              "syllabic": "single"
+            },
+            {
+              "text": "ho",
+              "syllabic": "begin"
+            },
+            {
+              "text": "ge",
+              "syllabic": "end"
+            }
+          ]
+        },
+        {
+          "raw": "Vrede op aarde, vrede op aarde",
+          "display": "Vrede op aarde, vrede op aarde",
+          "tokens": [
+            {
+              "text": "Vre",
+              "syllabic": "begin"
+            },
+            {
+              "text": "de",
+              "syllabic": "end"
+            },
+            {
+              "text": "op",
+              "syllabic": "single"
+            },
+            {
+              "text": "aar",
+              "syllabic": "begin"
+            },
+            {
+              "text": "de,",
+              "syllabic": "end"
+            },
+            {
+              "text": "vre",
+              "syllabic": "begin"
+            },
+            {
+              "text": "de",
+              "syllabic": "end"
+            },
+            {
+              "text": "op",
+              "syllabic": "single"
+            },
+            {
+              "text": "aar",
+              "syllabic": "begin"
+            },
+            {
+              "text": "de",
+              "syllabic": "end"
+            }
+          ]
+        },
+        {
+          "raw": "In de mensen een welbehagen.",
+          "display": "In de mensen een welbehagen.",
+          "tokens": [
+            {
+              "text": "In",
+              "syllabic": "single"
+            },
+            {
+              "text": "de",
+              "syllabic": "single"
+            },
+            {
+              "text": "men",
+              "syllabic": "begin"
+            },
+            {
+              "text": "sen",
+              "syllabic": "end"
+            },
+            {
+              "text": "een",
+              "syllabic": "single"
+            },
+            {
+              "text": "wel",
+              "syllabic": "begin"
+            },
+            {
+              "text": "be",
+              "syllabic": "middle"
+            },
+            {
+              "text": "ha",
+              "syllabic": "middle"
+            },
+            {
+              "text": "gen.",
+              "syllabic": "end"
+            }
+          ]
+        },
+        {
+          "raw": "Amen, amen.",
+          "display": "Amen, amen.",
+          "tokens": [
+            {
+              "text": "A",
+              "syllabic": "begin"
+            },
+            {
+              "text": "men,",
+              "syllabic": "end"
+            },
+            {
+              "text": "a",
+              "syllabic": "begin"
+            },
+            {
+              "text": "men.",
               "syllabic": "end"
             }
           ]

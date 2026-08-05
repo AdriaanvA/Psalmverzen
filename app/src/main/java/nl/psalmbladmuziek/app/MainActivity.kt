@@ -5,9 +5,13 @@ import android.os.Bundle
 import android.view.View
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.lifecycle.lifecycleScope
 import androidx.viewpager2.widget.ViewPager2
 import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class MainActivity : AppCompatActivity() {
 
@@ -20,8 +24,9 @@ class MainActivity : AppCompatActivity() {
         val tabLayout = findViewById<TabLayout>(R.id.tabLayout)
         val viewPager = findViewById<ViewPager2>(R.id.viewPager)
 
+        // For now, let's load synchronously to see if it fixes the "hang" (which might be a missing UI update)
         HymnRepository.refreshDownloadedContent(this)
-        ContentDownloadWorker.enqueueIfConfigured(this)
+        // ContentDownloadWorker.enqueueIfConfigured(this)
 
         val adapter = BookPagerAdapter(this, HymnRepository.bookTitles)
         viewPager.adapter = adapter

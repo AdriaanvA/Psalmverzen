@@ -43,7 +43,16 @@ class BookFragment : Fragment() {
         val bookType = arguments?.getString("BOOK_TYPE") ?: return
         val gridView = view.findViewById<GridView>(R.id.psalmGridView)
         val emptyTextView = view.findViewById<TextView>(R.id.emptyTextView)
+        val progressBar = view.findViewById<View>(R.id.progressBar)
 
+        if (!HymnRepository.isReady) {
+            gridView.visibility = View.GONE
+            emptyTextView.visibility = View.GONE
+            progressBar.visibility = View.VISIBLE
+            return
+        }
+
+        progressBar.visibility = View.GONE
         if (bookType == HymnRepository.PSALMS_TITLE) {
             emptyTextView.visibility = View.GONE
             gridView.visibility = View.VISIBLE
@@ -218,14 +227,16 @@ class BookFragment : Fragment() {
             17 to "1 Samuël 2 – Lofzang van Hanna",
             18 to "2 Samuël 1 – Klaaglied van David",
             19 to "2 Samuël 22 – Loflied van David (Psalm 18)",
-            20 to "Jesaja 12 – Danklied",
-            21 to "Jesaja 26 – Lied van Juda",
-            22 to "Jesaja 38 – Lofzang van Hizkia",
-            23 to "Habakuk 3 – Gebed/Lied van Habakuk",
-            24 to "Lukas 2 – Ere zij God",
-            25 to "Openbaring 5 – Lofzang voor het Lam",
-            26 to "Openbaring 15 – Lied van Mozes en het Lam",
-            27 to "Openbaring 19 – Halleluja's",
+            20 to "Jesaja 5 – Lied van den wijngaard",
+            21 to "Jesaja 12 – Danklied",
+            22 to "Jesaja 26 – Lied van Juda",
+            23 to "Jesaja 38 – Lofzang van Hizkia",
+            24 to "Jesaja 42 – Nieuw Lied van Jesaja",
+            25 to "Habakuk 3 – Gebed/Lied van Habakuk",
+            26 to "Lukas 2 – Ere zij God",
+            27 to "Openbaring 5 – Lofzang voor het Lam",
+            28 to "Openbaring 15 – Lied van Mozes en het Lam",
+            29 to "Openbaring 19 – Halleluja's",
         )
     }
 }

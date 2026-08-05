@@ -2,6 +2,7 @@ package nl.psalmbladmuziek.app
 
 import android.content.Context
 import org.json.JSONArray
+import org.json.JSONException
 import org.json.JSONObject
 
 object ScoreBundleRenderer {
@@ -20,9 +21,13 @@ object ScoreBundleRenderer {
      * de eigen SVG-renderer (score_renderer.html).
      */
     fun readScoreModel(context: Context, verse: Verse): String {
-        val text = JSONObject(ContentStorage.readBundledAsset(context, textAssetPath(verse)))
-        val melody = JSONObject(ContentStorage.readBundledAsset(context, melodyFilePath(text, verse)))
-        return buildScoreModel(melody, text, verse).toString()
+        return try {
+            val text = JSONObject(ContentStorage.readBundledAsset(context, textAssetPath(verse)))
+            val melody = JSONObject(ContentStorage.readBundledAsset(context, melodyFilePath(text, verse)))
+            buildScoreModelOrNull(melody, text, verse)?.toString() ?: "{}"
+        } catch (_: Exception) {
+            "{}"
+        }
     }
 
     /**
@@ -38,8 +43,8 @@ object ScoreBundleRenderer {
                 "content/psalms/texts/Psalm${number.toString().padStart(3, '0')}.json"
             }
             val text = JSONObject(ContentStorage.readBundledAsset(context, path))
-            text.optString("about", "").trim().ifBlank { null }
-        } catch (e: Exception) {
+            text.safeString("about").trim().ifBlank { null }
+        } catch (_: Exception) {
             null
         }
     }
@@ -56,98 +61,103 @@ object ScoreBundleRenderer {
                 "content/psalms/texts/Psalm${number.toString().padStart(3, '0')}.json"
             }
             val text = JSONObject(ContentStorage.readBundledAsset(context, path))
-            val verses = text.getJSONArray("verses")
+            val verses = text.safeJSONArray("verses")
             val map = HashMap<Int, List<String>>()
-            for (i in 0 until verses.length()) {
-                val verse = verses.getJSONObject(i)
-                val lines = verse.getJSONArray("lines")
-                val lineList = ArrayList<String>(lines.length())
-                for (j in 0 until lines.length()) {
-                    lineList.add(lines.getJSONObject(j).optString("raw"))
+            for (i in 0 until (verses?.length() ?: 0)) {
+                val verse = verses?.safeJSONObject(i) ?: continue
+                val lines = verse.safeJSONArray("lines")
+                val lineList = ArrayList<String>(lines?.length() ?: 0)
+                for (j in 0 until (lines?.length() ?: 0)) {
+                    lineList.add(lines?.safeJSONObject(j)?.safeString("raw") ?: "")
                 }
-                map[verse.getInt("number")] = lineList
+                map[verse.safeInt("number")] = lineList
             }
             map
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             emptyMap()
         }
     }
 
-    private fun buildScoreModel(melody: JSONObject, text: JSONObject, verse: Verse): JSONObject {
-        val melodyLines = melody.getJSONObject("melody").getJSONArray("lines")
-        val verseSource = findVerse(text.getJSONArray("verses"), verse.verse)
-        val lyricLines = verseSource.getJSONArray("lines")
-        val lineCount = minOf(melodyLines.length(), lyricLines.length())
-        val partName = if (verse.type == "Gezang") "Gezang" else "Psalm"
+    fun buildScoreModelOrNull(melody: JSONObject, text: JSONObject, verse: Verse): JSONObject? {
+        return try {
+            val melodyLines = melody.safeJSONObject("melody")?.safeJSONArray("lines")
+            val verseSource = findVerse(text.safeJSONArray("verses"), verse.verse)
+            val lyricLines = verseSource?.safeJSONArray("lines")
+            val lineCount = minOf(melodyLines?.length() ?: 0, lyricLines?.length() ?: 0)
+            val partName = if (verse.type == "Gezang") "Gezang" else "Psalm"
 
-        val linesJson = JSONArray()
-        for (lineIndex in 0 until lineCount) {
-            val notes = melodyLines.getJSONArray(lineIndex)
-            val tokens = lyricLines.getJSONObject(lineIndex).getJSONArray("tokens")
-            val slots = JSONArray()
-            var tokenIndex = 0
-            var currentSlot: JSONObject? = null
-            for (noteIndex in 0 until notes.length()) {
-                val note = notes.getJSONObject(noteIndex)
-                if (note.optBoolean("hidden")) continue
-                val noteJson = noteJsonModel(note)
-                val isRest = note.getBoolean("rest")
-                val hasLyric = note.optBoolean("lyricSlot") && tokenIndex < tokens.length()
-                when {
-                    isRest -> {
-                        slots.put(
-                            JSONObject()
-                                .put("text", "")
-                                .put("syllabic", "")
-                                .put("rest", true)
-                                .put("notes", JSONArray().put(noteJson))
-                        )
-                        currentSlot = null
-                    }
-                    hasLyric -> {
-                        val token = tokens.getJSONObject(tokenIndex++)
-                        val slot = JSONObject()
-                            .put("text", token.getString("text"))
-                            .put("syllabic", token.optString("syllabic", "single"))
-                            .put("rest", false)
-                            .put("notes", JSONArray().put(noteJson))
-                        slots.put(slot)
-                        currentSlot = slot
-                    }
-                    else -> {
-                        val slot = currentSlot
-                        if (slot != null) {
-                            slot.getJSONArray("notes").put(noteJson)
-                        } else {
-                            val newSlot = JSONObject()
-                                .put("text", "")
-                                .put("syllabic", "")
+            val linesJson = JSONArray()
+            for (lineIndex in 0 until lineCount) {
+                val notes = melodyLines?.safeJSONArray(lineIndex) ?: continue
+                val line = lyricLines?.safeJSONObject(lineIndex)
+                val tokens = line?.safeJSONArray("tokens") ?: JSONArray()
+                val slots = JSONArray()
+                var tokenIndex = 0
+                var currentSlot: JSONObject? = null
+                for (noteIndex in 0 until notes.length()) {
+                    val note = notes.safeJSONObject(noteIndex) ?: continue
+                    if (note.safeBoolean("hidden")) continue
+                    val noteJson = noteJsonModel(note)
+                    val isRest = note.safeBoolean("rest")
+                    val hasLyric = note.safeBoolean("lyricSlot") && tokenIndex < tokens.length()
+                    when {
+                        isRest -> {
+                            slots.put(
+                                JSONObject()
+                                    .put("text", "")
+                                    .put("syllabic", "")
+                                    .put("rest", true)
+                                    .put("notes", JSONArray().put(noteJson))
+                            )
+                            currentSlot = null
+                        }
+                        hasLyric -> {
+                            val token = tokens.safeJSONObject(tokenIndex++) ?: continue
+                            val slot = JSONObject()
+                                .put("text", token.safeString("text", ""))
+                                .put("syllabic", token.safeString("syllabic", "single"))
                                 .put("rest", false)
                                 .put("notes", JSONArray().put(noteJson))
-                            slots.put(newSlot)
-                            currentSlot = newSlot
+                            slots.put(slot)
+                            currentSlot = slot
+                        }
+                        else -> {
+                            val slot = currentSlot
+                            if (slot != null) {
+                                slot.getJSONArray("notes").put(noteJson)
+                            } else {
+                                val newSlot = JSONObject()
+                                    .put("text", "")
+                                    .put("syllabic", "")
+                                    .put("rest", false)
+                                    .put("notes", JSONArray().put(noteJson))
+                                slots.put(newSlot)
+                                currentSlot = newSlot
+                            }
                         }
                     }
                 }
+                linesJson.put(JSONObject().put("slots", slots))
             }
-            linesJson.put(JSONObject().put("slots", slots))
-        }
 
-        return JSONObject()
-            .put("title", "$partName ${verse.number} vers ${verse.verse}")
-            .put("fifths", melody.getInt("fifths"))
-            .put("clef", "G")
-            .put("lines", linesJson)
+            JSONObject()
+                .put("title", "$partName ${verse.number} vers ${verse.verse}")
+                .put("fifths", melody.safeInt("fifths", 0))
+                .put("clef", "G")
+                .put("lines", linesJson)
+        } catch (_: Exception) {
+            null
+        }
     }
 
     private fun noteJsonModel(note: JSONObject): JSONObject {
         return JSONObject()
-            .put("step", note.optString("step"))
-            .put("alter", if (note.isNull("alter")) 0 else note.optInt("alter"))
-            .put("octave", note.optInt("octave"))
-            .put("type", note.optString("type"))
-            .put("dot", note.optBoolean("dot"))
-            .put("rest", note.getBoolean("rest"))
+            .put("step", note.safeString("step"))
+            .put("alter", if (note.safeIsNull("alter")) 0 else note.safeInt("alter"))
+            .put("octave", note.safeInt("octave"))
+            .put("type", note.safeString("type"))
+            .put("dot", note.safeBoolean("dot"))
+            .put("rest", note.safeBoolean("rest"))
     }
 
     private fun textAssetPath(verse: Verse): String = when (verse.type) {
@@ -161,16 +171,16 @@ object ScoreBundleRenderer {
      * hebben); anders wordt de algemene "melodyFile" van het lied gebruikt.
      */
     private fun melodyFilePath(text: JSONObject, verse: Verse): String {
-        val verseSource = findVerse(text.getJSONArray("verses"), verse.verse)
-        val perVerse = verseSource.optString("melodyFile", "").trim()
-        return if (perVerse.isNotEmpty()) perVerse else text.getString("melodyFile")
+        val verseSource = findVerse(text.safeJSONArray("verses"), verse.verse)
+        val perVerse = verseSource?.safeString("melodyFile")?.trim()
+        return if (!perVerse.isNullOrEmpty()) perVerse else text.safeString("melodyFile")
     }
 
     private fun renderMusicXml(melody: JSONObject, text: JSONObject, verse: Verse): String {
-        val divisions = melody.getInt("divisions")
-        val melodyLines = melody.getJSONObject("melody").getJSONArray("lines")
-        val verseSource = findVerse(text.getJSONArray("verses"), verse.verse)
-        val lyricLines = verseSource.getJSONArray("lines")
+        val divisions = melody.safeInt("divisions")
+        val melodyLines = melody.safeJSONObject("melody")?.safeJSONArray("lines") ?: JSONArray()
+        val verseSource = findVerse(text.safeJSONArray("verses"), verse.verse)
+        val lyricLines = verseSource?.safeJSONArray("lines") ?: JSONArray()
         val lineCount = minOf(melodyLines.length(), lyricLines.length())
         val partName = if (verse.type == "Gezang") "Gezang" else "Psalm"
 
@@ -178,7 +188,7 @@ object ScoreBundleRenderer {
             appendLine("<?xml version=\"1.0\" encoding=\"UTF-8\"?>")
             appendLine("<score-partwise version=\"4.0\">")
             appendLine("  <work><work-title>${escapeXml(partName)} ${verse.number} vers ${verse.verse}</work-title></work>")
-            appendLine("  <identification><creator type=\"composer\">${escapeXml(melody.optString("composer"))}</creator></identification>")
+            appendLine("  <identification><creator type=\"composer\">${escapeXml(melody.safeString("composer"))}</creator></identification>")
             appendLine("  <part-list>")
             appendLine("    <score-part id=\"P1\"><part-name>${escapeXml(partName)}</part-name></score-part>")
             appendLine("  </part-list>")
@@ -191,7 +201,7 @@ object ScoreBundleRenderer {
                 var tokenIndex = 0
                 for (noteIndex in 0 until notes.length()) {
                     val note = notes.getJSONObject(noteIndex)
-                    val lyric = if (note.optBoolean("lyricSlot") && tokenIndex < tokens.length()) {
+                    val lyric = if (note.safeBoolean("lyricSlot") && tokenIndex < tokens.length()) {
                         tokens.getJSONObject(tokenIndex++)
                     } else {
                         null
@@ -205,12 +215,13 @@ object ScoreBundleRenderer {
         }
     }
 
-    private fun findVerse(verses: JSONArray, verseNumber: Int): JSONObject {
+    private fun findVerse(verses: JSONArray?, verseNumber: Int): JSONObject? {
+        if (verses == null) return null
         for (index in 0 until verses.length()) {
-            val verse = verses.getJSONObject(index)
-            if (verse.getInt("number") == verseNumber) return verse
+            val verse = verses.safeJSONObject(index) ?: continue
+            if (verse.safeInt("number") == verseNumber) return verse
         }
-        throw IllegalArgumentException("Verse $verseNumber not found in score bundle")
+        return null
     }
 
     private fun attributesXml(lineIndex: Int, notes: JSONArray, divisions: Int, fifths: Int): String {
@@ -226,29 +237,29 @@ object ScoreBundleRenderer {
     private fun totalDuration(notes: JSONArray): Int {
         var total = 0
         for (index in 0 until notes.length()) {
-            total += notes.getJSONObject(index).getInt("duration")
+            total += notes.safeJSONObject(index)?.safeInt("duration") ?: 0
         }
         return total
     }
 
     private fun noteXml(note: JSONObject, lyric: JSONObject?): String {
-        val noteAttributes = if (note.optBoolean("hidden")) " print-object=\"no\"" else ""
-        val pitchXml = if (note.getBoolean("rest")) {
+        val noteAttributes = if (note.safeBoolean("hidden")) " print-object=\"no\"" else ""
+        val pitchXml = if (note.safeBoolean("rest")) {
             "<rest />"
         } else {
-            val alterXml = if (!note.isNull("alter") && note.optInt("alter") != 0) "<alter>${note.getInt("alter")}</alter>" else ""
-            "<pitch><step>${note.getString("step")}</step>$alterXml<octave>${note.getInt("octave")}</octave></pitch>"
+            val alterXml = if (!note.safeIsNull("alter") && note.safeInt("alter") != 0) "<alter>${note.safeInt("alter")}</alter>" else ""
+            "<pitch><step>${note.safeString("step")}</step>$alterXml<octave>${note.safeInt("octave")}</octave></pitch>"
         }
-        val tie = note.optString("tie")
+        val tie = note.safeString("tie")
         val tieTag = if (tie.isNotBlank()) "<tie type=\"$tie\"/>" else ""
         val tiedTag = if (tie.isNotBlank()) "<notations><tied type=\"$tie\"/></notations>" else ""
-        val dotTag = if (note.optBoolean("dot")) "<dot/>" else ""
+        val dotTag = if (note.safeBoolean("dot")) "<dot/>" else ""
         val lyricTag = if (lyric == null) "" else lyricXml(lyric)
-        return "      <note$noteAttributes>$pitchXml<duration>${note.getInt("duration")}</duration>$tieTag<voice>1</voice><type>${note.getString("type")}</type>$dotTag$tiedTag$lyricTag</note>"
+        return "      <note$noteAttributes>$pitchXml<duration>${note.safeInt("duration")}</duration>$tieTag<voice>1</voice><type>${note.safeString("type")}</type>$dotTag$tiedTag$lyricTag</note>"
     }
 
     private fun lyricXml(lyric: JSONObject): String {
-        return "<lyric number=\"1\"><syllabic>${escapeXml(lyric.getString("syllabic"))}</syllabic><text>${escapeXml(lyric.getString("text"))}</text></lyric>"
+        return "<lyric number=\"1\"><syllabic>${escapeXml(lyric.safeString("syllabic"))}</syllabic><text>${escapeXml(lyric.safeString("text"))}</text></lyric>"
     }
 
     private fun escapeXml(value: String): String = value
@@ -257,4 +268,52 @@ object ScoreBundleRenderer {
         .replace(">", "&gt;")
         .replace("\"", "&quot;")
         .replace("'", "&apos;")
+
+    private fun JSONObject.safeJSONObject(key: String): JSONObject? = try {
+        getJSONObject(key)
+    } catch (_: JSONException) {
+        null
+    }
+
+    private fun JSONObject.safeJSONArray(key: String): JSONArray? = try {
+        getJSONArray(key)
+    } catch (_: JSONException) {
+        null
+    }
+
+    private fun JSONObject.safeInt(key: String, default: Int = 0): Int = try {
+        getInt(key)
+    } catch (_: JSONException) {
+        default
+    }
+
+    private fun JSONObject.safeString(key: String, default: String = ""): String = try {
+        getString(key)
+    } catch (_: JSONException) {
+        default
+    }
+
+    private fun JSONObject.safeBoolean(key: String, default: Boolean = false): Boolean = try {
+        getBoolean(key)
+    } catch (_: JSONException) {
+        default
+    }
+
+    private fun JSONObject.safeIsNull(key: String): Boolean = try {
+        isNull(key)
+    } catch (_: JSONException) {
+        true
+    }
+
+    private fun JSONArray.safeJSONObject(index: Int): JSONObject? = try {
+        getJSONObject(index)
+    } catch (_: JSONException) {
+        null
+    }
+
+    private fun JSONArray.safeJSONArray(index: Int): JSONArray? = try {
+        getJSONArray(index)
+    } catch (_: JSONException) {
+        null
+    }
 }
