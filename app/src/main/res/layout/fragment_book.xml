@@ -14,7 +14,7 @@
         android:paddingStart="12dp"
         android:paddingTop="14dp"
         android:paddingEnd="12dp"
-        android:paddingBottom="14dp"
+        android:paddingBottom="80dp"
         android:stretchMode="columnWidth"
         android:verticalSpacing="8dp" />
 
@@ -27,5 +27,12 @@
         android:text="Nog geen verzen toegevoegd."
         android:textColor="@color/app_text_secondary"
         android:textSize="16sp"
+        android:visibility="gone" />
+
+    <ProgressBar
+        android:id="@+id/progressBar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
         android:visibility="gone" />
 </FrameLayout>

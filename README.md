@@ -7,7 +7,7 @@
 ## Belangrijkste Kenmerken
 
 ### 🎵 Bladmuziek & Tekst in één oogopslag
-Lees de tekst en de noten tegelijkertijd. De app is geoptimaliseerd voor leesbaarheid op mobiele apparaten, zodat je nooit meer hoeft te schakelen tussen tekst en muziek.
+Lees de tekst en de noten tegelijkertijd. De app is geoptimaliseerd voor leesbaarheid op mobiele apparaten, zodat je de tekst en noten op 1 scherm kan zien.
 
 ### 🔍 Zoom & Schaalbaarheid
 Dankzij de ondersteuning voor knijpgebaren (pinch-to-zoom) kun je zowel de bladmuziek als de tekst traploos vergroten of verkleinen. Of je nu een groot tablet of een kleine telefoon gebruikt, de weergave past zich altijd aan jouw voorkeur aan.

@@ -1,199 +1,31 @@
 {
   "book": "gezangen",
   "number": 27,
-  "title": "Halleluja's",
-  "about": "Deze berijming van Openbaring 19:1-8 is primair gebaseerd op de Statenvertaling, met raadpleging van de Griekse grondtekst ter verduidelijking van kernwoorden, beelden en tekstverbanden.\n\nHet doel was een zingbare Schriftberijming te maken in de stijl van de Psalmberijming van 1773 en de Enige Gezangen, op de wijs van Psalm 98.\n\nBijbelse kernwoorden en beelden zijn zoveel mogelijk behouden. Betekenis ging daarbij vóór rijm.\n\nEr is bewust vermeden om nieuwe gedachten, uitleg of toepassingen toe te voegen. Waar de brontekst weinig woorden bevatte, is gekozen voor herhaling van bestaande kernwoorden of parallelismen uit hetzelfde Schriftgedeelte.\n\nDe indeling volgt de natuurlijke gedachte-eenheden van het Bijbelgedeelte: vers 1-2, vers 3-6 en vers 7-8.\n\nDeze berijming beoogt het Hallelujah uit Openbaring 19 zo getrouw mogelijk zingbaar weer te geven binnen de Nederlandse gereformeerde psalm- en gezangtraditie.",
+  "title": "Lofzang voor het Lam",
+  "about": "Deze berijming van Openbaring 5:9-14 is primair gebaseerd op de Statenvertaling, met raadpleging van de Griekse grondtekst ter verduidelijking van kernwoorden, beelden en tekstverbanden.\n\nHet doel was een zingbare Schriftberijming te maken in de stijl van de Psalmberijming van 1773 en de Enige Gezangen, op de wijs van Psalm 98.\n\nBijbelse kernwoorden, beelden en werkwoordparen zijn zoveel mogelijk behouden. Betekenis ging daarbij vóór rijm.\n\nEr is bewust vermeden om nieuwe gedachten, uitleg of toepassingen toe te voegen. Waar de brontekst weinig woorden bevatte, is gekozen voor herhaling van bestaande kernwoorden of parallelismen uit hetzelfde Schriftgedeelte.\n\nDe indeling volgt de natuurlijke gedachte-eenheden van het Bijbelgedeelte: vers 9 - 10a, vers 10b-12a en vers 12b-14.\n\nDeze berijming beoogt het nieuwe lied van het Lam uit Openbaring 5 zo getrouw mogelijk zingbaar weer te geven binnen de Nederlandse gereformeerde psalm- en gezangtraditie.",
   "melodyFile": "content/melodies/Psalm066.json",
   "verses": [
     {
       "number": 1,
       "lines": [
         {
-          "raw": "Halleluja! Heil en heerlijkheid;",
-          "display": "Halleluja! Heil en heerlijkheid;",
+          "raw": "Zij zingen ‘n nieuw gezang den Heere;",
+          "display": "Zij zingen ‘n nieuw gezang den Heere;",
           "tokens": [
             {
-              "text": "Hal",
+              "text": "Zij",
+              "syllabic": "single"
+            },
+            {
+              "text": "zin",
               "syllabic": "begin"
             },
             {
-              "text": "le",
-              "syllabic": "middle"
-            },
-            {
-              "text": "lu",
-              "syllabic": "middle"
-            },
-            {
-              "text": "ja!",
+              "text": "gen",
               "syllabic": "end"
             },
             {
-              "text": "Heil",
-              "syllabic": "single"
-            },
-            {
-              "text": "en",
-              "syllabic": "single"
-            },
-            {
-              "text": "heer",
-              "syllabic": "begin"
-            },
-            {
-              "text": "lijk",
-              "syllabic": "middle"
-            },
-            {
-              "text": "heid;",
-              "syllabic": "end"
-            }
-          ]
-        },
-        {
-          "raw": "En eer en kracht zij onzen God.",
-          "display": "En eer en kracht zij onzen God.",
-          "tokens": [
-            {
-              "text": "En",
-              "syllabic": "single"
-            },
-            {
-              "text": "eer",
-              "syllabic": "single"
-            },
-            {
-              "text": "en",
-              "syllabic": "single"
-            },
-            {
-              "text": "kracht",
-              "syllabic": "single"
-            },
-            {
-              "text": "zij",
-              "syllabic": "single"
-            },
-            {
-              "text": "on",
-              "syllabic": "begin"
-            },
-            {
-              "text": "zen",
-              "syllabic": "end"
-            },
-            {
-              "text": "God.",
-              "syllabic": "single"
-            }
-          ]
-        },
-        {
-          "raw": "Waarachtig en rechtvaardig zijn zij;",
-          "display": "Waarachtig en rechtvaardig zijn zij;",
-          "tokens": [
-            {
-              "text": "Waar",
-              "syllabic": "begin"
-            },
-            {
-              "text": "ach",
-              "syllabic": "middle"
-            },
-            {
-              "text": "tig",
-              "syllabic": "end"
-            },
-            {
-              "text": "en",
-              "syllabic": "single"
-            },
-            {
-              "text": "recht",
-              "syllabic": "begin"
-            },
-            {
-              "text": "vaar",
-              "syllabic": "middle"
-            },
-            {
-              "text": "dig",
-              "syllabic": "end"
-            },
-            {
-              "text": "zijn",
-              "syllabic": "single"
-            },
-            {
-              "text": "zij;",
-              "syllabic": "single"
-            }
-          ]
-        },
-        {
-          "raw": "De oordelen van onzen God.",
-          "display": "De oordelen van onzen God.",
-          "tokens": [
-            {
-              "text": "De",
-              "syllabic": "single"
-            },
-            {
-              "text": "oor",
-              "syllabic": "begin"
-            },
-            {
-              "text": "de",
-              "syllabic": "middle"
-            },
-            {
-              "text": "len",
-              "syllabic": "end"
-            },
-            {
-              "text": "van",
-              "syllabic": "single"
-            },
-            {
-              "text": "on",
-              "syllabic": "begin"
-            },
-            {
-              "text": "zen",
-              "syllabic": "end"
-            },
-            {
-              "text": "God.",
-              "syllabic": "single"
-            }
-          ]
-        },
-        {
-          "raw": "Hij heeft de grote hoer geoordeeld;",
-          "display": "Hij heeft de grote hoer geoordeeld;",
-          "tokens": [
-            {
-              "text": "Hij",
-              "syllabic": "single"
-            },
-            {
-              "text": "heeft",
-              "syllabic": "single"
-            },
-            {
-              "text": "de",
-              "syllabic": "single"
-            },
-            {
-              "text": "gro",
-              "syllabic": "begin"
-            },
-            {
-              "text": "te",
-              "syllabic": "end"
-            },
-            {
-              "text": "hoer",
+              "text": "‘n nieuw",
               "syllabic": "single"
             },
             {
@@ -201,71 +33,121 @@
               "syllabic": "begin"
             },
             {
-              "text": "oor",
-              "syllabic": "middle"
+              "text": "zang",
+              "syllabic": "end"
             },
             {
-              "text": "deeld;",
+              "text": "den",
+              "syllabic": "single"
+            },
+            {
+              "text": "Hee",
+              "syllabic": "begin"
+            },
+            {
+              "text": "re;",
               "syllabic": "end"
             }
           ]
         },
         {
-          "raw": "Die d'aarde met haar hoererij",
-          "display": "Die d'aarde met haar hoererij",
+          "raw": "Gij zijt waardig het boek te neem;",
+          "display": "Gij zijt waardig het boek te neem;",
           "tokens": [
             {
-              "text": "Die",
+              "text": "Gij",
               "syllabic": "single"
             },
             {
-              "text": "d'aar",
+              "text": "zijt",
+              "syllabic": "single"
+            },
+            {
+              "text": "waar",
               "syllabic": "begin"
             },
             {
-              "text": "de",
+              "text": "dig",
               "syllabic": "end"
             },
             {
-              "text": "met",
+              "text": "het",
               "syllabic": "single"
             },
             {
-              "text": "haar",
+              "text": "boek",
               "syllabic": "single"
             },
             {
-              "text": "hoe",
+              "text": "te",
+              "syllabic": "single"
+            },
+            {
+              "text": "neem;",
+              "syllabic": "single"
+            }
+          ]
+        },
+        {
+          "raw": "Zijn zegels opent Gij, o Heere;",
+          "display": "Zijn zegels opent Gij, o Heere;",
+          "tokens": [
+            {
+              "text": "Zijn",
+              "syllabic": "single"
+            },
+            {
+              "text": "ze",
               "syllabic": "begin"
             },
             {
-              "text": "re",
-              "syllabic": "middle"
+              "text": "gels",
+              "syllabic": "end"
             },
             {
-              "text": "rij",
+              "text": "o",
+              "syllabic": "begin"
+            },
+            {
+              "text": "pent",
+              "syllabic": "end"
+            },
+            {
+              "text": "Gij,",
+              "syllabic": "single"
+            },
+            {
+              "text": "o",
+              "syllabic": "single"
+            },
+            {
+              "text": "Hee",
+              "syllabic": "begin"
+            },
+            {
+              "text": "re;",
               "syllabic": "end"
             }
           ]
         },
         {
-          "raw": "Verdorven heeft; het bloed gewroken;",
-          "display": "Verdorven heeft; het bloed gewroken;",
+          "raw": "Want Gij zijt als het Lam geslacht.",
+          "display": "Want Gij zijt als het Lam geslacht.",
           "tokens": [
             {
-              "text": "Ver",
-              "syllabic": "begin"
+              "text": "Want",
+              "syllabic": "single"
             },
             {
-              "text": "dor",
-              "syllabic": "middle"
+              "text": "Gij",
+              "syllabic": "single"
             },
             {
-              "text": "ven",
-              "syllabic": "end"
+              "text": "zijt",
+              "syllabic": "single"
             },
             {
-              "text": "heeft;",
+              "text": "als",
               "syllabic": "single"
             },
             {
@@ -273,7 +155,7 @@
               "syllabic": "single"
             },
             {
-              "text": "bloed",
+              "text": "Lam",
               "syllabic": "single"
             },
             {
@@ -281,41 +163,71 @@
               "syllabic": "begin"
             },
             {
-              "text": "wro",
-              "syllabic": "middle"
-            },
-            {
-              "text": "ken;",
+              "text": "slacht.",
               "syllabic": "end"
             }
           ]
         },
         {
-          "raw": "Der dienaars bloed heeft Hij gewraakt.",
-          "display": "Der dienaars bloed heeft Hij gewraakt.",
+          "raw": "Gij hebt ons Gode Zelf vrijgekocht,",
+          "display": "Gij hebt ons Gode Zelf vrijgekocht,",
           "tokens": [
             {
-              "text": "Der",
+              "text": "Gij",
               "syllabic": "single"
             },
             {
-              "text": "die",
+              "text": "hebt",
+              "syllabic": "single"
+            },
+            {
+              "text": "ons",
+              "syllabic": "single"
+            },
+            {
+              "text": "Go",
               "syllabic": "begin"
             },
             {
-              "text": "naars",
+              "text": "de",
               "syllabic": "end"
             },
             {
-              "text": "bloed",
+              "text": "Zelf",
               "syllabic": "single"
             },
             {
-              "text": "heeft",
+              "text": "vrij",
+              "syllabic": "begin"
+            },
+            {
+              "text": "ge",
+              "syllabic": "middle"
+            },
+            {
+              "text": "kocht,",
+              "syllabic": "end"
+            }
+          ]
+        },
+        {
+          "raw": "Met Uw bloed, uit geslacht en taal;",
+          "display": "Met Uw bloed, uit geslacht en taal;",
+          "tokens": [
+            {
+              "text": "Met",
               "syllabic": "single"
             },
             {
-              "text": "Hij",
+              "text": "Uw",
+              "syllabic": "single"
+            },
+            {
+              "text": "bloed,",
+              "syllabic": "single"
+            },
+            {
+              "text": "uit",
               "syllabic": "single"
             },
             {
@@ -323,7 +235,95 @@
               "syllabic": "begin"
             },
             {
-              "text": "wraakt.",
+              "text": "slacht",
+              "syllabic": "end"
+            },
+            {
+              "text": "en",
+              "syllabic": "single"
+            },
+            {
+              "text": "taal;",
+              "syllabic": "single"
+            }
+          ]
+        },
+        {
+          "raw": "Uit volk en natiën vrijgekocht;",
+          "display": "Uit volk en natiën vrijgekocht;",
+          "tokens": [
+            {
+              "text": "Uit",
+              "syllabic": "single"
+            },
+            {
+              "text": "volk",
+              "syllabic": "single"
+            },
+            {
+              "text": "en",
+              "syllabic": "single"
+            },
+            {
+              "text": "na",
+              "syllabic": "begin"
+            },
+            {
+              "text": "ti",
+              "syllabic": "middle"
+            },
+            {
+              "text": "ën",
+              "syllabic": "end"
+            },
+            {
+              "text": "vrij",
+              "syllabic": "begin"
+            },
+            {
+              "text": "ge",
+              "syllabic": "middle"
+            },
+            {
+              "text": "kocht;",
+              "syllabic": "end"
+            }
+          ]
+        },
+        {
+          "raw": "Tot koningen en priesteren.",
+          "display": "Tot koningen en priesteren.",
+          "tokens": [
+            {
+              "text": "Tot",
+              "syllabic": "single"
+            },
+            {
+              "text": "ko",
+              "syllabic": "begin"
+            },
+            {
+              "text": "nin",
+              "syllabic": "middle"
+            },
+            {
+              "text": "gen",
+              "syllabic": "end"
+            },
+            {
+              "text": "en",
+              "syllabic": "single"
+            },
+            {
+              "text": "pries",
+              "syllabic": "begin"
+            },
+            {
+              "text": "te",
+              "syllabic": "middle"
+            },
+            {
+              "text": "ren.",
               "syllabic": "end"
             }
           ]
@@ -334,88 +334,88 @@
       "number": 2,
       "lines": [
         {
-          "raw": "Halleluja! Haar rook stijgt steeds op;",
-          "display": "Halleluja! Haar rook stijgt steeds op;",
+          "raw": "Wij zullen heersen op de aarde;",
+          "display": "Wij zullen heersen op de aarde;",
           "tokens": [
             {
-              "text": "Hal",
+              "text": "Wij",
+              "syllabic": "single"
+            },
+            {
+              "text": "zul",
               "syllabic": "begin"
             },
             {
-              "text": "le",
-              "syllabic": "middle"
-            },
-            {
-              "text": "lu",
-              "syllabic": "middle"
-            },
-            {
-              "text": "ja!",
+              "text": "len",
               "syllabic": "end"
             },
             {
-              "text": "Haar",
-              "syllabic": "single"
-            },
-            {
-              "text": "rook",
-              "syllabic": "single"
-            },
-            {
-              "text": "stijgt",
-              "syllabic": "single"
-            },
-            {
-              "text": "steeds",
-              "syllabic": "single"
-            },
-            {
-              "text": "op;",
-              "syllabic": "single"
-            }
-          ]
-        },
-        {
-          "raw": "Tot in der eeuwen eeuwigheid.",
-          "display": "Tot in der eeuwen eeuwigheid.",
-          "tokens": [
-            {
-              "text": "Tot",
-              "syllabic": "single"
-            },
-            {
-              "text": "in",
-              "syllabic": "single"
-            },
-            {
-              "text": "der",
-              "syllabic": "single"
-            },
-            {
-              "text": "eeu",
+              "text": "heer",
               "syllabic": "begin"
             },
             {
-              "text": "wen",
+              "text": "sen",
               "syllabic": "end"
             },
             {
-              "text": "eeu",
+              "text": "op",
+              "syllabic": "single"
+            },
+            {
+              "text": "de",
+              "syllabic": "single"
+            },
+            {
+              "text": "aar",
               "syllabic": "begin"
             },
             {
-              "text": "wig",
-              "syllabic": "middle"
-            },
-            {
-              "text": "heid.",
+              "text": "de;",
               "syllabic": "end"
             }
           ]
         },
         {
-          "raw": "De dieren en de oudsten allen;",
-          "display": "De dieren en de oudsten allen;",
+          "raw": "Rondom den troon klinkt luide zang;",
+          "display": "Rondom den troon klinkt luide zang;",
+          "tokens": [
+            {
+              "text": "Ron",
+              "syllabic": "begin"
+            },
+            {
+              "text": "dom",
+              "syllabic": "end"
+            },
+            {
+              "text": "den",
+              "syllabic": "single"
+            },
+            {
+              "text": "troon",
+              "syllabic": "single"
+            },
+            {
+              "text": "klinkt",
+              "syllabic": "single"
+            },
+            {
+              "text": "lui",
+              "syllabic": "begin"
+            },
+            {
+              "text": "de",
+              "syllabic": "end"
+            },
+            {
+              "text": "zang;",
+              "syllabic": "single"
+            }
+          ]
+        },
+        {
+          "raw": "De dieren en de ouderlingen;",
+          "display": "De dieren en de ouderlingen;",
           "tokens": [
             {
               "text": "De",
@@ -438,205 +438,171 @@
               "syllabic": "single"
             },
             {
-              "text": "oud",
+              "text": "ou",
               "syllabic": "begin"
             },
             {
-              "text": "sten",
-              "syllabic": "end"
+              "text": "der",
+              "syllabic": "middle"
             },
             {
-              "text": "al",
-              "syllabic": "begin"
+              "text": "lin",
+              "syllabic": "middle"
             },
             {
-              "text": "len;",
+              "text": "gen;",
               "syllabic": "end"
             }
           ]
         },
         {
-          "raw": "Spreken: Amen, Halleluja.",
-          "display": "Spreken: Amen, Halleluja.",
+          "raw": "Verheffen 's Lams verheven Naam.",
+          "display": "Verheffen 's Lams verheven Naam.",
           "tokens": [
             {
-              "text": "Spre",
+              "text": "Ver",
               "syllabic": "begin"
             },
             {
-              "text": "ken:",
+              "text": "hef",
+              "syllabic": "middle"
+            },
+            {
+              "text": "fen",
               "syllabic": "end"
             },
             {
-              "text": "A",
+              "text": "'s Lams",
+              "syllabic": "single"
+            },
+            {
+              "text": "ver",
               "syllabic": "begin"
             },
             {
-              "text": "men,",
+              "text": "he",
+              "syllabic": "middle"
+            },
+            {
+              "text": "ven",
               "syllabic": "end"
             },
             {
-              "text": "Hal",
+              "text": "Naam.",
+              "syllabic": "single"
+            }
+          ]
+        },
+        {
+          "raw": "Vele engelen rondom den troon;",
+          "display": "Vele engelen rondom den troon;",
+          "tokens": [
+            {
+              "text": "Ve",
               "syllabic": "begin"
             },
             {
               "text": "le",
-              "syllabic": "middle"
-            },
-            {
-              "text": "lu",
-              "syllabic": "middle"
-            },
-            {
-              "text": "ja.",
               "syllabic": "end"
-            }
-          ]
-        },
-        {
-          "raw": "Looft onzen God, gij knechten van Hem;",
-          "display": "Looft onzen God, gij knechten van Hem;",
-          "tokens": [
-            {
-              "text": "Looft",
-              "syllabic": "single"
-            },
-            {
-              "text": "on",
-              "syllabic": "begin"
-            },
-            {
-              "text": "zen",
-              "syllabic": "end"
-            },
-            {
-              "text": "God,",
-              "syllabic": "single"
-            },
-            {
-              "text": "gij",
-              "syllabic": "single"
-            },
-            {
-              "text": "knech",
-              "syllabic": "begin"
-            },
-            {
-              "text": "ten",
-              "syllabic": "end"
-            },
-            {
-              "text": "van",
-              "syllabic": "single"
-            },
-            {
-              "text": "Hem;",
-              "syllabic": "single"
-            }
-          ]
-        },
-        {
-          "raw": "Gij die Hem vreest, klein en ook groot.",
-          "display": "Gij die Hem vreest, klein en ook groot.",
-          "tokens": [
-            {
-              "text": "Gij",
-              "syllabic": "single"
-            },
-            {
-              "text": "die",
-              "syllabic": "single"
-            },
-            {
-              "text": "Hem",
-              "syllabic": "single"
-            },
-            {
-              "text": "vreest,",
-              "syllabic": "single"
-            },
-            {
-              "text": "klein",
-              "syllabic": "single"
             },
             {
               "text": "en",
+              "syllabic": "begin"
+            },
+            {
+              "text": "ge",
+              "syllabic": "middle"
+            },
+            {
+              "text": "len",
+              "syllabic": "end"
+            },
+            {
+              "text": "ron",
+              "syllabic": "begin"
+            },
+            {
+              "text": "dom",
+              "syllabic": "end"
+            },
+            {
+              "text": "den",
               "syllabic": "single"
             },
             {
-              "text": "ook",
-              "syllabic": "single"
-            },
-            {
-              "text": "groot.",
+              "text": "troon;",
               "syllabic": "single"
             }
           ]
         },
         {
-          "raw": "Halleluja! De HEERE onz’ God;",
-          "display": "Halleluja! De HEERE onz’ God;",
+          "raw": "Zij roepen met een grote stem:",
+          "display": "Zij roepen met een grote stem:",
           "tokens": [
             {
-              "text": "Hal",
-              "syllabic": "begin"
-            },
-            {
-              "text": "le",
-              "syllabic": "middle"
-            },
-            {
-              "text": "lu",
-              "syllabic": "middle"
-            },
-            {
-              "text": "ja!",
-              "syllabic": "end"
-            },
-            {
-              "text": "De",
+              "text": "Zij",
               "syllabic": "single"
             },
             {
-              "text": "HEE",
+              "text": "roe",
               "syllabic": "begin"
             },
             {
-              "text": "RE",
+              "text": "pen",
               "syllabic": "end"
             },
             {
-              "text": "onz’",
+              "text": "met",
               "syllabic": "single"
             },
             {
-              "text": "God;",
+              "text": "een",
+              "syllabic": "single"
+            },
+            {
+              "text": "gro",
+              "syllabic": "begin"
+            },
+            {
+              "text": "te",
+              "syllabic": "end"
+            },
+            {
+              "text": "stem:",
               "syllabic": "single"
             }
           ]
         },
         {
-          "raw": "Heeft als Koning Zelf geregeerd.",
-          "display": "Heeft als Koning Zelf geregeerd.",
+          "raw": "Ja, 't Lam Dat eenmaal ons werd geslacht,",
+          "display": "Ja, 't Lam Dat eenmaal ons werd geslacht,",
           "tokens": [
             {
-              "text": "Heeft",
+              "text": "Ja,",
               "syllabic": "single"
             },
             {
-              "text": "als",
+              "text": "'t Lam",
               "syllabic": "single"
             },
             {
-              "text": "Ko",
+              "text": "Dat",
+              "syllabic": "single"
+            },
+            {
+              "text": "een",
               "syllabic": "begin"
             },
             {
-              "text": "ning",
+              "text": "maal",
               "syllabic": "end"
             },
             {
-              "text": "Zelf",
+              "text": "ons",
+              "syllabic": "single"
+            },
+            {
+              "text": "werd",
               "syllabic": "single"
             },
             {
@@ -644,12 +610,46 @@
               "syllabic": "begin"
             },
             {
-              "text": "re",
-              "syllabic": "middle"
+              "text": "slacht,",
+              "syllabic": "end"
+            }
+          ]
+        },
+        {
+          "raw": "Is waardig rijkdom, eer en kracht.",
+          "display": "Is waardig rijkdom, eer en kracht.",
+          "tokens": [
+            {
+              "text": "Is",
+              "syllabic": "single"
             },
             {
-              "text": "geerd.",
+              "text": "waar",
+              "syllabic": "begin"
+            },
+            {
+              "text": "dig",
               "syllabic": "end"
+            },
+            {
+              "text": "rijk",
+              "syllabic": "begin"
+            },
+            {
+              "text": "dom,",
+              "syllabic": "end"
+            },
+            {
+              "text": "eer",
+              "syllabic": "single"
+            },
+            {
+              "text": "en",
+              "syllabic": "single"
+            },
+            {
+              "text": "kracht.",
+              "syllabic": "single"
             }
           ]
         }
@@ -659,61 +659,31 @@
       "number": 3,
       "lines": [
         {
-          "raw": "Laat ons nu blijde en vrolijk zijn;",
-          "display": "Laat ons nu blijde en vrolijk zijn;",
+          "raw": "Wijsheid, eer, sterkte en heerlijkheid;",
+          "display": "Wijsheid, eer, sterkte en heerlijkheid;",
           "tokens": [
             {
-              "text": "Laat",
-              "syllabic": "single"
-            },
-            {
-              "text": "ons",
-              "syllabic": "single"
-            },
-            {
-              "text": "nu",
-              "syllabic": "single"
-            },
-            {
-              "text": "blij",
+              "text": "Wijs",
               "syllabic": "begin"
             },
             {
-              "text": "de",
+              "text": "heid,",
+              "syllabic": "end"
+            },
+            {
+              "text": "eer,",
+              "syllabic": "single"
+            },
+            {
+              "text": "sterk",
+              "syllabic": "begin"
+            },
+            {
+              "text": "te",
               "syllabic": "end"
             },
             {
               "text": "en",
-              "syllabic": "single"
-            },
-            {
-              "text": "vro",
-              "syllabic": "begin"
-            },
-            {
-              "text": "lijk",
-              "syllabic": "end"
-            },
-            {
-              "text": "zijn;",
-              "syllabic": "single"
-            }
-          ]
-        },
-        {
-          "raw": "En Hem de heerlijkheid geven.",
-          "display": "En Hem de heerlijkheid geven.",
-          "tokens": [
-            {
-              "text": "En",
-              "syllabic": "single"
-            },
-            {
-              "text": "Hem",
-              "syllabic": "single"
-            },
-            {
-              "text": "de",
               "syllabic": "single"
             },
             {
@@ -725,41 +695,101 @@
               "syllabic": "middle"
             },
             {
-              "text": "heid",
+              "text": "heid;",
               "syllabic": "end"
+            }
+          ]
+        },
+        {
+          "raw": "En zegening in eeuwigheid.",
+          "display": "En zegening in eeuwigheid.",
+          "tokens": [
+            {
+              "text": "En",
+              "syllabic": "single"
+            },
+            {
+              "text": "ze",
+              "syllabic": "begin"
+            },
+            {
+              "text": "ge",
+              "syllabic": "middle"
+            },
+            {
+              "text": "ning",
+              "syllabic": "end"
+            },
+            {
+              "text": "in",
+              "syllabic": "single"
+            },
+            {
+              "text": "eeu",
+              "syllabic": "begin"
+            },
+            {
+              "text": "wig",
+              "syllabic": "middle"
+            },
+            {
+              "text": "heid.",
+              "syllabic": "end"
+            }
+          ]
+        },
+        {
+          "raw": "Hem Die gezeten is op de troon;",
+          "display": "Hem Die gezeten is op de troon;",
+          "tokens": [
+            {
+              "text": "Hem",
+              "syllabic": "single"
+            },
+            {
+              "text": "Die",
+              "syllabic": "single"
             },
             {
               "text": "ge",
               "syllabic": "begin"
             },
             {
-              "text": "ven.",
+              "text": "ze",
+              "syllabic": "middle"
+            },
+            {
+              "text": "ten",
               "syllabic": "end"
+            },
+            {
+              "text": "is",
+              "syllabic": "single"
+            },
+            {
+              "text": "op",
+              "syllabic": "single"
+            },
+            {
+              "text": "de",
+              "syllabic": "single"
+            },
+            {
+              "text": "troon;",
+              "syllabic": "single"
             }
           ]
         },
         {
-          "raw": "Het bruiloftfeest van het Lam is daar;",
-          "display": "Het bruiloftfeest van het Lam is daar;",
+          "raw": "En ook het Lam zij lof gebracht.",
+          "display": "En ook het Lam zij lof gebracht.",
           "tokens": [
             {
-              "text": "Het",
+              "text": "En",
               "syllabic": "single"
             },
             {
-              "text": "brui",
-              "syllabic": "begin"
-            },
-            {
-              "text": "loft",
-              "syllabic": "middle"
-            },
-            {
-              "text": "feest",
-              "syllabic": "end"
-            },
-            {
-              "text": "van",
+              "text": "ook",
               "syllabic": "single"
             },
             {
@@ -771,105 +801,75 @@
               "syllabic": "single"
             },
             {
-              "text": "is",
+              "text": "zij",
               "syllabic": "single"
             },
             {
-              "text": "daar;",
+              "text": "lof",
               "syllabic": "single"
-            }
-          ]
-        },
-        {
-          "raw": "Zijn vrouw heeft zichzelve bereid.",
-          "display": "Zijn vrouw heeft zichzelve bereid.",
-          "tokens": [
-            {
-              "text": "Zijn",
-              "syllabic": "single"
-            },
-            {
-              "text": "vrouw",
-              "syllabic": "single"
-            },
-            {
-              "text": "heeft",
-              "syllabic": "single"
-            },
-            {
-              "text": "zich",
-              "syllabic": "begin"
-            },
-            {
-              "text": "zel",
-              "syllabic": "middle"
-            },
-            {
-              "text": "ve",
-              "syllabic": "end"
-            },
-            {
-              "text": "be",
-              "syllabic": "begin"
-            },
-            {
-              "text": "reid.",
-              "syllabic": "end"
-            }
-          ]
-        },
-        {
-          "raw": "Haar worde fijn lijnwaad gegeven;",
-          "display": "Haar worde fijn lijnwaad gegeven;",
-          "tokens": [
-            {
-              "text": "Haar",
-              "syllabic": "single"
-            },
-            {
-              "text": "wor",
-              "syllabic": "begin"
-            },
-            {
-              "text": "de",
-              "syllabic": "end"
-            },
-            {
-              "text": "fijn",
-              "syllabic": "single"
-            },
-            {
-              "text": "lijn",
-              "syllabic": "begin"
-            },
-            {
-              "text": "waad",
-              "syllabic": "end"
             },
             {
               "text": "ge",
               "syllabic": "begin"
             },
             {
-              "text": "ge",
-              "syllabic": "middle"
-            },
-            {
-              "text": "ven;",
+              "text": "bracht.",
               "syllabic": "end"
             }
           ]
         },
         {
-          "raw": "Dat rein en blinkend is voor God.",
-          "display": "Dat rein en blinkend is voor God.",
+          "raw": "Al het schepsel in den hemel hoog;",
+          "display": "Al het schepsel in den hemel hoog;",
           "tokens": [
             {
-              "text": "Dat",
+              "text": "Al",
               "syllabic": "single"
             },
             {
-              "text": "rein",
+              "text": "het",
+              "syllabic": "single"
+            },
+            {
+              "text": "schep",
+              "syllabic": "begin"
+            },
+            {
+              "text": "sel",
+              "syllabic": "end"
+            },
+            {
+              "text": "in",
+              "syllabic": "single"
+            },
+            {
+              "text": "den",
+              "syllabic": "single"
+            },
+            {
+              "text": "he",
+              "syllabic": "begin"
+            },
+            {
+              "text": "mel",
+              "syllabic": "end"
+            },
+            {
+              "text": "hoog;",
+              "syllabic": "single"
+            }
+          ]
+        },
+        {
+          "raw": "Op aard' en in de zee beneên;",
+          "display": "Op aard' en in de zee beneên;",
+          "tokens": [
+            {
+              "text": "Op",
+              "syllabic": "single"
+            },
+            {
+              "text": "aard'",
               "syllabic": "single"
             },
             {
@@ -877,95 +877,15 @@
               "syllabic": "single"
             },
             {
-              "text": "blin",
-              "syllabic": "begin"
-            },
-            {
-              "text": "kend",
-              "syllabic": "end"
-            },
-            {
-              "text": "is",
+              "text": "in",
               "syllabic": "single"
             },
             {
-              "text": "voor",
+              "text": "de",
               "syllabic": "single"
             },
             {
-              "text": "God.",
-              "syllabic": "single"
-            }
-          ]
-        },
-        {
-          "raw": "Dit lijnwaad zijn rechtvaardigheden;",
-          "display": "Dit lijnwaad zijn rechtvaardigheden;",
-          "tokens": [
-            {
-              "text": "Dit",
-              "syllabic": "single"
-            },
-            {
-              "text": "lijn",
-              "syllabic": "begin"
-            },
-            {
-              "text": "waad",
-              "syllabic": "end"
-            },
-            {
-              "text": "zijn",
-              "syllabic": "single"
-            },
-            {
-              "text": "recht",
-              "syllabic": "begin"
-            },
-            {
-              "text": "vaar",
-              "syllabic": "middle"
-            },
-            {
-              "text": "dig",
-              "syllabic": "middle"
-            },
-            {
-              "text": "he",
-              "syllabic": "middle"
-            },
-            {
-              "text": "den;",
-              "syllabic": "end"
-            }
-          ]
-        },
-        {
-          "raw": "Der heiligen voor God bereid.",
-          "display": "Der heiligen voor God bereid.",
-          "tokens": [
-            {
-              "text": "Der",
-              "syllabic": "single"
-            },
-            {
-              "text": "hei",
-              "syllabic": "begin"
-            },
-            {
-              "text": "li",
-              "syllabic": "middle"
-            },
-            {
-              "text": "gen",
-              "syllabic": "end"
-            },
-            {
-              "text": "voor",
-              "syllabic": "single"
-            },
-            {
-              "text": "God",
+              "text": "zee",
               "syllabic": "single"
             },
             {
@@ -973,7 +893,87 @@
               "syllabic": "begin"
             },
             {
-              "text": "reid.",
+              "text": "neên;",
+              "syllabic": "end"
+            }
+          ]
+        },
+        {
+          "raw": "De dieren zeggen allen: Amen;",
+          "display": "De dieren zeggen allen: Amen;",
+          "tokens": [
+            {
+              "text": "De",
+              "syllabic": "single"
+            },
+            {
+              "text": "die",
+              "syllabic": "begin"
+            },
+            {
+              "text": "ren",
+              "syllabic": "end"
+            },
+            {
+              "text": "zeg",
+              "syllabic": "begin"
+            },
+            {
+              "text": "gen",
+              "syllabic": "end"
+            },
+            {
+              "text": "al",
+              "syllabic": "begin"
+            },
+            {
+              "text": "len:",
+              "syllabic": "end"
+            },
+            {
+              "text": "A",
+              "syllabic": "begin"
+            },
+            {
+              "text": "men;",
+              "syllabic": "end"
+            }
+          ]
+        },
+        {
+          "raw": "Hem zij de lof in eeuwigheid.",
+          "display": "Hem zij de lof in eeuwigheid.",
+          "tokens": [
+            {
+              "text": "Hem",
+              "syllabic": "single"
+            },
+            {
+              "text": "zij",
+              "syllabic": "single"
+            },
+            {
+              "text": "de",
+              "syllabic": "single"
+            },
+            {
+              "text": "lof",
+              "syllabic": "single"
+            },
+            {
+              "text": "in",
+              "syllabic": "single"
+            },
+            {
+              "text": "eeu",
+              "syllabic": "begin"
+            },
+            {
+              "text": "wig",
+              "syllabic": "middle"
+            },
+            {
+              "text": "heid.",
               "syllabic": "end"
             }
           ]

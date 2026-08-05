@@ -23,12 +23,16 @@ object HymnRepository {
 
     val bookTitles = listOf(PSALMS_TITLE, HYMNS_TITLE)
 
+    @Volatile
+    var isReady = false
+        private set
+
     /**
      * Gezang-nummers (Schriftliederen) die (nog) niet toegankelijk zijn: ze tonen
      * in het overzicht als placeholder en worden overgeslagen bij vorige/volgende.
      * Eén centrale bron zodat lijst én swipe-navigatie hetzelfde gedrag hebben.
      */
-    val disabledHymnNumbers = setOf(22)   // 22 = Jesaja 38 – Lofzang van Hizkia
+    val disabledHymnNumbers = setOf(23)   // 23 = Jesaja 38 – Lofzang van Hizkia
 
     fun isHymnDisabled(type: String, number: Int): Boolean =
         type == "Gezang" && number in disabledHymnNumbers
@@ -47,7 +51,14 @@ object HymnRepository {
     private var bundledVerses = fallbackBundledVerses
     private var downloadedVerses = emptyList<Verse>()
 
+    @Volatile
+    private var allVersesCache: List<Verse>? = null
+
+    @Volatile
+    private var groupsCache = mutableMapOf<String, List<VerseGroup>>()
+
     fun refreshDownloadedContent(context: Context) {
+        isReady = false
         bundledVerses = readBundledManifest(context).ifEmpty { fallbackBundledVerses }
 
         val manifestFile = ContentStorage.downloadedManifestFile(context)
@@ -56,6 +67,13 @@ object HymnRepository {
         } else {
             emptyList()
         }
+        allVersesCache = null
+        groupsCache.clear()
+
+        // Pre-build caches
+        allVerses()
+        bookTitles.forEach { groupedVersesForBook(it) }
+        isReady = true
     }
 
     private fun readBundledManifest(context: Context): List<Verse> = try {
@@ -67,11 +85,13 @@ object HymnRepository {
     }
 
     fun groupedVersesForBook(bookTitle: String): List<VerseGroup> {
+        groupsCache[bookTitle]?.let { return it }
+
         val versesByNumber = allVerses()
             .filter { it.type == typeForBook(bookTitle) }
             .groupBy { it.number }
 
-        return when (bookTitle) {
+        val result = when (bookTitle) {
             PSALMS_TITLE -> (1..150).map { number ->
                 VerseGroup(
                     title = "Psalm $number",
@@ -89,6 +109,8 @@ object HymnRepository {
                     )
                 }
         }
+        groupsCache[bookTitle] = result
+        return result
     }
 
     fun verseByFileName(fileName: String): Verse? = allVerses().firstOrNull { it.fileName == fileName }
@@ -131,9 +153,14 @@ object HymnRepository {
         return null
     }
 
-    private fun allVerses(): List<Verse> = (bundledVerses + downloadedVerses)
-        .distinctBy { "${it.type}-${it.number}-${it.verse}" }
-        .sortedWith(compareBy<Verse> { it.type }.thenBy { it.number }.thenBy { it.verse })
+    private fun allVerses(): List<Verse> {
+        allVersesCache?.let { return it }
+        val built = (bundledVerses + downloadedVerses)
+            .distinctBy { "${it.type}-${it.number}-${it.verse}" }
+            .sortedWith(compareBy<Verse> { it.type }.thenBy { it.number }.thenBy { it.verse })
+        allVersesCache = built
+        return built
+    }
 
     private fun parseDownloadedManifest(json: String): List<Verse> {
         val root = JSONObject(json)
