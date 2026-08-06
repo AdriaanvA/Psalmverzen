@@ -20,10 +20,10 @@ class ContentDownloadWorker(
 ) : Worker(appContext, workerParameters) {
 
     override fun doWork(): Result {
-        val manifestUrl = inputData.getString(nl.psalmbladmuziek.app.ContentDownloadWorker.Companion.KEY_MANIFEST_URL)
+        val manifestUrl = inputData.getString(KEY_MANIFEST_URL)
             ?: applicationContext.getString(R.string.content_manifest_url).takeIf { it.isNotBlank() }
             ?: return Result.success()
-        if (!nl.psalmbladmuziek.app.ContentDownloadWorker.Companion.isHttpsUrl(manifestUrl)) return Result.failure()
+        if (!isHttpsUrl(manifestUrl)) return Result.failure()
 
         return runCatching {
             val manifestJson = downloadText(manifestUrl)
@@ -84,21 +84,21 @@ class ContentDownloadWorker(
             if (manifestUrl.isBlank()) {
                 return
             }
-            nl.psalmbladmuziek.app.ContentDownloadWorker.Companion.enqueue(context, manifestUrl)
+            enqueue(context, manifestUrl)
         }
 
         fun enqueue(context: Context, manifestUrl: String) {
-            val request = OneTimeWorkRequestBuilder<nl.psalmbladmuziek.app.ContentDownloadWorker>()
+            val request = OneTimeWorkRequestBuilder<ContentDownloadWorker>()
                 .setConstraints(
                     Constraints.Builder()
                         .setRequiredNetworkType(NetworkType.CONNECTED)
                         .build()
                 )
-                .setInputData(workDataOf(nl.psalmbladmuziek.app.ContentDownloadWorker.Companion.KEY_MANIFEST_URL to manifestUrl))
+                .setInputData(workDataOf(KEY_MANIFEST_URL to manifestUrl))
                 .build()
 
             WorkManager.getInstance(context).enqueueUniqueWork(
-                nl.psalmbladmuziek.app.ContentDownloadWorker.Companion.UNIQUE_WORK_NAME,
+                UNIQUE_WORK_NAME,
                 ExistingWorkPolicy.KEEP,
                 request
             )

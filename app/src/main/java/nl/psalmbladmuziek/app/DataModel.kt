@@ -37,18 +37,7 @@ object HymnRepository {
     fun isHymnDisabled(type: String, number: Int): Boolean =
         type == "Gezang" && number in disabledHymnNumbers
 
-    private val fallbackBundledVerses = listOf(
-        Verse("Psalm", 1, 1, "Psalm1_v1.xml", "Welzalig hij, die in der bozen raad"),
-        Verse("Psalm", 2, 1, "Psalm2_v1.xml", "Wat drift beheerst het woedend heidendom"),
-        Verse("Psalm", 3, 1, "Psalm3_v1.xml", "Hoe vrees'lijk groeit, o God"),
-        Verse("Psalm", 4, 1, "Psalm4_v1.xml", "Wil mij, wanneer ik roep, verhoren"),
-        Verse("Psalm", 5, 1, "Psalm5_v1.xml", "Neem, HEER', mijn bange klacht ter oren"),
-        Verse("Psalm", 42, 1, "Psalm42_v1.xml", "'t Hijgend hert, der jacht ontkomen"),
-        Verse("Psalm", 116, 1, "Psalm116_v1.xml", "God heb ik lief, want die getrouwe HEER"),
-        Verse("Psalm", 116, 2, "Psalm116_v2.xml", "Want Hij neigt Zijn oor tot mij")
-    )
-
-    private var bundledVerses = fallbackBundledVerses
+    private var bundledVerses = emptyList<Verse>()
     private var downloadedVerses = emptyList<Verse>()
 
     @Volatile
@@ -59,11 +48,15 @@ object HymnRepository {
 
     fun refreshDownloadedContent(context: Context) {
         isReady = false
-        bundledVerses = readBundledManifest(context).ifEmpty { fallbackBundledVerses }
+        bundledVerses = readBundledManifest(context)
 
         val manifestFile = ContentStorage.downloadedManifestFile(context)
         downloadedVerses = if (manifestFile.exists()) {
-            parseDownloadedManifest(manifestFile.readText())
+            try {
+                parseDownloadedManifest(manifestFile.readText().trimStart('\uFEFF'))
+            } catch (_: Exception) {
+                emptyList()
+            }
         } else {
             emptyList()
         }
@@ -166,20 +159,27 @@ object HymnRepository {
         val root = JSONObject(json)
         val items = root.optJSONArray("items") ?: return emptyList()
 
-        return List(items.length()) { index ->
-            val item = items.getJSONObject(index)
-            Verse(
+        val parsed = mutableListOf<Verse>()
+        for (index in 0 until items.length()) {
+            val item = items.optJSONObject(index) ?: continue
+            val number = item.optInt("number", -1)
+            val verse = item.optInt("verse", -1)
+            val fileName = item.optString("fileName", "").trim()
+            if (number <= 0 || verse <= 0 || fileName.isBlank()) continue
+
+            parsed += Verse(
                 type = when (item.optString("book")) {
                     "hymns", "gezangen" -> "Gezang"
                     else -> "Psalm"
                 },
-                number = item.getInt("number"),
-                verse = item.getInt("verse"),
-                fileName = item.getString("fileName"),
+                number = number,
+                verse = verse,
+                fileName = fileName,
                 firstLine = item.optString("firstLine", ""),
                 title = item.optString("title", "")
             )
         }
+        return parsed
     }
 
     private fun typeForBook(bookTitle: String): String = when (bookTitle) {
