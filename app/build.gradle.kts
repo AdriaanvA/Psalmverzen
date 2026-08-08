@@ -23,19 +23,24 @@ android {
         applicationId = "nl.psalmbladmuziek.app"
         minSdk = 34
         targetSdk = 36
-        versionCode = 1
-        versionName = "1.0.0"
+        versionCode = 3
+        versionName = "1.0.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
     signingConfigs {
         create("release") {
-            if (keystorePropertiesFile.exists()) {
-                storeFile = file(keystoreProperties.getProperty("storeFile"))
-                storePassword = keystoreProperties.getProperty("storePassword")
-                keyAlias = keystoreProperties.getProperty("keyAlias")
-                keyPassword = keystoreProperties.getProperty("keyPassword")
+            val sFile = keystoreProperties.getProperty("storeFile")
+            val sPass = keystoreProperties.getProperty("storePassword")
+            val kAlias = keystoreProperties.getProperty("keyAlias")
+            val kPass = keystoreProperties.getProperty("keyPassword")
+
+            if (sFile != null && sPass != null && kAlias != null && kPass != null) {
+                storeFile = rootProject.file(sFile)
+                storePassword = sPass
+                keyAlias = kAlias
+                keyPassword = kPass
             }
         }
     }
