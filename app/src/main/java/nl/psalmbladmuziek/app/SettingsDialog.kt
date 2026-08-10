@@ -10,7 +10,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SwitchCompat
 
 /** Bestemming van de 'Steun de app'-knop (tip jar). */
-private const val SUPPORT_URL = "https://github.com/hidinker/Psalmverzen"
+private const val SUPPORT_URL = "https://arianappel.github.io/Psalmverzen/"
 
 /**
  * Eén gedeeld instellingen-menu voor zowel het overzicht (MainActivity) als de
@@ -103,6 +103,16 @@ fun AppCompatActivity.showAppSettingsDialog(onChanged: () -> Unit = {}) {
             valueView.text = displayModeName(AppSettings.displayMode(this)); onChanged()
         }
     }
+    chooserRow("Psalmen", { psalmVersionName(AppSettings.psalmVersion(this)) }) { valueView ->
+        showPsalmVersionChooser {
+            valueView.text = psalmVersionName(AppSettings.psalmVersion(this)); onChanged()
+        }
+    }
+    chooserRow("Ritme", { rhythmModeName(AppSettings.rhythmMode(this)) }) { valueView ->
+        showRhythmModeChooser {
+            valueView.text = rhythmModeName(AppSettings.rhythmMode(this)); onChanged()
+        }
+    }
     toggleRow("Scherm aan laten", AppSettings.keepScreenOn(this)) {
         AppSettings.setKeepScreenOn(this, it); onChanged()
     }
@@ -121,8 +131,8 @@ fun AppCompatActivity.showAppSettingsDialog(onChanged: () -> Unit = {}) {
     toggleRow("Twee zinnen op één regel", AppSettings.combineLines(this)) {
         AppSettings.setCombineLines(this, it); onChanged()
     }
-    toggleRow("Rusttekens uit", !AppSettings.showRests(this)) {
-        AppSettings.setShowRests(this, !it); onChanged()
+    toggleRow("Rusttekens aan", AppSettings.showRests(this)) {
+        AppSettings.setShowRests(this, it); onChanged()
     }
     chooserRow("Tekst uitlijning", { textAlignName(AppSettings.textAlign(this)) }) { valueView ->
         showTextAlignChooser {
@@ -189,12 +199,47 @@ private fun displayModeName(mode: Int): String = when (mode) {
     else -> "Beide"
 }
 
+private fun psalmVersionName(version: Int): String = when (version) {
+    AppSettings.PSALM_VERSION_DATHEEN -> "Datheen"
+    AppSettings.PSALM_VERSION_REVIUS -> "Revius"
+    else -> "1773"
+}
+
+private fun rhythmModeName(mode: Int): String = when (mode) {
+    AppSettings.RHYTHM_ISOMETRIC -> "Iso-ritmisch"
+    else -> "Ritmisch"
+}
+
 private fun AppCompatActivity.showDisplayModeChooser(onChanged: () -> Unit) {
     val options = arrayOf("Beide", "Tekst", "Noten")
     AlertDialog.Builder(this)
         .setTitle("Weergave")
         .setSingleChoiceItems(options, AppSettings.displayMode(this)) { dialog, which ->
             AppSettings.setDisplayMode(this, which)
+            dialog.dismiss()
+            onChanged()
+        }
+        .show()
+}
+
+private fun AppCompatActivity.showPsalmVersionChooser(onChanged: () -> Unit) {
+    val options = arrayOf("1773", "Datheen", "Revius")
+    AlertDialog.Builder(this)
+        .setTitle("Psalmberijming")
+        .setSingleChoiceItems(options, AppSettings.psalmVersion(this)) { dialog, which ->
+            AppSettings.setPsalmVersion(this, which)
+            dialog.dismiss()
+            onChanged()
+        }
+        .show()
+}
+
+private fun AppCompatActivity.showRhythmModeChooser(onChanged: () -> Unit) {
+    val options = arrayOf("Ritmisch", "Iso-ritmisch")
+    AlertDialog.Builder(this)
+        .setTitle("Ritme")
+        .setSingleChoiceItems(options, AppSettings.rhythmMode(this)) { dialog, which ->
+            AppSettings.setRhythmMode(this, which)
             dialog.dismiss()
             onChanged()
         }

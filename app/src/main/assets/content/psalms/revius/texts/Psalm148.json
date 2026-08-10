@@ -1,0 +1,1593 @@
+{
+  "book": "psalms",
+  "number": 148,
+  "title": "Psalm 148 (Revius)",
+  "melodyFile": "content/melodies/Psalm148.json",
+  "verses": [
+    {
+      "number": 1,
+      "lines": [
+        {
+          "raw": "Looft God den Heer eendrachtelijck",
+          "display": "Looft God den Heer eendrachtelijck",
+          "tokens": [
+            {
+              "text": "Looft",
+              "syllabic": "single"
+            },
+            {
+              "text": "God",
+              "syllabic": "single"
+            },
+            {
+              "text": "den",
+              "syllabic": "single"
+            },
+            {
+              "text": "Heer",
+              "syllabic": "single"
+            },
+            {
+              "text": "eend",
+              "syllabic": "begin"
+            },
+            {
+              "text": "rac",
+              "syllabic": "middle"
+            },
+            {
+              "text": "htel",
+              "syllabic": "middle"
+            },
+            {
+              "text": "ijck",
+              "syllabic": "end"
+            }
+          ]
+        },
+        {
+          "raw": "Ghy borgers van het hemelrijck.",
+          "display": "Ghy borgers van het hemelrijck.",
+          "tokens": [
+            {
+              "text": "Ghy",
+              "syllabic": "single"
+            },
+            {
+              "text": "bor",
+              "syllabic": "begin"
+            },
+            {
+              "text": "gers",
+              "syllabic": "end"
+            },
+            {
+              "text": "van",
+              "syllabic": "single"
+            },
+            {
+              "text": "het",
+              "syllabic": "single"
+            },
+            {
+              "text": "hem",
+              "syllabic": "begin"
+            },
+            {
+              "text": "elri",
+              "syllabic": "middle"
+            },
+            {
+              "text": "jck.",
+              "syllabic": "end"
+            }
+          ]
+        },
+        {
+          "raw": "Ghy die bewoont de hoochste stee",
+          "display": "Ghy die bewoont de hoochste stee",
+          "tokens": [
+            {
+              "text": "Ghy",
+              "syllabic": "single"
+            },
+            {
+              "text": "die",
+              "syllabic": "single"
+            },
+            {
+              "text": "bew",
+              "syllabic": "begin"
+            },
+            {
+              "text": "oont",
+              "syllabic": "end"
+            },
+            {
+              "text": "de",
+              "syllabic": "single"
+            },
+            {
+              "text": "hooc",
+              "syllabic": "begin"
+            },
+            {
+              "text": "hste",
+              "syllabic": "end"
+            },
+            {
+              "text": "stee",
+              "syllabic": "single"
+            }
+          ]
+        },
+        {
+          "raw": "Om hem te prijsen maeckt u ree.",
+          "display": "Om hem te prijsen maeckt u ree.",
+          "tokens": [
+            {
+              "text": "Om",
+              "syllabic": "single"
+            },
+            {
+              "text": "hem",
+              "syllabic": "single"
+            },
+            {
+              "text": "te",
+              "syllabic": "single"
+            },
+            {
+              "text": "prij",
+              "syllabic": "begin"
+            },
+            {
+              "text": "sen",
+              "syllabic": "end"
+            },
+            {
+              "text": "maeckt",
+              "syllabic": "single"
+            },
+            {
+              "text": "u",
+              "syllabic": "single"
+            },
+            {
+              "text": "ree.",
+              "syllabic": "single"
+            }
+          ]
+        },
+        {
+          "raw": "Ghy engelen, ghy stercke scharen",
+          "display": "Ghy engelen, ghy stercke scharen",
+          "tokens": [
+            {
+              "text": "Ghy",
+              "syllabic": "single"
+            },
+            {
+              "text": "en",
+              "syllabic": "begin"
+            },
+            {
+              "text": "gel",
+              "syllabic": "middle"
+            },
+            {
+              "text": "en,",
+              "syllabic": "end"
+            },
+            {
+              "text": "ghy",
+              "syllabic": "single"
+            },
+            {
+              "text": "ster",
+              "syllabic": "begin"
+            },
+            {
+              "text": "cke",
+              "syllabic": "end"
+            },
+            {
+              "text": "scha",
+              "syllabic": "begin"
+            },
+            {
+              "text": "ren",
+              "syllabic": "end"
+            }
+          ]
+        },
+        {
+          "raw": "Wilt syne grootheyt openbaren.",
+          "display": "Wilt syne grootheyt openbaren.",
+          "tokens": [
+            {
+              "text": "Wilt",
+              "syllabic": "single"
+            },
+            {
+              "text": "sy",
+              "syllabic": "begin"
+            },
+            {
+              "text": "ne",
+              "syllabic": "end"
+            },
+            {
+              "text": "groo",
+              "syllabic": "begin"
+            },
+            {
+              "text": "theyt",
+              "syllabic": "end"
+            },
+            {
+              "text": "op",
+              "syllabic": "begin"
+            },
+            {
+              "text": "en",
+              "syllabic": "middle"
+            },
+            {
+              "text": "bar",
+              "syllabic": "middle"
+            },
+            {
+              "text": "en.",
+              "syllabic": "end"
+            }
+          ]
+        },
+        {
+          "raw": "Ghy son en mane looft den Heer.",
+          "display": "Ghy son en mane looft den Heer.",
+          "tokens": [
+            {
+              "text": "Ghy",
+              "syllabic": "single"
+            },
+            {
+              "text": "son",
+              "syllabic": "single"
+            },
+            {
+              "text": "en",
+              "syllabic": "single"
+            },
+            {
+              "text": "ma",
+              "syllabic": "begin"
+            },
+            {
+              "text": "ne",
+              "syllabic": "end"
+            },
+            {
+              "text": "looft",
+              "syllabic": "single"
+            },
+            {
+              "text": "den",
+              "syllabic": "single"
+            },
+            {
+              "text": "Heer.",
+              "syllabic": "single"
+            }
+          ]
+        },
+        {
+          "raw": "Ghy held’re sterren prijst hem seer.",
+          "display": "Ghy held’re sterren prijst hem seer.",
+          "tokens": [
+            {
+              "text": "Ghy",
+              "syllabic": "single"
+            },
+            {
+              "text": "hel",
+              "syllabic": "begin"
+            },
+            {
+              "text": "d’re",
+              "syllabic": "end"
+            },
+            {
+              "text": "ster",
+              "syllabic": "begin"
+            },
+            {
+              "text": "ren",
+              "syllabic": "end"
+            },
+            {
+              "text": "prijst",
+              "syllabic": "single"
+            },
+            {
+              "text": "hem",
+              "syllabic": "single"
+            },
+            {
+              "text": "seer.",
+              "syllabic": "single"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "number": 2,
+      "lines": [
+        {
+          "raw": "Ghy hemels, die soo hooge gaet,",
+          "display": "Ghy hemels, die soo hooge gaet,",
+          "tokens": [
+            {
+              "text": "Ghy",
+              "syllabic": "single"
+            },
+            {
+              "text": "hem",
+              "syllabic": "begin"
+            },
+            {
+              "text": "els,",
+              "syllabic": "end"
+            },
+            {
+              "text": "die",
+              "syllabic": "single"
+            },
+            {
+              "text": "soo",
+              "syllabic": "single"
+            },
+            {
+              "text": "ho",
+              "syllabic": "begin"
+            },
+            {
+              "text": "oge",
+              "syllabic": "end"
+            },
+            {
+              "text": "gaet,",
+              "syllabic": "single"
+            }
+          ]
+        },
+        {
+          "raw": "Ghy waters die daer boven staet",
+          "display": "Ghy waters die daer boven staet",
+          "tokens": [
+            {
+              "text": "Ghy",
+              "syllabic": "single"
+            },
+            {
+              "text": "wat",
+              "syllabic": "begin"
+            },
+            {
+              "text": "ers",
+              "syllabic": "end"
+            },
+            {
+              "text": "die",
+              "syllabic": "single"
+            },
+            {
+              "text": "daer",
+              "syllabic": "single"
+            },
+            {
+              "text": "bo",
+              "syllabic": "begin"
+            },
+            {
+              "text": "ven",
+              "syllabic": "end"
+            },
+            {
+              "text": "staet",
+              "syllabic": "single"
+            }
+          ]
+        },
+        {
+          "raw": "En in de lichte wolcken sweeft,",
+          "display": "En in de lichte wolcken sweeft,",
+          "tokens": [
+            {
+              "text": "En",
+              "syllabic": "single"
+            },
+            {
+              "text": "in",
+              "syllabic": "single"
+            },
+            {
+              "text": "de",
+              "syllabic": "single"
+            },
+            {
+              "text": "lic",
+              "syllabic": "begin"
+            },
+            {
+              "text": "hte",
+              "syllabic": "end"
+            },
+            {
+              "text": "wol",
+              "syllabic": "begin"
+            },
+            {
+              "text": "cken",
+              "syllabic": "end"
+            },
+            {
+              "text": "sweeft,",
+              "syllabic": "single"
+            }
+          ]
+        },
+        {
+          "raw": "Des Heeren naem syn eere geeft.",
+          "display": "Des Heeren naem syn eere geeft.",
+          "tokens": [
+            {
+              "text": "Des",
+              "syllabic": "single"
+            },
+            {
+              "text": "Hee",
+              "syllabic": "begin"
+            },
+            {
+              "text": "ren",
+              "syllabic": "end"
+            },
+            {
+              "text": "naem",
+              "syllabic": "single"
+            },
+            {
+              "text": "syn",
+              "syllabic": "single"
+            },
+            {
+              "text": "ee",
+              "syllabic": "begin"
+            },
+            {
+              "text": "re",
+              "syllabic": "end"
+            },
+            {
+              "text": "geeft.",
+              "syllabic": "single"
+            }
+          ]
+        },
+        {
+          "raw": "Want door syn uytgesproken reden",
+          "display": "Want door syn uytgesproken reden",
+          "tokens": [
+            {
+              "text": "Want",
+              "syllabic": "single"
+            },
+            {
+              "text": "door",
+              "syllabic": "single"
+            },
+            {
+              "text": "syn",
+              "syllabic": "single"
+            },
+            {
+              "text": "uyt",
+              "syllabic": "begin"
+            },
+            {
+              "text": "ges",
+              "syllabic": "middle"
+            },
+            {
+              "text": "pro",
+              "syllabic": "middle"
+            },
+            {
+              "text": "ken",
+              "syllabic": "end"
+            },
+            {
+              "text": "re",
+              "syllabic": "begin"
+            },
+            {
+              "text": "den",
+              "syllabic": "end"
+            }
+          ]
+        },
+        {
+          "raw": "Is alles boven en beneden",
+          "display": "Is alles boven en beneden",
+          "tokens": [
+            {
+              "text": "Is",
+              "syllabic": "single"
+            },
+            {
+              "text": "al",
+              "syllabic": "begin"
+            },
+            {
+              "text": "les",
+              "syllabic": "end"
+            },
+            {
+              "text": "bo",
+              "syllabic": "begin"
+            },
+            {
+              "text": "ven",
+              "syllabic": "end"
+            },
+            {
+              "text": "en",
+              "syllabic": "single"
+            },
+            {
+              "text": "be",
+              "syllabic": "begin"
+            },
+            {
+              "text": "ned",
+              "syllabic": "middle"
+            },
+            {
+              "text": "en",
+              "syllabic": "end"
+            }
+          ]
+        },
+        {
+          "raw": "Geschapen, en soo vast geleyt",
+          "display": "Geschapen, en soo vast geleyt",
+          "tokens": [
+            {
+              "text": "Ges",
+              "syllabic": "begin"
+            },
+            {
+              "text": "cha",
+              "syllabic": "middle"
+            },
+            {
+              "text": "pen,",
+              "syllabic": "end"
+            },
+            {
+              "text": "en",
+              "syllabic": "single"
+            },
+            {
+              "text": "soo",
+              "syllabic": "single"
+            },
+            {
+              "text": "vast",
+              "syllabic": "single"
+            },
+            {
+              "text": "gel",
+              "syllabic": "begin"
+            },
+            {
+              "text": "eyt",
+              "syllabic": "end"
+            }
+          ]
+        },
+        {
+          "raw": "Dat het bestaet in eeuwicheyt.",
+          "display": "Dat het bestaet in eeuwicheyt.",
+          "tokens": [
+            {
+              "text": "Dat",
+              "syllabic": "single"
+            },
+            {
+              "text": "het",
+              "syllabic": "single"
+            },
+            {
+              "text": "bes",
+              "syllabic": "begin"
+            },
+            {
+              "text": "taet",
+              "syllabic": "end"
+            },
+            {
+              "text": "in",
+              "syllabic": "single"
+            },
+            {
+              "text": "eeu",
+              "syllabic": "begin"
+            },
+            {
+              "text": "wich",
+              "syllabic": "middle"
+            },
+            {
+              "text": "eyt.",
+              "syllabic": "end"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "number": 3,
+      "lines": [
+        {
+          "raw": "Hy heeft haer een bevel gedaen",
+          "display": "Hy heeft haer een bevel gedaen",
+          "tokens": [
+            {
+              "text": "Hy",
+              "syllabic": "single"
+            },
+            {
+              "text": "heeft",
+              "syllabic": "single"
+            },
+            {
+              "text": "haer",
+              "syllabic": "single"
+            },
+            {
+              "text": "een",
+              "syllabic": "single"
+            },
+            {
+              "text": "be",
+              "syllabic": "begin"
+            },
+            {
+              "text": "vel",
+              "syllabic": "end"
+            },
+            {
+              "text": "ged",
+              "syllabic": "begin"
+            },
+            {
+              "text": "aen",
+              "syllabic": "end"
+            }
+          ]
+        },
+        {
+          "raw": "Daer over sy niet sullen gaen.",
+          "display": "Daer over sy niet sullen gaen.",
+          "tokens": [
+            {
+              "text": "Daer",
+              "syllabic": "single"
+            },
+            {
+              "text": "ov",
+              "syllabic": "begin"
+            },
+            {
+              "text": "er",
+              "syllabic": "end"
+            },
+            {
+              "text": "sy",
+              "syllabic": "single"
+            },
+            {
+              "text": "niet",
+              "syllabic": "single"
+            },
+            {
+              "text": "sul",
+              "syllabic": "begin"
+            },
+            {
+              "text": "len",
+              "syllabic": "end"
+            },
+            {
+              "text": "gaen.",
+              "syllabic": "single"
+            }
+          ]
+        },
+        {
+          "raw": "Inwoonders vande aerde ront,",
+          "display": "Inwoonders vande aerde ront,",
+          "tokens": [
+            {
+              "text": "Inw",
+              "syllabic": "begin"
+            },
+            {
+              "text": "oond",
+              "syllabic": "middle"
+            },
+            {
+              "text": "ers",
+              "syllabic": "end"
+            },
+            {
+              "text": "va",
+              "syllabic": "begin"
+            },
+            {
+              "text": "nde",
+              "syllabic": "end"
+            },
+            {
+              "text": "ae",
+              "syllabic": "begin"
+            },
+            {
+              "text": "rde",
+              "syllabic": "end"
+            },
+            {
+              "text": "ront,",
+              "syllabic": "single"
+            }
+          ]
+        },
+        {
+          "raw": "Walvissen in den diepen gront,",
+          "display": "Walvissen in den diepen gront,",
+          "tokens": [
+            {
+              "text": "Wal",
+              "syllabic": "begin"
+            },
+            {
+              "text": "vis",
+              "syllabic": "middle"
+            },
+            {
+              "text": "sen",
+              "syllabic": "end"
+            },
+            {
+              "text": "in",
+              "syllabic": "single"
+            },
+            {
+              "text": "den",
+              "syllabic": "single"
+            },
+            {
+              "text": "die",
+              "syllabic": "begin"
+            },
+            {
+              "text": "pen",
+              "syllabic": "end"
+            },
+            {
+              "text": "gront,",
+              "syllabic": "single"
+            }
+          ]
+        },
+        {
+          "raw": "Vier, hagel, sneeu, en mistich weder,",
+          "display": "Vier, hagel, sneeu, en mistich weder,",
+          "tokens": [
+            {
+              "text": "Vier,",
+              "syllabic": "single"
+            },
+            {
+              "text": "ha",
+              "syllabic": "begin"
+            },
+            {
+              "text": "gel,",
+              "syllabic": "end"
+            },
+            {
+              "text": "sneeu,",
+              "syllabic": "single"
+            },
+            {
+              "text": "en",
+              "syllabic": "single"
+            },
+            {
+              "text": "mis",
+              "syllabic": "begin"
+            },
+            {
+              "text": "tich",
+              "syllabic": "end"
+            },
+            {
+              "text": "we",
+              "syllabic": "begin"
+            },
+            {
+              "text": "der,",
+              "syllabic": "end"
+            }
+          ]
+        },
+        {
+          "raw": "Stormwint, die’t alles werpt ter neder",
+          "display": "Stormwint, die’t alles werpt ter neder",
+          "tokens": [
+            {
+              "text": "Stor",
+              "syllabic": "begin"
+            },
+            {
+              "text": "mwint,",
+              "syllabic": "end"
+            },
+            {
+              "text": "die’t",
+              "syllabic": "single"
+            },
+            {
+              "text": "al",
+              "syllabic": "begin"
+            },
+            {
+              "text": "les",
+              "syllabic": "end"
+            },
+            {
+              "text": "werpt",
+              "syllabic": "single"
+            },
+            {
+              "text": "ter",
+              "syllabic": "single"
+            },
+            {
+              "text": "ne",
+              "syllabic": "begin"
+            },
+            {
+              "text": "der",
+              "syllabic": "end"
+            }
+          ]
+        },
+        {
+          "raw": "En achtervolget het gebot",
+          "display": "En achtervolget het gebot",
+          "tokens": [
+            {
+              "text": "En",
+              "syllabic": "single"
+            },
+            {
+              "text": "ach",
+              "syllabic": "begin"
+            },
+            {
+              "text": "ter",
+              "syllabic": "middle"
+            },
+            {
+              "text": "vol",
+              "syllabic": "middle"
+            },
+            {
+              "text": "get",
+              "syllabic": "end"
+            },
+            {
+              "text": "het",
+              "syllabic": "single"
+            },
+            {
+              "text": "ge",
+              "syllabic": "begin"
+            },
+            {
+              "text": "bot",
+              "syllabic": "end"
+            }
+          ]
+        },
+        {
+          "raw": "Van onsen alderhoochsten God:",
+          "display": "Van onsen alderhoochsten God:",
+          "tokens": [
+            {
+              "text": "Van",
+              "syllabic": "single"
+            },
+            {
+              "text": "on",
+              "syllabic": "begin"
+            },
+            {
+              "text": "sen",
+              "syllabic": "end"
+            },
+            {
+              "text": "alde",
+              "syllabic": "begin"
+            },
+            {
+              "text": "rho",
+              "syllabic": "middle"
+            },
+            {
+              "text": "och",
+              "syllabic": "middle"
+            },
+            {
+              "text": "sten",
+              "syllabic": "end"
+            },
+            {
+              "text": "God:",
+              "syllabic": "single"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "number": 4,
+      "lines": [
+        {
+          "raw": "Ghy bergen, uwen schepper looft,",
+          "display": "Ghy bergen, uwen schepper looft,",
+          "tokens": [
+            {
+              "text": "Ghy",
+              "syllabic": "single"
+            },
+            {
+              "text": "ber",
+              "syllabic": "begin"
+            },
+            {
+              "text": "gen,",
+              "syllabic": "end"
+            },
+            {
+              "text": "uw",
+              "syllabic": "begin"
+            },
+            {
+              "text": "en",
+              "syllabic": "end"
+            },
+            {
+              "text": "sche",
+              "syllabic": "begin"
+            },
+            {
+              "text": "pper",
+              "syllabic": "end"
+            },
+            {
+              "text": "looft,",
+              "syllabic": "single"
+            }
+          ]
+        },
+        {
+          "raw": "Ghy bomen overla’en met ooft,",
+          "display": "Ghy bomen overla’en met ooft,",
+          "tokens": [
+            {
+              "text": "Ghy",
+              "syllabic": "single"
+            },
+            {
+              "text": "bomen",
+              "syllabic": "single"
+            },
+            {
+              "text": "ov",
+              "syllabic": "begin"
+            },
+            {
+              "text": "er",
+              "syllabic": "middle"
+            },
+            {
+              "text": "la’",
+              "syllabic": "middle"
+            },
+            {
+              "text": "en",
+              "syllabic": "end"
+            },
+            {
+              "text": "met",
+              "syllabic": "single"
+            },
+            {
+              "text": "ooft,",
+              "syllabic": "single"
+            }
+          ]
+        },
+        {
+          "raw": "Ghy ceders die het wout verciert,",
+          "display": "Ghy ceders die het wout verciert,",
+          "tokens": [
+            {
+              "text": "Ghy",
+              "syllabic": "single"
+            },
+            {
+              "text": "ced",
+              "syllabic": "begin"
+            },
+            {
+              "text": "ers",
+              "syllabic": "end"
+            },
+            {
+              "text": "die",
+              "syllabic": "single"
+            },
+            {
+              "text": "het",
+              "syllabic": "single"
+            },
+            {
+              "text": "wout",
+              "syllabic": "single"
+            },
+            {
+              "text": "verc",
+              "syllabic": "begin"
+            },
+            {
+              "text": "iert,",
+              "syllabic": "end"
+            }
+          ]
+        },
+        {
+          "raw": "Ghy wilt, en oock ghy tam gediert,",
+          "display": "Ghy wilt, en oock ghy tam gediert,",
+          "tokens": [
+            {
+              "text": "Ghy",
+              "syllabic": "single"
+            },
+            {
+              "text": "wilt,",
+              "syllabic": "single"
+            },
+            {
+              "text": "en",
+              "syllabic": "single"
+            },
+            {
+              "text": "oock",
+              "syllabic": "single"
+            },
+            {
+              "text": "ghy",
+              "syllabic": "single"
+            },
+            {
+              "text": "tam",
+              "syllabic": "single"
+            },
+            {
+              "text": "ged",
+              "syllabic": "begin"
+            },
+            {
+              "text": "iert,",
+              "syllabic": "end"
+            }
+          ]
+        },
+        {
+          "raw": "Ghy beesten cruypend’ op de aerde,",
+          "display": "Ghy beesten cruypend’ op de aerde,",
+          "tokens": [
+            {
+              "text": "Ghy",
+              "syllabic": "single"
+            },
+            {
+              "text": "bees",
+              "syllabic": "begin"
+            },
+            {
+              "text": "ten",
+              "syllabic": "end"
+            },
+            {
+              "text": "cruy",
+              "syllabic": "begin"
+            },
+            {
+              "text": "pend’",
+              "syllabic": "end"
+            },
+            {
+              "text": "op",
+              "syllabic": "single"
+            },
+            {
+              "text": "de",
+              "syllabic": "single"
+            },
+            {
+              "text": "ae",
+              "syllabic": "begin"
+            },
+            {
+              "text": "rde,",
+              "syllabic": "end"
+            }
+          ]
+        },
+        {
+          "raw": "Ghy vogels die met sneller vaerde",
+          "display": "Ghy vogels die met sneller vaerde",
+          "tokens": [
+            {
+              "text": "Ghy",
+              "syllabic": "single"
+            },
+            {
+              "text": "vog",
+              "syllabic": "begin"
+            },
+            {
+              "text": "els",
+              "syllabic": "end"
+            },
+            {
+              "text": "die",
+              "syllabic": "single"
+            },
+            {
+              "text": "met",
+              "syllabic": "single"
+            },
+            {
+              "text": "snel",
+              "syllabic": "begin"
+            },
+            {
+              "text": "ler",
+              "syllabic": "end"
+            },
+            {
+              "text": "vae",
+              "syllabic": "begin"
+            },
+            {
+              "text": "rde",
+              "syllabic": "end"
+            }
+          ]
+        },
+        {
+          "raw": "V rept, ghy volck van alle staet,",
+          "display": "V rept, ghy volck van alle staet,",
+          "tokens": [
+            {
+              "text": "V",
+              "syllabic": "single"
+            },
+            {
+              "text": "rept,",
+              "syllabic": "single"
+            },
+            {
+              "text": "ghy",
+              "syllabic": "single"
+            },
+            {
+              "text": "volck",
+              "syllabic": "single"
+            },
+            {
+              "text": "van",
+              "syllabic": "single"
+            },
+            {
+              "text": "al",
+              "syllabic": "begin"
+            },
+            {
+              "text": "le",
+              "syllabic": "end"
+            },
+            {
+              "text": "staet,",
+              "syllabic": "single"
+            }
+          ]
+        },
+        {
+          "raw": "Vorst, coninck, richter, ondersaet:",
+          "display": "Vorst, coninck, richter, ondersaet:",
+          "tokens": [
+            {
+              "text": "Vorst,",
+              "syllabic": "single"
+            },
+            {
+              "text": "con",
+              "syllabic": "begin"
+            },
+            {
+              "text": "inck,",
+              "syllabic": "end"
+            },
+            {
+              "text": "ric",
+              "syllabic": "begin"
+            },
+            {
+              "text": "hter,",
+              "syllabic": "end"
+            },
+            {
+              "text": "ond",
+              "syllabic": "begin"
+            },
+            {
+              "text": "ers",
+              "syllabic": "middle"
+            },
+            {
+              "text": "aet:",
+              "syllabic": "end"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "number": 5,
+      "lines": [
+        {
+          "raw": "’tSy jongelinck, of teere maecht,",
+          "display": "’tSy jongelinck, of teere maecht,",
+          "tokens": [
+            {
+              "text": "’tSy",
+              "syllabic": "single"
+            },
+            {
+              "text": "jon",
+              "syllabic": "begin"
+            },
+            {
+              "text": "geli",
+              "syllabic": "middle"
+            },
+            {
+              "text": "nck,",
+              "syllabic": "end"
+            },
+            {
+              "text": "of",
+              "syllabic": "single"
+            },
+            {
+              "text": "te",
+              "syllabic": "begin"
+            },
+            {
+              "text": "ere",
+              "syllabic": "end"
+            },
+            {
+              "text": "maecht,",
+              "syllabic": "single"
+            }
+          ]
+        },
+        {
+          "raw": "Van weynich jaren, of bedaecht,",
+          "display": "Van weynich jaren, of bedaecht,",
+          "tokens": [
+            {
+              "text": "Van",
+              "syllabic": "single"
+            },
+            {
+              "text": "weyn",
+              "syllabic": "begin"
+            },
+            {
+              "text": "ich",
+              "syllabic": "end"
+            },
+            {
+              "text": "ja",
+              "syllabic": "begin"
+            },
+            {
+              "text": "ren,",
+              "syllabic": "end"
+            },
+            {
+              "text": "of",
+              "syllabic": "single"
+            },
+            {
+              "text": "beda",
+              "syllabic": "begin"
+            },
+            {
+              "text": "echt,",
+              "syllabic": "end"
+            }
+          ]
+        },
+        {
+          "raw": "Des Heeren name doch verheft",
+          "display": "Des Heeren name doch verheft",
+          "tokens": [
+            {
+              "text": "Des",
+              "syllabic": "single"
+            },
+            {
+              "text": "Hee",
+              "syllabic": "begin"
+            },
+            {
+              "text": "ren",
+              "syllabic": "end"
+            },
+            {
+              "text": "na",
+              "syllabic": "begin"
+            },
+            {
+              "text": "me",
+              "syllabic": "end"
+            },
+            {
+              "text": "doch",
+              "syllabic": "single"
+            },
+            {
+              "text": "ver",
+              "syllabic": "begin"
+            },
+            {
+              "text": "heft",
+              "syllabic": "end"
+            }
+          ]
+        },
+        {
+          "raw": "Die aerd’ en hemel overtreft.",
+          "display": "Die aerd’ en hemel overtreft.",
+          "tokens": [
+            {
+              "text": "Die",
+              "syllabic": "single"
+            },
+            {
+              "text": "aerd’",
+              "syllabic": "single"
+            },
+            {
+              "text": "en",
+              "syllabic": "single"
+            },
+            {
+              "text": "he",
+              "syllabic": "begin"
+            },
+            {
+              "text": "mel",
+              "syllabic": "end"
+            },
+            {
+              "text": "ove",
+              "syllabic": "begin"
+            },
+            {
+              "text": "rtr",
+              "syllabic": "middle"
+            },
+            {
+              "text": "eft.",
+              "syllabic": "end"
+            }
+          ]
+        },
+        {
+          "raw": "Den hoorn syns volcx heeft hy verheven,",
+          "display": "Den hoorn syns volcx heeft hy verheven,",
+          "tokens": [
+            {
+              "text": "Den",
+              "syllabic": "single"
+            },
+            {
+              "text": "hoorn",
+              "syllabic": "single"
+            },
+            {
+              "text": "syns",
+              "syllabic": "single"
+            },
+            {
+              "text": "volcx",
+              "syllabic": "single"
+            },
+            {
+              "text": "heeft",
+              "syllabic": "single"
+            },
+            {
+              "text": "hy",
+              "syllabic": "single"
+            },
+            {
+              "text": "ver",
+              "syllabic": "begin"
+            },
+            {
+              "text": "he",
+              "syllabic": "middle"
+            },
+            {
+              "text": "ven,",
+              "syllabic": "end"
+            }
+          ]
+        },
+        {
+          "raw": "En heeft haer stof van lof gegeven.",
+          "display": "En heeft haer stof van lof gegeven.",
+          "tokens": [
+            {
+              "text": "En",
+              "syllabic": "single"
+            },
+            {
+              "text": "heeft",
+              "syllabic": "single"
+            },
+            {
+              "text": "haer",
+              "syllabic": "single"
+            },
+            {
+              "text": "stof",
+              "syllabic": "single"
+            },
+            {
+              "text": "van",
+              "syllabic": "single"
+            },
+            {
+              "text": "lof",
+              "syllabic": "single"
+            },
+            {
+              "text": "ge",
+              "syllabic": "begin"
+            },
+            {
+              "text": "gev",
+              "syllabic": "middle"
+            },
+            {
+              "text": "en.",
+              "syllabic": "end"
+            }
+          ]
+        },
+        {
+          "raw": "Syn gonst blijft Israël gewis,",
+          "display": "Syn gonst blijft Israël gewis,",
+          "tokens": [
+            {
+              "text": "Syn",
+              "syllabic": "single"
+            },
+            {
+              "text": "gonst",
+              "syllabic": "single"
+            },
+            {
+              "text": "bli",
+              "syllabic": "begin"
+            },
+            {
+              "text": "jft",
+              "syllabic": "end"
+            },
+            {
+              "text": "Isr",
+              "syllabic": "begin"
+            },
+            {
+              "text": "aël",
+              "syllabic": "end"
+            },
+            {
+              "text": "ge",
+              "syllabic": "begin"
+            },
+            {
+              "text": "wis,",
+              "syllabic": "end"
+            }
+          ]
+        },
+        {
+          "raw": "Het volck dat hem het naeste is.",
+          "display": "Het volck dat hem het naeste is.",
+          "tokens": [
+            {
+              "text": "Het",
+              "syllabic": "single"
+            },
+            {
+              "text": "volck",
+              "syllabic": "single"
+            },
+            {
+              "text": "dat",
+              "syllabic": "single"
+            },
+            {
+              "text": "hem",
+              "syllabic": "single"
+            },
+            {
+              "text": "het",
+              "syllabic": "single"
+            },
+            {
+              "text": "nae",
+              "syllabic": "begin"
+            },
+            {
+              "text": "ste",
+              "syllabic": "end"
+            },
+            {
+              "text": "is.",
+              "syllabic": "single"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

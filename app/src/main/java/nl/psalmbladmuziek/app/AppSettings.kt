@@ -20,6 +20,8 @@ object AppSettings {
     private const val KEY_SHOW_RESTS = "show_rests"
     private const val KEY_TEXT_ALIGN = "text_align"
     private const val KEY_COMBINE_LINES = "combine_lines"
+    private const val KEY_PSALM_VERSION = "psalm_version"
+    private const val KEY_RHYTHM_MODE = "rhythm_mode"
     /** Themamodus: 0 = systeem volgen, 1 = altijd licht, 2 = altijd donker. */
     const val THEME_SYSTEM = 0
     const val THEME_LIGHT = 1
@@ -35,6 +37,15 @@ object AppSettings {
     const val DISPLAY_TEXT = 1
     const val DISPLAY_NOTES = 2
     private const val KEY_DISPLAY_MODE = "display_mode"
+
+    /** Psalmberijming: 0 = 1773 (huidig), 1 = Datheen, 2 = Revius. */
+    const val PSALM_VERSION_1773 = 0
+    const val PSALM_VERSION_DATHEEN = 1
+    const val PSALM_VERSION_REVIUS = 2
+
+    /** Ritme: 0 = ritmisch, 1 = iso-ritmisch (kwartnoten als halve noten). */
+    const val RHYTHM_RHYTHMIC = 0
+    const val RHYTHM_ISOMETRIC = 1
 
     private fun prefs(context: Context) =
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
@@ -126,10 +137,10 @@ object AppSettings {
         prefs(context).edit().putBoolean(KEY_DARK_SHEET, value).apply()
     }
 
-    /** Rusttekens (rusten) in de bladmuziek tonen. Standaard aan.
-     *  Staan altijd aan het eind van de vorige regel, niet vóór een zin. */
+    /** Rusttekens (rusten) in de bladmuziek tonen. Standaard uit voor maximale regelbreedte.
+     *  Bij achtste-nootmuziek worden rusten alsnog getoond door de renderer. */
     fun showRests(context: Context): Boolean =
-        prefs(context).getBoolean(KEY_SHOW_RESTS, true)
+        prefs(context).getBoolean(KEY_SHOW_RESTS, false)
 
     fun setShowRests(context: Context, value: Boolean) {
         prefs(context).edit().putBoolean(KEY_SHOW_RESTS, value).apply()
@@ -150,6 +161,22 @@ object AppSettings {
 
     fun setCombineLines(context: Context, value: Boolean) {
         prefs(context).edit().putBoolean(KEY_COMBINE_LINES, value).apply()
+    }
+
+    /** Psalmberijming voor de psalmen. Gezangen blijven ongewijzigd. */
+    fun psalmVersion(context: Context): Int =
+        prefs(context).getInt(KEY_PSALM_VERSION, PSALM_VERSION_1773)
+
+    fun setPsalmVersion(context: Context, value: Int) {
+        prefs(context).edit().putInt(KEY_PSALM_VERSION, value).apply()
+    }
+
+    /** Ritmische of iso-ritmische notatie. */
+    fun rhythmMode(context: Context): Int =
+        prefs(context).getInt(KEY_RHYTHM_MODE, RHYTHM_RHYTHMIC)
+
+    fun setRhythmMode(context: Context, value: Int) {
+        prefs(context).edit().putInt(KEY_RHYTHM_MODE, value).apply()
     }
 
     /** Past de opgeslagen themavoorkeur toe (recreëert actieve schermen indien nodig). */

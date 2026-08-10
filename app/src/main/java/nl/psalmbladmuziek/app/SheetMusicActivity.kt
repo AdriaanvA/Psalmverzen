@@ -3,7 +3,10 @@ package nl.psalmbladmuziek.app
 import android.graphics.Color
 import android.graphics.Typeface
 import android.annotation.SuppressLint
+import android.content.Intent
+import android.content.res.ColorStateList
 import android.content.res.Configuration
+import android.graphics.pdf.PdfDocument
 import android.os.Bundle
 import android.text.Spannable
 import android.text.SpannableStringBuilder
@@ -31,8 +34,11 @@ import android.widget.GridLayout
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
+import android.widget.Toast
 import org.json.JSONArray
 import org.json.JSONObject
+import androidx.core.content.FileProvider
+import java.io.File
 
 class SheetMusicActivity : AppCompatActivity() {
     private lateinit var webView: WebView
@@ -50,6 +56,8 @@ class SheetMusicActivity : AppCompatActivity() {
     private var currentScoreVerticalScale = DEFAULT_NOTE_SCALE
     private var currentTransposition = 0
     private var showNotes = true
+    private var exportingPdf = false
+    private var pdfExportInProgress = false
 
     private var isFullscreen = false
     private val fullscreenBackCallback = object : OnBackPressedCallback(false) {
@@ -103,6 +111,7 @@ class SheetMusicActivity : AppCompatActivity() {
 
     private fun setupButtons() {
         findViewById<View>(R.id.backToIndexButton).setOnClickListener { finish() }
+        findViewById<View>(R.id.sharePdfButton).setOnClickListener { shareCurrentVerseAsPdf() }
         val optionsButton = findViewById<View>(R.id.optionsButton)
         optionsButton.setOnClickListener { showAppSettingsDialog { onSettingsChanged() } }
         psalmPickerTextView.setOnClickListener { showPsalmMenu() }
@@ -157,6 +166,7 @@ class SheetMusicActivity : AppCompatActivity() {
         super.onConfigurationChanged(newConfig)
         // Statusbalk opnieuw toepassen (landscape verbergt, portrait toont).
         applyFullscreenSystemBars()
+        updateHeaderDropdownIndicators()
         // De bladmuziek herberekenen zodat die op de nieuwe breedte past.
         if (showNotes && !isTextOnlyAsset()) {
             webView.evaluateJavascript("updateScore();", null)
@@ -167,6 +177,7 @@ class SheetMusicActivity : AppCompatActivity() {
         showNotes = !isTextOnlyAsset() && !AppSettings.textOnly(this)
         applyKeepScreenOn()
         applySheetTheme()
+        updateLyricsText()
         updateContentMode()
         if (showNotes) {
             webView.evaluateJavascript("updateScore();", null)
@@ -240,15 +251,106 @@ class SheetMusicActivity : AppCompatActivity() {
         webView.evaluateJavascript("updateScore();", null)
     }
 
+    private fun shareCurrentVerseAsPdf() {
+        if (pdfExportInProgress) return
+        if (isTextOnlyAsset()) {
+            Toast.makeText(this, "Voor dit item is geen bladmuziek-PDF beschikbaar.", Toast.LENGTH_SHORT).show()
+            return
+        }
+        pdfExportInProgress = true
+        exportingPdf = true
+        Toast.makeText(this, "PDF wordt gemaakt...", Toast.LENGTH_SHORT).show()
+        webView.evaluateJavascript("window.__pdfExport = true; document.documentElement.classList.add('pdf-export'); updateScore();") {
+            webView.postDelayed({
+                webView.scrollTo(0, 0)
+                writeCurrentWebViewToPdf()
+            }, 250)
+        }
+    }
+
+    private fun writeCurrentWebViewToPdf() {
+        val sharedDir = File(cacheDir, "shared").apply { mkdirs() }
+        val file = File(sharedDir, buildPdfFileName())
+        if (file.exists()) file.delete()
+
+        try {
+            @Suppress("DEPRECATION")
+            val picture = webView.capturePicture()
+            if (picture.width <= 0 || picture.height <= 0) {
+                throw IllegalStateException("PDF-bron is leeg.")
+            }
+            val pageWidth = 595
+            val pageHeight = 842
+            val margin = 28f
+            val scale = (pageWidth - margin * 2) / picture.width.toFloat().coerceAtLeast(1f)
+            val sourcePageHeight = (pageHeight - margin * 2) / scale
+            val pageCount = kotlin.math.ceil(picture.height / sourcePageHeight).toInt().coerceAtLeast(1)
+            val document = PdfDocument()
+
+            for (pageIndex in 0 until pageCount) {
+                val pageInfo = PdfDocument.PageInfo.Builder(pageWidth, pageHeight, pageIndex + 1).create()
+                val page = document.startPage(pageInfo)
+                page.canvas.translate(margin, margin)
+                page.canvas.scale(scale, scale)
+                page.canvas.translate(0f, -pageIndex * sourcePageHeight)
+                picture.draw(page.canvas)
+                document.finishPage(page)
+            }
+
+            file.outputStream().use { document.writeTo(it) }
+            document.close()
+            finishPdfExport()
+            sharePdfFile(file)
+        } catch (e: Exception) {
+            finishPdfExport()
+            Toast.makeText(this, e.message ?: "PDF maken is mislukt.", Toast.LENGTH_LONG).show()
+        }
+    }
+
+    private fun finishPdfExport() {
+        pdfExportInProgress = false
+        exportingPdf = false
+        if (showNotes && !isTextOnlyAsset()) {
+            webView.evaluateJavascript("window.__pdfExport = false; document.documentElement.classList.remove('pdf-export'); updateScore();", null)
+        }
+    }
+
+    private fun sharePdfFile(file: File) {
+        val uri = FileProvider.getUriForFile(this, "$packageName.fileprovider", file)
+        val intent = Intent(Intent.ACTION_SEND).apply {
+            type = "application/pdf"
+            putExtra(Intent.EXTRA_STREAM, uri)
+            putExtra(Intent.EXTRA_SUBJECT, buildPdfTitle())
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+        startActivity(Intent.createChooser(intent, "PDF delen"))
+    }
+
+    private fun buildPdfTitle(): String {
+        val verse = HymnRepository.verseByFileName(fileName)
+        return if (verse == null) getString(R.string.app_name) else "${verse.type} ${verse.number} vers ${verse.verse}"
+    }
+
+    private fun buildPdfFileName(): String = buildPdfTitle()
+        .lowercase()
+        .replace(Regex("[^a-z0-9]+"), "-")
+        .trim('-')
+        .ifBlank { "psalmverzen" } + ".pdf"
+
     private fun showVerseMenu() {
         val currentVerse = HymnRepository.verseByFileName(fileName) ?: return
         val verses = HymnRepository.versesFor(currentVerse.type, currentVerse.number)
         if (verses.isEmpty()) return
 
         PopupMenu(this, verseTitleTextView).apply {
-            verses.forEach { verse ->
-                menu.add("vers ${verse.verse}").setOnMenuItemClickListener {
-                    openVerse(verse)
+            itemsFromCurrent(verses, currentVerse) { it.fileName }.forEach { verse ->
+                val item = menu.add("vers ${verse.verse}")
+                if (verse.fileName == currentVerse.fileName) {
+                    item.isCheckable = true
+                    item.isChecked = true
+                }
+                item.setOnMenuItemClickListener {
+                    if (verse.fileName != currentVerse.fileName) openVerse(verse)
                     true
                 }
             }
@@ -264,7 +366,7 @@ class SheetMusicActivity : AppCompatActivity() {
         if (numbers.isEmpty()) return
 
         PopupMenu(this, psalmPickerTextView).apply {
-            numbers.forEach { number ->
+            itemsFromCurrent(numbers, currentVerse.number) { it }.forEach { number ->
                 val item = menu.add("${currentVerse.type} $number")
                 if (number == currentVerse.number) {
                     item.isCheckable = true
@@ -277,6 +379,13 @@ class SheetMusicActivity : AppCompatActivity() {
             }
             show()
         }
+    }
+
+    private fun <T, K> itemsFromCurrent(items: List<T>, current: T, keyOf: (T) -> K): List<T> {
+        val currentKey = keyOf(current)
+        val currentIndex = items.indexOfFirst { keyOf(it) == currentKey }
+        if (currentIndex <= 0) return items
+        return items.drop(currentIndex) + items.take(currentIndex)
     }
 
     private fun openNumber(type: String, number: Int) {
@@ -532,6 +641,18 @@ class SheetMusicActivity : AppCompatActivity() {
         title = activityTitle
         psalmPickerTextView.text = if (verse == null) getString(R.string.app_name) else "${verse.type} ${verse.number}"
         verseTitleTextView.text = if (verse == null) "vers -" else "vers ${verse.verse}"
+        updateHeaderDropdownIndicators()
+    }
+
+    private fun updateHeaderDropdownIndicators() {
+        val showDropdown = resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE ||
+            resources.configuration.screenWidthDp >= 600
+        val icon = if (showDropdown) R.drawable.ic_arrow_drop_down else 0
+        listOf(psalmPickerTextView, verseTitleTextView).forEach { view ->
+            view.setCompoundDrawablesRelativeWithIntrinsicBounds(0, 0, icon, 0)
+            view.compoundDrawableTintList = ColorStateList.valueOf(Color.WHITE)
+            view.compoundDrawablePadding = 0
+        }
     }
 
     private fun readAsset(assetFileName: String): String = stripInstrumentLabels(
@@ -685,13 +806,13 @@ class SheetMusicActivity : AppCompatActivity() {
         fun getAllowLineWrap(): Boolean = AppSettings.allowLineWrap(this@SheetMusicActivity)
 
         @JavascriptInterface
-        fun getSheetDark(): Boolean = this@SheetMusicActivity.isSheetDark()
+        fun getSheetDark(): Boolean = !exportingPdf && this@SheetMusicActivity.isSheetDark()
 
         @JavascriptInterface
         fun getShowRests(): Boolean = AppSettings.showRests(this@SheetMusicActivity)
 
         @JavascriptInterface
-        fun getShowLyrics(): Boolean = AppSettings.showLyrics(this@SheetMusicActivity)
+        fun getShowLyrics(): Boolean = exportingPdf || AppSettings.showLyrics(this@SheetMusicActivity)
 
         @JavascriptInterface
         fun getTextAlign(): Int = AppSettings.textAlign(this@SheetMusicActivity)

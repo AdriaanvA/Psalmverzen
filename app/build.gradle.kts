@@ -21,7 +21,7 @@ android {
 
     defaultConfig {
         applicationId = "nl.psalmbladmuziek.app"
-        minSdk = 34
+        minSdk = 32
         targetSdk = 36
         versionCode = 3
         versionName = "1.0.2"

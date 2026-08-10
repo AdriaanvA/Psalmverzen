@@ -107,6 +107,35 @@
             padding: 20px;
             font-family: sans-serif;
         }
+        .pdf-export, .pdf-export body, .pdf-export #root, .pdf-export #main {
+            background: #ffffff !important;
+            min-height: auto !important;
+        }
+        .pdf-export #root {
+            filter: none !important;
+        }
+        .pdf-export #controls-top, .pdf-export #controls-bottom, .pdf-export #verse-section {
+            display: none !important;
+        }
+        @media print {
+            @page {
+                size: A4 portrait;
+                margin: 10mm;
+            }
+            html, body, #root, #main {
+                background: #ffffff !important;
+                min-height: auto !important;
+            }
+            #root {
+                filter: none !important;
+            }
+            #controls-top, #controls-bottom, #verse-section {
+                display: none !important;
+            }
+            #score {
+                width: 100% !important;
+            }
+        }
     </style>
 </head>
 <body>
@@ -464,7 +493,9 @@
         window.requestAnimationFrame(function() {
             var top = document.getElementById("controls-top");
             var topH = top ? top.offsetHeight : 0;
-            if (scrollToScore) {
+            if (window.__pdfExport) {
+                window.scrollTo(0, 0);
+            } else if (scrollToScore) {
                 window.scrollTo(0, topH);
             } else {
                 window.scrollTo(0, previousScroll);
@@ -867,10 +898,7 @@
         bottom.innerHTML = "";
         section.innerHTML = "";
 
-        // Boven de balk: instellen vóór het zingen (Toonsoort / Tekst / Noten).
-        top.appendChild(stepperRow("Toonsoort", safeCall(function() { return Android.getTranspositionLabel(); }, "0"),
-            function() { Android.transposeBy(-1); },
-            function() { Android.transposeBy(1); }));
+        // Boven de balk: tekst/notengrootte eerst; toonsoort het dichtst bij de noten.
         top.appendChild(stepperRow("Tekst", safeCall(function() { return Android.getTextScaleLabel(); }, ""),
             function() { Android.adjustTextScale(-0.2); },
             function() { Android.adjustTextScale(0.2); }));
@@ -878,6 +906,9 @@
             function() { Android.adjustNoteScale(-0.1); },
             function() { Android.adjustNoteScale(0.1); });
         top.appendChild(notenRow);
+        top.appendChild(stepperRow("Toonsoort", safeCall(function() { return Android.getTranspositionLabel(); }, "0"),
+            function() { Android.transposeBy(-1); },
+            function() { Android.transposeBy(1); }));
 
         // Onder de balk: gebruik ná de muziek/zang (Vorige/Volgende + versnummers).
         var items = [];

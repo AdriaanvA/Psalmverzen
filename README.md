@@ -1,6 +1,6 @@
 # Psalmverzen met bladmuziek
 
-**Psalmen & Gezangen** is een Android-applicatie ontworpen voor muzikanten en iedereen die graag psalmen en de enige gezangen zingt met volledige ondersteuning voor bladmuziek.
+**Psalmverzen met bladmuziek** is een Android-app voor muzikanten en iedereen die graag psalmen en gezangen zingt met tekst en noten in één rustige, leesbare weergave.
 
 ![App Icoon](app/src/main/ic_launcher-playstore.png)
 
@@ -17,14 +17,17 @@ Moeite met een te hoge of lage toonsoort? Transponeer de bladmuziek eenvoudig ee
 
 ### ⚙️ Uitgebreide Configuratie
 Personaliseer de app volledig naar jouw wens via het instellingenmenu:
-- **Weergavemodi:** Kies uit 'Alleen tekst', 'Alleen noten' of 'Beide'.
+- **Weergavemodi:** kies uit tekst met noten, alleen tekst of alleen noten.
+- **Psalmberijmingen:** wissel tussen 1773, Datheen en Revius; 1773 blijft de standaard.
+- **Ritme:** toon de melodieën ritmisch of iso-ritmisch.
 - **Donker Thema:** Ondersteuning voor een donker thema, inclusief een speciale 'donkere bladmuziek' modus voor gebruik in omgevingen met weinig licht.
-- **Tekstinstellingen:** Grote letters, regelafbreking toestaan, tekstuitlijning (links, gecentreerd, vullend).
+- **Tekstinstellingen:** grote letters, regelafbreking toestaan, tekstuitlijning (links, gecentreerd, vullend), twee zinnen op één regel en optionele rusttekens.
 - **Scherm aan laten:** Voorkom dat je scherm uitgaat terwijl je aan het zingen of spelen bent.
 
 ### 📱 Gebruiksgemak
 - **Snel Navigeren:** Veeg horizontaal om direct naar het vorige of volgende vers te springen.
 - **Vers-Matrix:** Een handig raster om razendsnel tussen verschillende verzen van een psalm te schakelen.
+- **PDF delen:** Deel het huidige vers als A4-PDF met alleen notenbalk en tekst.
 - **Volledig Scherm:** Dubbeltik op de muziek of tekst om alle balken te verbergen en de volledige focus op de muziek te leggen.
 
 ## Screenshots
@@ -37,9 +40,10 @@ Personaliseer de app volledig naar jouw wens via het instellingenmenu:
 
 ## Ontwikkeling
 Dit project is gebouwd met de volgende Android-technieken:
-- **Kotlin** voor robuuste logica.
-- **WebView & JavaScript** voor hoogwaardige, dynamische weergave van bladmuziek via MusicXML.
-- **Jetpack Libraries** voor een soepele gebruikerservaring.
+- **Kotlin** voor app-logica, instellingen, navigatie en contentselectie.
+- **View-gebaseerde Android UI** met AppCompat/Material-componenten.
+- **Eigen SVG-renderer in een WebView** voor de dynamische bladmuziekweergave. De app gebruikt hiervoor compacte JSON-assets met melodie- en tekstdata.
+- **Gebundelde content-assets** voor psalmen, gezangen, meerdere psalmberijmingen en gedeelde melodieën.
 
 ## Licentie
 Dit project is bedoeld voor persoonlijk-  en gemeenschapsgebruik.

@@ -9,7 +9,7 @@ object ScoreBundleRenderer {
     fun readMusicXml(context: Context, verse: Verse): String {
         ContentStorage.readDownloadedMusicXmlOrNull(context, verse.fileName)?.let { return it }
 
-        val text = JSONObject(ContentStorage.readBundledAsset(context, textAssetPath(verse)))
+        val text = readTextForVerse(context, verse)
         val melody = JSONObject(ContentStorage.readBundledAsset(context, melodyFilePath(text, verse)))
         return renderMusicXml(melody, text, verse)
     }
@@ -22,9 +22,9 @@ object ScoreBundleRenderer {
      */
     fun readScoreModel(context: Context, verse: Verse): String {
         return try {
-            val text = JSONObject(ContentStorage.readBundledAsset(context, textAssetPath(verse)))
+            val text = readTextForVerse(context, verse)
             val melody = JSONObject(ContentStorage.readBundledAsset(context, melodyFilePath(text, verse)))
-            buildScoreModelOrNull(melody, text, verse)?.toString() ?: "{}"
+            buildScoreModelOrNull(context, melody, text, verse)?.toString() ?: "{}"
         } catch (_: Exception) {
             "{}"
         }
@@ -40,7 +40,7 @@ object ScoreBundleRenderer {
             val path = if (type == "Gezang") {
                 "content/gezangen/texts/Gezang${number.toString().padStart(3, '0')}.json"
             } else {
-                "content/psalms/texts/Psalm${number.toString().padStart(3, '0')}.json"
+                textAssetPath(context, "Psalm", number)
             }
             val text = JSONObject(ContentStorage.readBundledAsset(context, path))
             text.safeString("about").trim().ifBlank { null }
@@ -55,22 +55,26 @@ object ScoreBundleRenderer {
      */
     fun readVerseLines(context: Context, type: String, number: Int): Map<Int, List<String>> {
         return try {
-            val path = if (type == "Gezang") {
-                "content/gezangen/texts/Gezang${number.toString().padStart(3, '0')}.json"
+            val texts = if (type == "Psalm" && AppSettings.psalmVersion(context) != AppSettings.PSALM_VERSION_1773) {
+                listOf(
+                    JSONObject(ContentStorage.readBundledAsset(context, textAssetPath(context, type, number))),
+                    JSONObject(ContentStorage.readBundledAsset(context, canonicalTextAssetPath(type, number)))
+                )
             } else {
-                "content/psalms/texts/Psalm${number.toString().padStart(3, '0')}.json"
+                listOf(JSONObject(ContentStorage.readBundledAsset(context, textAssetPath(context, type, number))))
             }
-            val text = JSONObject(ContentStorage.readBundledAsset(context, path))
-            val verses = text.safeJSONArray("verses")
             val map = HashMap<Int, List<String>>()
-            for (i in 0 until (verses?.length() ?: 0)) {
-                val verse = verses?.safeJSONObject(i) ?: continue
-                val lines = verse.safeJSONArray("lines")
-                val lineList = ArrayList<String>(lines?.length() ?: 0)
-                for (j in 0 until (lines?.length() ?: 0)) {
-                    lineList.add(lines?.safeJSONObject(j)?.safeString("raw") ?: "")
+            texts.asReversed().forEach { text ->
+                val verses = text.safeJSONArray("verses")
+                for (i in 0 until (verses?.length() ?: 0)) {
+                    val verse = verses?.safeJSONObject(i) ?: continue
+                    val lines = verse.safeJSONArray("lines")
+                    val lineList = ArrayList<String>(lines?.length() ?: 0)
+                    for (j in 0 until (lines?.length() ?: 0)) {
+                        lineList.add(lines?.safeJSONObject(j)?.safeString("raw") ?: "")
+                    }
+                    map[verse.safeInt("number")] = lineList
                 }
-                map[verse.safeInt("number")] = lineList
             }
             map
         } catch (_: Exception) {
@@ -78,13 +82,14 @@ object ScoreBundleRenderer {
         }
     }
 
-    fun buildScoreModelOrNull(melody: JSONObject, text: JSONObject, verse: Verse): JSONObject? {
+    fun buildScoreModelOrNull(context: Context, melody: JSONObject, text: JSONObject, verse: Verse): JSONObject? {
         return try {
             val melodyLines = melody.safeJSONObject("melody")?.safeJSONArray("lines")
             val verseSource = findVerse(text.safeJSONArray("verses"), verse.verse)
             val lyricLines = verseSource?.safeJSONArray("lines")
             val lineCount = minOf(melodyLines?.length() ?: 0, lyricLines?.length() ?: 0)
             val partName = if (verse.type == "Gezang") "Gezang" else "Psalm"
+            val isometric = AppSettings.rhythmMode(context) == AppSettings.RHYTHM_ISOMETRIC && !keepsRhythmicNotation(verse)
 
             val linesJson = JSONArray()
             for (lineIndex in 0 until lineCount) {
@@ -97,7 +102,7 @@ object ScoreBundleRenderer {
                 for (noteIndex in 0 until notes.length()) {
                     val note = notes.safeJSONObject(noteIndex) ?: continue
                     if (note.safeBoolean("hidden")) continue
-                    val noteJson = noteJsonModel(note)
+                    val noteJson = noteJsonModel(note, isometric)
                     val isRest = note.safeBoolean("rest")
                     val hasLyric = note.safeBoolean("lyricSlot") && tokenIndex < tokens.length()
                     when {
@@ -150,19 +155,46 @@ object ScoreBundleRenderer {
         }
     }
 
-    private fun noteJsonModel(note: JSONObject): JSONObject {
+    private fun noteJsonModel(note: JSONObject, isometric: Boolean): JSONObject {
+        val rest = note.safeBoolean("rest")
+        val originalType = note.safeString("type")
+        val type = if (isometric && !rest && originalType == "quarter") "half" else originalType
         return JSONObject()
             .put("step", note.safeString("step"))
             .put("alter", if (note.safeIsNull("alter")) 0 else note.safeInt("alter"))
             .put("octave", note.safeInt("octave"))
-            .put("type", note.safeString("type"))
-            .put("dot", note.safeBoolean("dot"))
-            .put("rest", note.safeBoolean("rest"))
+            .put("type", type)
+            .put("dot", if (isometric && !rest && originalType == "quarter") false else note.safeBoolean("dot"))
+            .put("rest", rest)
     }
 
-    private fun textAssetPath(verse: Verse): String = when (verse.type) {
-        "Gezang" -> "content/gezangen/texts/Gezang${verse.number.toString().padStart(3, '0')}.json"
-        else -> "content/psalms/texts/Psalm${verse.number.toString().padStart(3, '0')}.json"
+    private fun keepsRhythmicNotation(verse: Verse): Boolean =
+        verse.type == "Gezang" && verse.number in setOf(24, 26)
+
+    private fun readTextForVerse(context: Context, verse: Verse): JSONObject {
+        val preferred = JSONObject(ContentStorage.readBundledAsset(context, textAssetPath(context, verse.type, verse.number)))
+        if (verse.type != "Psalm" || AppSettings.psalmVersion(context) == AppSettings.PSALM_VERSION_1773) {
+            return preferred
+        }
+        return if (findVerse(preferred.safeJSONArray("verses"), verse.verse) != null) {
+            preferred
+        } else {
+            JSONObject(ContentStorage.readBundledAsset(context, canonicalTextAssetPath(verse.type, verse.number)))
+        }
+    }
+
+    private fun textAssetPath(context: Context, type: String, number: Int): String = when (type) {
+        "Gezang" -> canonicalTextAssetPath(type, number)
+        else -> when (AppSettings.psalmVersion(context)) {
+            AppSettings.PSALM_VERSION_DATHEEN -> "content/psalms/datheen/texts/Psalm${number.toString().padStart(3, '0')}.json"
+            AppSettings.PSALM_VERSION_REVIUS -> "content/psalms/revius/texts/Psalm${number.toString().padStart(3, '0')}.json"
+            else -> canonicalTextAssetPath(type, number)
+        }
+    }
+
+    private fun canonicalTextAssetPath(type: String, number: Int): String = when (type) {
+        "Gezang" -> "content/gezangen/texts/Gezang${number.toString().padStart(3, '0')}.json"
+        else -> "content/psalms/texts/Psalm${number.toString().padStart(3, '0')}.json"
     }
 
     /**
