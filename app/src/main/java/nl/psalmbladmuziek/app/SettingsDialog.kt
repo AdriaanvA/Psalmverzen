@@ -4,10 +4,12 @@ import android.content.Intent
 import android.net.Uri
 import android.view.Gravity
 import android.widget.LinearLayout
+import android.widget.SeekBar
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SwitchCompat
+import androidx.core.content.ContextCompat
 
 /** Bestemming van de 'Steun de app'-knop (tip jar). */
 private const val SUPPORT_URL = "https://arianappel.github.io/Psalmverzen/"
@@ -49,11 +51,14 @@ fun AppCompatActivity.showAppSettingsDialog(onChanged: () -> Unit = {}) {
     }
 
     fun sectionHeader(title: String) {
+        val tv = android.util.TypedValue()
+        val activeColor = if (theme.resolveAttribute(android.R.attr.colorControlActivated, tv, true)) tv.data
+            else ContextCompat.getColor(this, R.color.settings_blue_bright)
         root.addView(TextView(this).apply {
             text = title
             textSize = 13f
             setTypeface(typeface, android.graphics.Typeface.BOLD)
-            setTextColor(0xFF607D8B.toInt())
+            setTextColor(activeColor)
             setPadding(0, dp(16), 0, dp(2))
         })
     }
@@ -86,10 +91,13 @@ fun AppCompatActivity.showAppSettingsDialog(onChanged: () -> Unit = {}) {
             textSize = 16f
             layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
         })
+        val tv = android.util.TypedValue()
+        val activeColor = if (theme.resolveAttribute(android.R.attr.colorControlActivated, tv, true)) tv.data
+            else ContextCompat.getColor(this, R.color.settings_blue_bright)
         val valueView = TextView(this).apply {
             text = value()
             textSize = 16f
-            setTextColor(0xFF607D8B.toInt())
+            setTextColor(activeColor)
         }
         row.addView(valueView)
         row.setOnClickListener { onClick(valueView) }
@@ -108,16 +116,34 @@ fun AppCompatActivity.showAppSettingsDialog(onChanged: () -> Unit = {}) {
             valueView.text = psalmVersionName(AppSettings.psalmVersion(this)); onChanged()
         }
     }
-    chooserRow("Ritme", { rhythmModeName(AppSettings.rhythmMode(this)) }) { valueView ->
-        showRhythmModeChooser {
-            valueView.text = rhythmModeName(AppSettings.rhythmMode(this)); onChanged()
-        }
-    }
     toggleRow("Scherm aan laten", AppSettings.keepScreenOn(this)) {
         AppSettings.setKeepScreenOn(this, it); onChanged()
     }
     toggleRow("Schriftliederen", AppSettings.showSchriftliederen(this)) {
         AppSettings.setShowSchriftliederen(this, it); onChanged()
+    }
+
+    // --- Noten en muziek ---
+    sectionHeader("Noten en muziek")
+    chooserRow("Ritme", { rhythmModeName(AppSettings.rhythmMode(this)) }) { valueView ->
+        showRhythmModeChooser {
+            valueView.text = rhythmModeName(AppSettings.rhythmMode(this)); onChanged()
+        }
+    }
+    chooserRow("Bovenbalk knop", { topBarActionName(AppSettings.topBarActionIcon(this)) }) { valueView ->
+        showTopBarActionChooser {
+            valueView.text = topBarActionName(AppSettings.topBarActionIcon(this)); onChanged()
+        }
+    }
+    chooserRow("Afspeelsnelheid", { "${AppSettings.playbackTempo(this)}" }) { valueView ->
+        showTempoChooser {
+            valueView.text = "${AppSettings.playbackTempo(this)}"; onChanged()
+        }
+    }
+    chooserRow("Klank", { timbreName(AppSettings.playbackTimbre(this)) }) { valueView ->
+        showTimbreChooser {
+            valueView.text = timbreName(AppSettings.playbackTimbre(this)); onChanged()
+        }
     }
 
     // --- Schermgrootte ---
@@ -151,9 +177,9 @@ fun AppCompatActivity.showAppSettingsDialog(onChanged: () -> Unit = {}) {
         }
     }
 
-    // --- Steun ---
-    sectionHeader("Steun")
-    linkRow("\u2764 Steun de app") {
+    // --- Over ---
+    sectionHeader("Over")
+    linkRow("Informatie") {
         try {
             startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(SUPPORT_URL)))
         } catch (_: Exception) {}
@@ -180,8 +206,12 @@ fun AppCompatActivity.showAppSettingsDialog(onChanged: () -> Unit = {}) {
         // Versienummer als rustig label linksonder (naast Klaar); geen actie bij tik.
         dialog.getButton(AlertDialog.BUTTON_NEUTRAL)?.apply {
             isAllCaps = false
-            setTextColor(0xFF9E9E9E.toInt())
+            setTextColor(ContextCompat.getColor(this@showAppSettingsDialog, R.color.app_text_secondary))
             setOnClickListener { /* alleen versielabel */ }
+        }
+        // KLAAR knop uses theme's colorAccent (settings_blue_bright) which is already applied
+        dialog.getButton(AlertDialog.BUTTON_POSITIVE)?.apply {
+            isAllCaps = false
         }
     }
     dialog.show()
@@ -210,6 +240,19 @@ private fun rhythmModeName(mode: Int): String = when (mode) {
     else -> "Ritmisch"
 }
 
+private fun topBarActionName(value: Int): String = when (value) {
+    AppSettings.TOPBAR_ACTION_PLAY -> "Afspelen"
+    else -> "Delen"
+}
+
+private fun timbreName(value: Int): String = when (value) {
+    AppSettings.TIMBRE_HOLPIJP -> "Holpijp"
+    AppSettings.TIMBRE_FLUIT -> "Fluit"
+    AppSettings.TIMBRE_STRINGS -> "Strings"
+    AppSettings.TIMBRE_VOL16 -> "Plenum 16'"
+    else -> "Prestant"
+}
+
 private fun AppCompatActivity.showDisplayModeChooser(onChanged: () -> Unit) {
     val options = arrayOf("Beide", "Tekst", "Noten")
     AlertDialog.Builder(this)
@@ -228,6 +271,7 @@ private fun AppCompatActivity.showPsalmVersionChooser(onChanged: () -> Unit) {
         .setTitle("Psalmberijming")
         .setSingleChoiceItems(options, AppSettings.psalmVersion(this)) { dialog, which ->
             AppSettings.setPsalmVersion(this, which)
+            VerseSearchIndex.clear()
             dialog.dismiss()
             onChanged()
         }
@@ -240,6 +284,71 @@ private fun AppCompatActivity.showRhythmModeChooser(onChanged: () -> Unit) {
         .setTitle("Ritme")
         .setSingleChoiceItems(options, AppSettings.rhythmMode(this)) { dialog, which ->
             AppSettings.setRhythmMode(this, which)
+            dialog.dismiss()
+            onChanged()
+        }
+        .show()
+}
+
+private fun AppCompatActivity.showTopBarActionChooser(onChanged: () -> Unit) {
+    val options = arrayOf("Delen", "Afspelen")
+    AlertDialog.Builder(this)
+        .setTitle("Bovenbalk knop")
+        .setSingleChoiceItems(options, AppSettings.topBarActionIcon(this)) { dialog, which ->
+            AppSettings.setTopBarActionIcon(this, which)
+            dialog.dismiss()
+            onChanged()
+        }
+        .show()
+}
+
+private fun AppCompatActivity.showTempoChooser(onChanged: () -> Unit) {
+    val density = resources.displayMetrics.density
+    fun dp(value: Int) = (value * density).toInt()
+
+    val root = LinearLayout(this).apply {
+        orientation = LinearLayout.VERTICAL
+        setPadding(dp(20), dp(16), dp(20), 0)
+    }
+    val valueLabel = TextView(this).apply {
+        textSize = 18f
+        text = "Tempo ${AppSettings.playbackTempo(this@showTempoChooser)}"
+        setPadding(0, 0, 0, dp(8))
+    }
+    val seekBar = SeekBar(this).apply {
+        max = AppSettings.MAX_PLAYBACK_TEMPO - AppSettings.MIN_PLAYBACK_TEMPO
+        progress = AppSettings.playbackTempo(this@showTempoChooser) - AppSettings.MIN_PLAYBACK_TEMPO
+        setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                val tempo = AppSettings.MIN_PLAYBACK_TEMPO + progress
+                valueLabel.text = "Tempo $tempo"
+                if (fromUser) {
+                    AppSettings.setPlaybackTempo(this@showTempoChooser, tempo)
+                }
+            }
+            override fun onStartTrackingTouch(seekBar: SeekBar?) {}
+            override fun onStopTrackingTouch(seekBar: SeekBar?) {
+                onChanged()
+            }
+        })
+    }
+
+    root.addView(valueLabel)
+    root.addView(seekBar)
+
+    AlertDialog.Builder(this)
+        .setTitle("Afspeelsnelheid")
+        .setView(root)
+        .setPositiveButton("Klaar", null)
+        .show()
+}
+
+private fun AppCompatActivity.showTimbreChooser(onChanged: () -> Unit) {
+    val options = arrayOf("Prestant", "Holpijp", "Fluit", "Strings", "Plenum 16'")
+    AlertDialog.Builder(this)
+        .setTitle("Klank")
+        .setSingleChoiceItems(options, AppSettings.playbackTimbre(this)) { dialog, which ->
+            AppSettings.setPlaybackTimbre(this, which)
             dialog.dismiss()
             onChanged()
         }

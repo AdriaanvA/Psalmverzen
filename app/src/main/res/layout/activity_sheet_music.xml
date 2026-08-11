@@ -72,6 +72,15 @@
             android:contentDescription="Delen als PDF" />
 
         <ImageButton
+            android:id="@+id/playMelodyButton"
+            android:layout_width="56dp"
+            android:layout_height="match_parent"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/ic_play"
+            android:scaleType="centerInside"
+            android:contentDescription="Melodie afspelen" />
+
+        <ImageButton
             android:id="@+id/optionsButton"
             android:layout_width="56dp"
             android:layout_height="match_parent"

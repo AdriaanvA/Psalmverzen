@@ -242,23 +242,46 @@
 
     // Rusten: standaard aan het EIND van de vorige regel (niet vóór een zin). Wanneer
     // rusten uitstaan worden ze volledig weggelaten.
-    function preprocessRests(model, showRests) {
-        var lines = model.lines || [];
+    // Deze functie is pure: bronmodel blijft ongewijzigd.
+    function preprocessRests(lines, showRests) {
+        var cloned = (lines || []).map(function(line) {
+            var slots = (line.slots || []).map(function(slot) {
+                return {
+                    text: slot.text || "",
+                    syllabic: slot.syllabic || "",
+                    rest: !!slot.rest,
+                    notes: (slot.notes || []).map(function(n) { return Object.assign({}, n); })
+                };
+            });
+            return {
+                slots: slots,
+                verseStart: !!line.verseStart,
+                verseEnd: !!line.verseEnd,
+                verseNumber: line.verseNumber
+            };
+        });
+
         if (!showRests) {
-            for (var i = 0; i < lines.length; i++) {
-                lines[i].slots = (lines[i].slots || []).filter(function(s) { return !s.rest; });
-            }
-            return;
+            return cloned.map(function(line) {
+                return {
+                    slots: (line.slots || []).filter(function(s) { return !s.rest; }),
+                    verseStart: !!line.verseStart,
+                    verseEnd: !!line.verseEnd,
+                    verseNumber: line.verseNumber
+                };
+            });
         }
-        for (var j = 1; j < lines.length; j++) {
-            var slots = lines[j].slots || [];
+
+        for (var j = 1; j < cloned.length; j++) {
+            var slots = cloned[j].slots || [];
             while (slots.length && slots[0].rest) {
                 var moved = slots.shift();
-                lines[j - 1].slots = (lines[j - 1].slots || []);
-                lines[j - 1].slots.push(moved);
+                cloned[j - 1].slots = (cloned[j - 1].slots || []);
+                cloned[j - 1].slots.push(moved);
             }
-            lines[j].slots = slots;
+            cloned[j].slots = slots;
         }
+        return cloned;
     }
 
     function modelHasEighthNotes(model) {
@@ -284,12 +307,14 @@
             svg.removeChild(svg.firstChild);
         }
 
-        // Dubbeltik op de notenbalk/tekst = volledig scherm aan/uit (NIET op de knoppen,
-        // want die zitten buiten dit SVG). Eén keer aankoppelen.
+        // Dubbeltik op notenbalk, tekst of witte ruimte eronder = volledig scherm aan/uit.
+        // Uitgesloten: de navigatieknoppen in controls-bottom.
         if (!window.__dtapAttached) {
             window.__dtapAttached = true;
             var lastTouchEnd = 0;
-            svg.addEventListener("touchend", function(ev) {
+            var main = document.getElementById("main");
+            main.addEventListener("touchend", function(ev) {
+                if (ev.target.closest && ev.target.closest("#controls-bottom")) return;
                 var now = Date.now();
                 if (lastTouchEnd && (now - lastTouchEnd) < 350) {
                     ev.preventDefault();
@@ -321,7 +346,9 @@
         try { showRests = (Android.getShowRests() !== false); } catch (e) { showRests = true; }
     HAS_EIGHTH_NOTES = modelHasEighthNotes(model);
     if (HAS_EIGHTH_NOTES) { showRests = true; }
-        preprocessRests(model, showRests);
+        model = Object.assign({}, model, {
+            lines: preprocessRests(model.lines || [], showRests)
+        });
 
         var TEXT_ALIGN = 1; // 0=links, 1=centrisch, 2=vullend
         try { TEXT_ALIGN = Android.getTextAlign(); } catch (e) { TEXT_ALIGN = 1; }
@@ -360,7 +387,7 @@
             var rows = [];
             // 'Twee zinnen op één regel': combineer opeenvolgende regels (max 2) als ze
             // samen op de breedte passen (handig in landscape/op tablets).
-            if (COMBINE_LINES) {
+            if (COMBINE_LINES && model.multiVerse !== true) {
                 var k = 0;
                 while (k < model.lines.length) {
                     var showClefK = (k === 0);
@@ -370,18 +397,33 @@
                         var combinedK = slotsK.concat(model.lines[k + 1].slots || []);
                         var natK = computeLayout({ slots: combinedK }, baseMetrics).naturalWidth;
                         if (natK <= availK) {
-                            rows.push({ slots: combinedK, showClef: showClefK, cont: false });
+                            rows.push({
+                                slots: combinedK,
+                                showClef: showClefK,
+                                cont: false,
+                                verseStart: !!model.lines[k].verseStart,
+                                verseNumber: model.lines[k].verseNumber,
+                                verseEnd: !!model.lines[k + 1].verseEnd
+                            });
                             k += 2;
                             continue;
                         }
                     }
-                    rows.push({ slots: slotsK, showClef: showClefK, cont: false });
+                    rows.push({
+                        slots: slotsK,
+                        showClef: showClefK,
+                        cont: false,
+                        verseStart: !!model.lines[k].verseStart,
+                        verseNumber: model.lines[k].verseNumber,
+                        verseEnd: !!model.lines[k].verseEnd
+                    });
                     k += 1;
                 }
                 return rows;
             }
             for (var i = 0; i < model.lines.length; i++) {
-                var slots = model.lines[i].slots || [];
+                var sourceLine = model.lines[i] || {};
+                var slots = sourceLine.slots || [];
                 var showClefLine = (i === 0);
                 var avail = Math.max(1, width - staffStartXFor(showClefLine) - RIGHT_MARGIN);
                 var natural = computeLayout(model.lines[i], baseMetrics).naturalWidth;
@@ -395,12 +437,33 @@
                         }
                     }
                     if (best > 0 && best < slots.length) {
-                        rows.push({ slots: slots.slice(0, best), showClef: showClefLine, cont: false });
-                        rows.push({ slots: slots.slice(best), showClef: false, cont: true });
+                        rows.push({
+                            slots: slots.slice(0, best),
+                            showClef: showClefLine,
+                            cont: false,
+                            verseStart: !!sourceLine.verseStart,
+                            verseNumber: sourceLine.verseNumber,
+                            verseEnd: false
+                        });
+                        rows.push({
+                            slots: slots.slice(best),
+                            showClef: false,
+                            cont: true,
+                            verseStart: false,
+                            verseNumber: sourceLine.verseNumber,
+                            verseEnd: !!sourceLine.verseEnd
+                        });
                         continue;
                     }
                 }
-                rows.push({ slots: slots, showClef: showClefLine, cont: false });
+                rows.push({
+                    slots: slots,
+                    showClef: showClefLine,
+                    cont: false,
+                    verseStart: !!sourceLine.verseStart,
+                    verseNumber: sourceLine.verseNumber,
+                    verseEnd: !!sourceLine.verseEnd
+                });
             }
             return rows;
         }
@@ -408,13 +471,45 @@
 
         var extents = rows.map(function(r) { return lineVerticalExtent({ slots: r.slots }); });
         var staffTops = [];
+        var rowBounds = [];
+        var verseSeparators = [];
         var y = 4;
+        var VERSE_SEPARATOR_GAP = 14;
         for (var idx = 0; idx < rows.length; idx++) {
+            if (rows[idx].verseStart && idx > 0) {
+                verseSeparators.push(y + Math.floor(VERSE_SEPARATOR_GAP / 2));
+                y += VERSE_SEPARATOR_GAP;
+            }
             var ext = extents[idx];
+            var rowTop = y;
             staffTops.push(y + TOP_PAD + ext.above);
-            y += TOP_PAD + ext.above + 4 * S + ext.below + TEXT_GAP + FONT_SIZE + LINE_GAP;
+            var rowHeight = TOP_PAD + ext.above + 4 * S + ext.below + TEXT_GAP + FONT_SIZE + LINE_GAP;
+            y += rowHeight;
+            rowBounds.push({ top: rowTop, bottom: y });
         }
         var totalHeight = y + 4;
+
+        var verseRanges = [];
+        var activeStart = null;
+        for (var ri = 0; ri < rows.length; ri++) {
+            if (rows[ri].verseStart || activeStart === null) {
+                if (activeStart !== null && ri > 0) {
+                    verseRanges.push({ startY: activeStart, endY: rowBounds[ri - 1].bottom });
+                }
+                activeStart = rowBounds[ri].top;
+            }
+            if (rows[ri].verseEnd && activeStart !== null) {
+                verseRanges.push({ startY: activeStart, endY: rowBounds[ri].bottom });
+                activeStart = null;
+            }
+        }
+        if (activeStart !== null && rowBounds.length) {
+            verseRanges.push({ startY: activeStart, endY: rowBounds[rowBounds.length - 1].bottom });
+        }
+        if (!verseRanges.length) {
+            verseRanges.push({ startY: 0, endY: totalHeight });
+        }
+        window.__verseRanges = verseRanges;
 
         svg.setAttribute("width", width);
         svg.setAttribute("height", totalHeight);
@@ -426,6 +521,17 @@
             x: 0, y: 0, width: width, height: totalHeight,
             fill: "transparent", "pointer-events": "all"
         }));
+
+        verseSeparators.forEach(function(sepY) {
+            svg.appendChild(el("line", {
+                x1: LEFT_MARGIN,
+                y1: sepY,
+                x2: width - RIGHT_MARGIN,
+                y2: sepY,
+                stroke: "#ccd3cc",
+                "stroke-width": 1
+            }));
+        });
 
         // Kies één consistente schaal zodat elke rij binnen zijn eigen ruimte past.
         var minRatio = 1;
@@ -456,6 +562,7 @@
             leftFillStretch = maxNat > 0 ? Math.max(1, availAtMax / maxNat) : 1;
         }
 
+        var showVerseLabels = (model.multiVerse === true);
         rows.forEach(function(r, index) {
             var showClef = r.showClef;
             var staffStartX = staffStartXFor(showClef);
@@ -480,7 +587,26 @@
                 stretch = Math.min(rawStretch, MAX_STRETCH);
                 xOffset = Math.max(0, (available - layout.naturalWidth * stretch) / 2);
             }
-            renderLine(svg, layout, stretch, xOffset, staffTops[index], extents[index].below, width, fifths, staffStartX, metrics.font, showClef);
+            renderLine(
+                svg,
+                layout,
+                stretch,
+                xOffset,
+                staffTops[index],
+                extents[index].below,
+                width,
+                fifths,
+                staffStartX,
+                metrics.font,
+                showClef,
+                {
+                    verseStart: r.verseStart,
+                    verseNumber: r.verseNumber,
+                    verseEnd: r.verseEnd,
+                    showVerseLabel: showVerseLabels
+                },
+                index === rows.length - 1
+            );
         });
 
         window.__hasModel = true;
@@ -560,7 +686,7 @@
         return { items: items, naturalWidth: cursor || 1 };
     }
 
-    function renderLine(svg, layout, stretch, xOffset, staffTopY, belowStaff, width, fifths, staffStartX, font, showClef) {
+    function renderLine(svg, layout, stretch, xOffset, staffTopY, belowStaff, width, fifths, staffStartX, font, showClef, rowMeta, isFinalRow) {
         var midY = staffTopY + 2 * S;
 
         // y-positie uit een diatonische waarde
@@ -574,6 +700,17 @@
             svg.appendChild(el("line", {
                 x1: LEFT_MARGIN, y1: ly, x2: width - RIGHT_MARGIN, y2: ly,
                 stroke: "#16110a", "stroke-width": 1
+            }));
+        }
+
+        if ((rowMeta && rowMeta.verseEnd) || isFinalRow) {
+            svg.appendChild(el("line", {
+                x1: width - RIGHT_MARGIN,
+                y1: staffTopY,
+                x2: width - RIGHT_MARGIN,
+                y2: staffTopY + 4 * S,
+                stroke: "#16110a",
+                "stroke-width": 1.6
             }));
         }
 
@@ -643,6 +780,8 @@
         var i = 0;
         var prevRight = -Infinity;
         var minWordGap = font * 0.32;
+        var versePrefixPending = !!(rowMeta && rowMeta.showVerseLabel && rowMeta.verseStart && rowMeta.verseNumber != null);
+        var versePrefix = versePrefixPending ? (String(rowMeta.verseNumber) + ". ") : "";
         while (i < layout.items.length) {
             var j = i;
             while (j + 1 < layout.items.length && !startsNewWord(layout.items[j + 1].slot)) {
@@ -670,6 +809,10 @@
                 }
             }
             if (syllables.length) {
+                if (versePrefixPending) {
+                    syllables[0].text = versePrefix + syllables[0].text;
+                    versePrefixPending = false;
+                }
                 var wordW = 0;
                 for (var w = 0; w < syllables.length; w++) {
                     wordW += measureText(syllables[w].text, syllables[w].italic, font);
@@ -994,6 +1137,24 @@
 
     window.renderScore = renderScore;
     window.updateScore = updateScore;
+    window.getVerseRanges = function() {
+        return JSON.stringify(window.__verseRanges || []);
+    };
+    window.getPdfExportState = function() {
+        var root = document.getElementById("root");
+        var dpr = window.devicePixelRatio || 1;
+        var contentHeight = root ? Math.ceil((root.scrollHeight || root.offsetHeight || 0) * dpr) : 0;
+        var scaledRanges = (window.__verseRanges || []).map(function(range) {
+            return {
+                startY: Math.ceil((range.startY || 0) * dpr),
+                endY: Math.ceil((range.endY || 0) * dpr)
+            };
+        });
+        return JSON.stringify({
+            verseRanges: scaledRanges,
+            contentHeightPx: contentHeight
+        });
+    };
     window.addEventListener("resize", function() {
         if (window.__hasModel) {
             renderScore();

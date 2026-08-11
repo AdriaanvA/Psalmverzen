@@ -7,14 +7,18 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
+import android.widget.BaseAdapter
 import android.widget.GridView
 import android.widget.TextView
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 
 class BookFragment : Fragment() {
 
     private var rootView: View? = null
+    var activeCategory: PsalmCategory? = null
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -31,6 +35,10 @@ class BookFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
+        val app = requireActivity().application as? PsalmenApplication
+        if (app?.consumeBackgroundedFlag() == true) {
+            activeCategory = null
+        }
         rootView?.let { populate(it) }
     }
 
@@ -57,26 +65,28 @@ class BookFragment : Fragment() {
             emptyTextView.visibility = View.GONE
             gridView.visibility = View.VISIBLE
             gridView.numColumns = 8
-            // Geen rij-tussenruimte: de accentcellen (boek 2 en 4) sluiten zo
-            // verticaal aaneen tot een doorlopende band; de celhoogte (52dp)
-            // levert het visuele ritme.
             gridView.verticalSpacing = 0
             gridView.horizontalSpacing = 0
-            val psalmNumbers = (1..150).map { it.toString() }
-            val bookAccent = androidx.core.content.ContextCompat.getColor(requireContext(), R.color.psalm_book_accent)
+
+            val cat = activeCategory
+            val psalmNumbers = if (cat != null) {
+                (1..150).filter { it in cat.psalms }.map { it.toString() }
+            } else {
+                (1..150).map { it.toString() }
+            }
+
+            val bookAccent = ContextCompat.getColor(requireContext(), R.color.psalm_book_accent)
             gridView.adapter = object : ArrayAdapter<String>(requireContext(), R.layout.item_number_grid, psalmNumbers) {
                 override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
                     val itemView = super.getView(position, convertView, parent)
-                    // Subtiele achtergrond voor de 2e (Ps 42-72) en 4e (Ps 90-106)
-                    // 'rol' van de Hebreeuwse Psalter; overige boeken blijven neutraal.
-                    val n = position + 1
+                    val n = psalmNumbers[position].toInt()
                     val inAccentedBook = n in 42..72 || n in 90..106
                     itemView.setBackgroundColor(if (inAccentedBook) bookAccent else 0)
                     return itemView
                 }
             }
             gridView.setOnItemClickListener { _, _, position, _ ->
-                openPsalmOrGezang("Psalm", position + 1)
+                openPsalmOrGezang("Psalm", psalmNumbers[position].toInt())
             }
             return
         }
@@ -86,7 +96,7 @@ class BookFragment : Fragment() {
             emptyTextView.visibility = View.GONE
             gridView.visibility = View.VISIBLE
             gridView.numColumns = 1
-            gridView.verticalSpacing = dpToPx(4)
+            gridView.verticalSpacing = requireContext().dpToPx(4)
             val secondary = androidx.core.content.ContextCompat.getColor(requireContext(), R.color.app_text_secondary)
             val primary = androidx.core.content.ContextCompat.getColor(requireContext(), R.color.app_text_primary)
             gridView.adapter = object : ArrayAdapter<HymnRow>(requireContext(), R.layout.item_hymn_list, rows) {
@@ -141,6 +151,79 @@ class BookFragment : Fragment() {
      * aanstaat, daaronder de Schriftliederen (vaste lijst, bijbelvolgorde). Liederen
      * zonder tekst/muziek verschijnen cursief als placeholder.
      */
+    fun showCurrentInfo() {
+        val cat = activeCategory ?: PSALM_CATEGORY_DEFAULT
+        AlertDialog.Builder(requireContext())
+            .setTitle(cat.name)
+            .setMessage(cat.description)
+            .setPositiveButton("Sluiten", null)
+            .show()
+    }
+
+    fun showCategoryChooser() {
+        val context = requireContext()
+        val currentCat = activeCategory
+        val density = resources.displayMetrics.density
+
+        class Entry(val category: PsalmCategory?, val label: String, val isHeader: Boolean = false)
+
+        val entries = mutableListOf<Entry>()
+        entries += Entry(null, "Alle 150 psalmen")
+        listOf(
+            "Psalterindeling" to listOf(0,1,2,3,4),
+            "Bijbels/literair" to listOf(5,6,7,8,9,10,11,12,33,32,34,22,23,28),
+            "Thema" to listOf(13,14,15,16,24,17,18,19,20,21,25,27,26,29),
+            "Gebruik" to listOf(30,31)
+        ).forEach { (title, indices) ->
+            entries += Entry(null, title, isHeader = true)
+            indices.forEach { idx ->
+                val c = PSALM_CATEGORIES[idx]
+                entries += Entry(c, "${c.name} (${c.psalms.size})")
+            }
+        }
+
+        val adapter = object : BaseAdapter() {
+            override fun getCount() = entries.size
+            override fun getItem(pos: Int) = entries[pos]
+            override fun getItemId(pos: Int) = pos.toLong()
+            override fun isEnabled(pos: Int) = !entries[pos].isHeader
+            override fun getViewTypeCount() = 2
+            override fun getItemViewType(pos: Int) = if (entries[pos].isHeader) 0 else 1
+
+            override fun getView(pos: Int, convertView: View?, parent: ViewGroup): View {
+                val entry = entries[pos]
+                return if (entry.isHeader) {
+                    (convertView as? TextView ?: TextView(context)).apply {
+                        text = entry.label
+                        textSize = 11f
+                        setTypeface(null, Typeface.BOLD)
+                        isAllCaps = true
+                        setTextColor(ContextCompat.getColor(context, R.color.app_text_secondary))
+                        setPadding((16*density).toInt(), (14*density).toInt(), (16*density).toInt(), (2*density).toInt())
+                    }
+                } else {
+                    (convertView as? TextView ?: TextView(context)).apply {
+                        text = entry.label
+                        textSize = 15f
+                        setTypeface(null, if (entry.category == currentCat) Typeface.BOLD else Typeface.NORMAL)
+                        setPadding((32*density).toInt(), (10*density).toInt(), (16*density).toInt(), (10*density).toInt())
+                    }
+                }
+            }
+        }
+
+        AlertDialog.Builder(context)
+            .setTitle("Categorie")
+            .setAdapter(adapter) { _, which ->
+                val entry = entries[which]
+                if (!entry.isHeader) {
+                    activeCategory = entry.category
+                    rootView?.let { populate(it) }
+                }
+            }
+            .show()
+    }
+
     private fun gezangRows(): List<HymnRow> {
         val rows = mutableListOf<HymnRow>()
         HymnRepository.groupsForBook(HymnRepository.HYMNS_TITLE)
@@ -164,8 +247,6 @@ class BookFragment : Fragment() {
         }
         return rows
     }
-
-    private fun dpToPx(value: Int): Int = (value * resources.displayMetrics.density).toInt()
 
     private fun openFirstAvailableVerseOrExplain(type: String, number: Int) {
         val firstVerse = HymnRepository.versesFor(type, number).firstOrNull()

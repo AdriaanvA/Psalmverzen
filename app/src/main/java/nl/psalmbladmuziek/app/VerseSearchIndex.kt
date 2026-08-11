@@ -1,6 +1,8 @@
 package nl.psalmbladmuziek.app
 
 import android.content.Context
+import android.os.Handler
+import android.os.Looper
 
 /** Eén zoekresultaat: het vers plus de regel die getoond wordt (de matchende regel). */
 data class SearchResult(val verse: Verse, val displayLine: String)
@@ -14,6 +16,25 @@ object VerseSearchIndex {
 
     @Volatile
     private var entries: List<Entry>? = null
+
+    private val buildLock = Any()
+
+    fun clear() {
+        entries = null
+    }
+
+    /**
+     * Zoekt op een achtergrondthread (de eerste keer bouwt dit de index op via
+     * asset-I/O) en levert het resultaat op de main-thread. Voorkomt jank/ANR in
+     * het zoekscherm.
+     */
+    fun searchAsync(context: Context, query: String, onResult: (List<SearchResult>) -> Unit) {
+        val appContext = context.applicationContext
+        Thread {
+            val result = search(appContext, query)
+            Handler(Looper.getMainLooper()).post { onResult(result) }
+        }.start()
+    }
 
     fun search(context: Context, query: String): List<SearchResult> {
         val index = ensureIndex(context)
@@ -30,9 +51,12 @@ object VerseSearchIndex {
 
     private fun ensureIndex(context: Context): List<Entry> {
         entries?.let { return it }
-        val built = build(context)
-        entries = built
-        return built
+        synchronized(buildLock) {
+            entries?.let { return it }
+            val built = build(context)
+            entries = built
+            return built
+        }
     }
 
     private fun build(context: Context): List<Entry> {

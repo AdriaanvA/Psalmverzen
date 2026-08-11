@@ -1,6 +1,8 @@
 package nl.psalmbladmuziek.app
 
 import android.content.Context
+import android.os.Handler
+import android.os.Looper
 import org.json.JSONObject
 
 data class Verse(
@@ -28,45 +30,101 @@ object HymnRepository {
         private set
 
     /**
-     * Gezang-nummers (Schriftliederen) die (nog) niet toegankelijk zijn: ze tonen
-     * in het overzicht als placeholder en worden overgeslagen bij vorige/volgende.
-     * Eén centrale bron zodat lijst én swipe-navigatie hetzelfde gedrag hebben.
+     * Gezang-nummers die (nog) niet toegankelijk zijn: ze tonen in het overzicht als
+     * placeholder en worden overgeslagen bij vorige/volgende. De vlag staat per lied in
+     * het lied-JSON ("disabled": true) en wordt bij het laden verzameld.
      */
-    val disabledHymnNumbers = setOf(23)   // 23 = Jesaja 38 – Lofzang van Hizkia
+    @Volatile
+    var disabledHymnNumbers: Set<Int> = emptySet()
+        private set
+
+    /** Korte header-afkorting per gezang (uit "abbreviation" in het lied-JSON). */
+    @Volatile
+    var hymnAbbreviations: Map<Int, String> = emptyMap()
+        private set
+
+    fun hymnAbbreviation(number: Int): String? = hymnAbbreviations[number]
 
     fun isHymnDisabled(type: String, number: Int): Boolean =
         type == "Gezang" && number in disabledHymnNumbers
 
     private var bundledVerses = emptyList<Verse>()
-    private var downloadedVerses = emptyList<Verse>()
 
     @Volatile
     private var allVersesCache: List<Verse>? = null
 
+    // Afgeleide opzoektabellen zodat veelgebruikte lookups O(1) zijn i.p.v. een lineaire scan.
+    @Volatile
+    private var verseByFileNameCache: Map<String, Verse> = emptyMap()
+
+    @Volatile
+    private var versesByTypeNumberCache: Map<String, List<Verse>> = emptyMap()
+
+    @Volatile
+    private var indexByFileNameCache: Map<String, Int> = emptyMap()
+
     @Volatile
     private var groupsCache = mutableMapOf<String, List<VerseGroup>>()
 
-    fun refreshDownloadedContent(context: Context) {
-        isReady = false
-        bundledVerses = readBundledManifest(context)
+    private val loadLock = Any()
 
-        val manifestFile = ContentStorage.downloadedManifestFile(context)
-        downloadedVerses = if (manifestFile.exists()) {
-            try {
-                parseDownloadedManifest(manifestFile.readText().trimStart('\uFEFF'))
-            } catch (_: Exception) {
-                emptyList()
-            }
-        } else {
-            emptyList()
+    /**
+     * Laadt de gebundelde content eenmalig (synchroon) en bouwt de caches op.
+     * Doet niets als de content al geladen is; veilig vanaf meerdere threads.
+     */
+    fun ensureLoaded(context: Context) {
+        if (isReady) return
+        synchronized(loadLock) {
+            if (isReady) return
+            loadNow(context.applicationContext)
         }
+    }
+
+    /**
+     * Laadt de content op een achtergrondthread (indien nog niet geladen) en roept
+     * [onReady] op de main-thread aan zodra de caches klaar zijn. Voorkomt jank/ANR
+     * bij het opstarten doordat het parsen van het manifest niet op de UI-thread gebeurt.
+     */
+    fun loadAsync(context: Context, onReady: () -> Unit) {
+        if (isReady) {
+            onReady()
+            return
+        }
+        val appContext = context.applicationContext
+        Thread {
+            ensureLoaded(appContext)
+            Handler(Looper.getMainLooper()).post(onReady)
+        }.start()
+    }
+
+    private fun loadNow(context: Context) {
+        bundledVerses = readBundledManifest(context)
         allVersesCache = null
         groupsCache.clear()
+        VerseSearchIndex.clear()
 
         // Pre-build caches
         allVerses()
         bookTitles.forEach { groupedVersesForBook(it) }
+        computeHymnMeta(context)
         isReady = true
+    }
+
+    // Leest per bestaand gezang de metadata (uitschakel-vlag + header-afkorting) in één keer.
+    private fun computeHymnMeta(context: Context) {
+        val disabled = mutableSetOf<Int>()
+        val abbreviations = mutableMapOf<Int, String>()
+        allVerses().asSequence()
+            .filter { it.type == "Gezang" }
+            .map { it.number }
+            .distinct()
+            .forEach { number ->
+                val meta = ScoreBundleRenderer.readHymnMeta(context, number)
+                if (meta.disabled) disabled.add(number)
+                meta.abbreviation?.let { abbreviations[number] = it }
+            }
+        disabledHymnNumbers = disabled
+        hymnAbbreviations = abbreviations
     }
 
     private fun readBundledManifest(context: Context): List<Verse> = try {
@@ -106,15 +164,15 @@ object HymnRepository {
         return result
     }
 
-    fun verseByFileName(fileName: String): Verse? = allVerses().firstOrNull { it.fileName == fileName }
+    fun verseByFileName(fileName: String): Verse? {
+        allVerses()
+        return verseByFileNameCache[fileName]
+    }
 
-    fun versesForPsalm(number: Int): List<Verse> = allVerses()
-        .filter { it.type == "Psalm" && it.number == number }
-        .sortedBy { it.verse }
-
-    fun versesFor(type: String, number: Int): List<Verse> = allVerses()
-        .filter { it.type == type && it.number == number }
-        .sortedBy { it.verse }
+    fun versesFor(type: String, number: Int): List<Verse> {
+        allVerses()
+        return versesByTypeNumberCache["$type-$number"].orEmpty()
+    }
 
     /** Beschikbare (niet-uitgeschakelde) nummers van een boektype, oplopend gesorteerd.
      *  Gebruikt voor de psalm-/gezang-keuzelijst in de bladmuziek. */
@@ -133,26 +191,35 @@ object HymnRepository {
 
     private fun adjacentVerse(currentFileName: String, offset: Int): Verse? {
         val verses = allVerses()
-        val currentIndex = verses.indexOfFirst { it.fileName == currentFileName }
-        if (currentIndex < 0) return null
+        val currentIndex = indexByFileNameCache[currentFileName] ?: return null
         // Sla verzen van uitgeschakelde liederen (bv. Gezang 22) over, zodat je er
         // via vorige/volgende niet alsnog belandt.
-        var targetIndex = currentIndex + offset
-        while (targetIndex in verses.indices) {
+        var targetIndex = Math.floorMod(currentIndex + offset, verses.size)
+        while (targetIndex != currentIndex) {
             val candidate = verses[targetIndex]
             if (!isHymnDisabled(candidate.type, candidate.number)) return candidate
-            targetIndex += offset
+            targetIndex = Math.floorMod(targetIndex + offset, verses.size)
         }
         return null
     }
 
     private fun allVerses(): List<Verse> {
         allVersesCache?.let { return it }
-        val built = (bundledVerses + downloadedVerses)
+        val built = bundledVerses
             .distinctBy { "${it.type}-${it.number}-${it.verse}" }
-            .sortedWith(compareBy<Verse> { it.type }.thenBy { it.number }.thenBy { it.verse })
+            .sortedWith(compareBy<Verse> { bookOrder(it.type) }.thenBy { it.number }.thenBy { it.verse })
+        // built is al gesorteerd op nummer+vers, dus groupBy levert per lied gesorteerde lijsten.
+        verseByFileNameCache = built.associateBy { it.fileName }
+        versesByTypeNumberCache = built.groupBy { "${it.type}-${it.number}" }
+        indexByFileNameCache = built.withIndex().associate { (index, verse) -> verse.fileName to index }
         allVersesCache = built
         return built
+    }
+
+    private fun bookOrder(type: String): Int = when (type) {
+        "Psalm" -> 0
+        "Gezang" -> 1
+        else -> 2
     }
 
     private fun parseDownloadedManifest(json: String): List<Verse> {

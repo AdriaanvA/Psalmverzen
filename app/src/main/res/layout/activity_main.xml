@@ -25,6 +25,7 @@
         android:paddingEnd="8dp">
 
         <TextView
+            android:id="@+id/filterButton"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
@@ -33,7 +34,19 @@
             android:text="@string/header_title"
             android:textColor="#FFFFFF"
             android:textSize="20sp"
-            android:textStyle="bold" />
+            android:textStyle="bold"
+            android:clickable="true"
+            android:focusable="true"
+            android:background="?attr/selectableItemBackgroundBorderless" />
+
+        <ImageButton
+            android:id="@+id/infoButton"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/ic_info"
+            android:scaleType="centerInside"
+            android:contentDescription="Over de psalmen" />
 
         <ImageButton
             android:id="@+id/searchButton"

@@ -1,10 +1,14 @@
 package nl.psalmbladmuziek.app
 
 import android.app.Activity
+import android.content.Context
 import android.os.Build
+import android.view.View
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.ColorUtils
+import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
 
 @Suppress("DEPRECATION")
 fun Activity.configureReadableSystemBars(
@@ -34,3 +38,16 @@ private fun Activity.applyBarContrastPolicy() {
         window.isNavigationBarContrastEnforced = false
     }
 }
+
+/** Laat de statusbalk-achtergrond even hoog worden als de systeem-statusbalk (edge-to-edge). */
+fun Activity.bindStatusBarBackground(root: View, statusBarBackground: View) {
+    ViewCompat.setOnApplyWindowInsetsListener(root) { _, insets ->
+        val statusBars = insets.getInsets(WindowInsetsCompat.Type.statusBars())
+        statusBarBackground.layoutParams = statusBarBackground.layoutParams.apply {
+            height = statusBars.top
+        }
+        insets
+    }
+}
+
+fun Context.dpToPx(value: Int): Int = (value * resources.displayMetrics.density).toInt()

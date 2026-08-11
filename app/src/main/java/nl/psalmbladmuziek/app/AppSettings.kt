@@ -22,6 +22,9 @@ object AppSettings {
     private const val KEY_COMBINE_LINES = "combine_lines"
     private const val KEY_PSALM_VERSION = "psalm_version"
     private const val KEY_RHYTHM_MODE = "rhythm_mode"
+    private const val KEY_TOPBAR_ACTION_ICON = "topbar_action_icon"
+    private const val KEY_PLAYBACK_TEMPO = "playback_tempo"
+    private const val KEY_PLAYBACK_TIMBRE = "playback_timbre"
     /** Themamodus: 0 = systeem volgen, 1 = altijd licht, 2 = altijd donker. */
     const val THEME_SYSTEM = 0
     const val THEME_LIGHT = 1
@@ -46,6 +49,23 @@ object AppSettings {
     /** Ritme: 0 = ritmisch, 1 = iso-ritmisch (kwartnoten als halve noten). */
     const val RHYTHM_RHYTHMIC = 0
     const val RHYTHM_ISOMETRIC = 1
+
+    /** Topbar-actie in portrait: 0 = delen, 1 = afspelen. */
+    const val TOPBAR_ACTION_SHARE = 0
+    const val TOPBAR_ACTION_PLAY = 1
+
+    /** Afspelen: tempo in procenten van de basisduur (50..150, standaard 100). */
+    const val MIN_PLAYBACK_TEMPO = 50
+    const val MAX_PLAYBACK_TEMPO = 150
+    const val DEFAULT_PLAYBACK_TEMPO = 100
+
+    /** Klankprofiel voor de live speler. */
+    const val TIMBRE_PRESTANT = 0
+    const val TIMBRE_HOLPIJP = 1
+    const val TIMBRE_FLUIT = 2
+    const val TIMBRE_STRINGS = 3
+    const val TIMBRE_VOL16 = 4
+    const val DEFAULT_PLAYBACK_TIMBRE = TIMBRE_PRESTANT
 
     private fun prefs(context: Context) =
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
@@ -177,6 +197,31 @@ object AppSettings {
 
     fun setRhythmMode(context: Context, value: Int) {
         prefs(context).edit().putInt(KEY_RHYTHM_MODE, value).apply()
+    }
+
+    fun topBarActionIcon(context: Context): Int =
+        prefs(context).getInt(KEY_TOPBAR_ACTION_ICON, TOPBAR_ACTION_SHARE)
+
+    fun setTopBarActionIcon(context: Context, value: Int) {
+        prefs(context).edit().putInt(KEY_TOPBAR_ACTION_ICON, value).apply()
+    }
+
+    fun playbackTempo(context: Context): Int =
+        prefs(context)
+            .getInt(KEY_PLAYBACK_TEMPO, DEFAULT_PLAYBACK_TEMPO)
+            .coerceIn(MIN_PLAYBACK_TEMPO, MAX_PLAYBACK_TEMPO)
+
+    fun setPlaybackTempo(context: Context, value: Int) {
+        prefs(context).edit().putInt(KEY_PLAYBACK_TEMPO, value.coerceIn(MIN_PLAYBACK_TEMPO, MAX_PLAYBACK_TEMPO)).apply()
+    }
+
+    fun playbackTimbre(context: Context): Int =
+        prefs(context)
+            .getInt(KEY_PLAYBACK_TIMBRE, DEFAULT_PLAYBACK_TIMBRE)
+            .coerceIn(TIMBRE_PRESTANT, TIMBRE_VOL16)
+
+    fun setPlaybackTimbre(context: Context, value: Int) {
+        prefs(context).edit().putInt(KEY_PLAYBACK_TIMBRE, value.coerceIn(TIMBRE_PRESTANT, TIMBRE_VOL16)).apply()
     }
 
     /** Past de opgeslagen themavoorkeur toe (recreëert actieve schermen indien nodig). */

@@ -1,7 +1,6 @@
 package nl.psalmbladmuziek.app
 
 import android.content.Intent
-import android.graphics.Color
 import android.graphics.Typeface
 import android.os.Bundle
 import android.text.Editable
@@ -18,8 +17,7 @@ import android.widget.EditText
 import android.widget.ListView
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
+import androidx.core.content.ContextCompat
 
 class SearchActivity : AppCompatActivity() {
 
@@ -31,19 +29,9 @@ class SearchActivity : AppCompatActivity() {
         configureReadableSystemBars()
         setContentView(R.layout.activity_search)
 
-        val root = findViewById<View>(R.id.searchRoot)
-        val statusBarBackground = findViewById<View>(R.id.statusBarBackground)
-        ViewCompat.setOnApplyWindowInsetsListener(root) { _, insets ->
-            val statusBars = insets.getInsets(WindowInsetsCompat.Type.statusBars())
-            statusBarBackground.layoutParams = statusBarBackground.layoutParams.apply {
-                height = statusBars.top
-            }
-            insets
-        }
+        bindStatusBarBackground(findViewById(R.id.searchRoot), findViewById(R.id.statusBarBackground))
 
         findViewById<View>(R.id.backButton).setOnClickListener { finish() }
-
-        results.addAll(VerseSearchIndex.search(this, ""))
 
         val adapter = object : ArrayAdapter<SearchResult>(this, R.layout.item_search_result, results) {
             override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
@@ -67,14 +55,29 @@ class SearchActivity : AppCompatActivity() {
             )
         }
 
+        // Alle resultaten (lege query) alvast async laden; bouwt de index buiten de UI-thread.
+        VerseSearchIndex.searchAsync(this, currentQuery) { res ->
+            if (currentQuery.isEmpty()) {
+                results.clear()
+                results.addAll(res)
+                adapter.notifyDataSetChanged()
+            }
+        }
+
         findViewById<EditText>(R.id.searchEditText).addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
             override fun afterTextChanged(s: Editable?) {
                 currentQuery = s?.toString().orEmpty()
-                results.clear()
-                results.addAll(VerseSearchIndex.search(this@SearchActivity, currentQuery))
-                adapter.notifyDataSetChanged()
+                val queryAtRequest = currentQuery
+                VerseSearchIndex.searchAsync(this@SearchActivity, queryAtRequest) { res ->
+                    // Verouderde (trager binnengekomen) resultaten negeren.
+                    if (queryAtRequest == currentQuery) {
+                        results.clear()
+                        results.addAll(res)
+                        adapter.notifyDataSetChanged()
+                    }
+                }
             }
         })
     }
@@ -87,7 +90,7 @@ class SearchActivity : AppCompatActivity() {
         if (index < 0) return line
         val spannable = SpannableString(line)
         spannable.setSpan(StyleSpan(Typeface.BOLD), index, index + q.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
-        spannable.setSpan(ForegroundColorSpan(Color.rgb(75, 103, 72)), index, index + q.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+        spannable.setSpan(ForegroundColorSpan(ContextCompat.getColor(this, R.color.tab_selected)), index, index + q.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
         return spannable
     }
 }

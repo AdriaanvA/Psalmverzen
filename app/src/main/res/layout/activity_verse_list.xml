@@ -60,4 +60,13 @@
         android:divider="@color/app_divider"
         android:dividerHeight="1dp"
         android:paddingTop="4dp" />
+
+    <GridView
+        android:id="@+id/verseGridView"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:numColumns="8"
+        android:visibility="gone"
+        android:paddingTop="4dp" />
 </LinearLayout>

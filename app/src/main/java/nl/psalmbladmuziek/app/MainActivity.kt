@@ -3,15 +3,9 @@ package nl.psalmbladmuziek.app
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.View
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
-import androidx.lifecycle.lifecycleScope
 import androidx.viewpager2.widget.ViewPager2
 import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 class MainActivity : AppCompatActivity() {
 
@@ -24,9 +18,7 @@ class MainActivity : AppCompatActivity() {
         val tabLayout = findViewById<TabLayout>(R.id.tabLayout)
         val viewPager = findViewById<ViewPager2>(R.id.viewPager)
 
-        // For now, let's load synchronously to see if it fixes the "hang" (which might be a missing UI update)
-        HymnRepository.refreshDownloadedContent(this)
-        // ContentDownloadWorker.enqueueIfConfigured(this)
+        HymnRepository.loadAsync(this) { refreshBookFragments() }
 
         val adapter = BookPagerAdapter(this, HymnRepository.bookTitles)
         viewPager.adapter = adapter
@@ -36,6 +28,18 @@ class MainActivity : AppCompatActivity() {
             tab.text = HymnRepository.bookTitles[position]
         }.attach()
 
+        findViewById<View>(R.id.infoButton).setOnClickListener {
+            getPsalmFragment()?.showCurrentInfo()
+        }
+        val filterButton = findViewById<View>(R.id.filterButton)
+        filterButton.setOnClickListener { getPsalmFragment()?.showCategoryChooser() }
+        viewPager.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
+            override fun onPageSelected(position: Int) {
+                filterButton.isClickable = position == 0
+                filterButton.isFocusable = position == 0
+            }
+        })
+
         findViewById<View>(R.id.settingsButton).setOnClickListener {
             showAppSettingsDialog { refreshBookFragments() }
         }
@@ -44,17 +48,11 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun getPsalmFragment(): BookFragment? =
+        supportFragmentManager.fragments.filterIsInstance<BookFragment>()
+            .find { it.arguments?.getString("BOOK_TYPE") == HymnRepository.PSALMS_TITLE }
+
     private fun refreshBookFragments() {
         supportFragmentManager.fragments.filterIsInstance<BookFragment>().forEach { it.refresh() }
-    }
-
-    private fun bindStatusBarBackground(root: View, statusBarBackground: View) {
-        ViewCompat.setOnApplyWindowInsetsListener(root) { _, insets ->
-            val statusBars = insets.getInsets(WindowInsetsCompat.Type.statusBars())
-            statusBarBackground.layoutParams = statusBarBackground.layoutParams.apply {
-                height = statusBars.top
-            }
-            insets
-        }
     }
 }

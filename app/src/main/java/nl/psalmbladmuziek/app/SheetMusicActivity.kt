@@ -1,28 +1,24 @@
 package nl.psalmbladmuziek.app
 
+import android.content.Intent
 import android.graphics.Color
 import android.graphics.Typeface
-import android.annotation.SuppressLint
-import android.content.Intent
 import android.content.res.ColorStateList
 import android.content.res.Configuration
-import android.graphics.pdf.PdfDocument
+import androidx.appcompat.app.AlertDialog
 import android.os.Bundle
 import android.text.Spannable
 import android.text.SpannableStringBuilder
 import android.text.style.StyleSpan
 import android.util.TypedValue
-import android.view.GestureDetector
 import android.view.Gravity
-import android.view.MotionEvent
-import android.view.ScaleGestureDetector
 import android.view.View
 import android.view.WindowManager
 import android.webkit.JavascriptInterface
 import android.webkit.WebView
 import android.webkit.WebViewClient
-import android.widget.PopupMenu
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowCompat
@@ -31,14 +27,12 @@ import androidx.activity.OnBackPressedCallback
 import android.widget.Button
 import android.widget.FrameLayout
 import android.widget.GridLayout
+import android.widget.ImageButton
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
-import android.widget.Toast
 import org.json.JSONArray
 import org.json.JSONObject
-import androidx.core.content.FileProvider
-import java.io.File
 
 class SheetMusicActivity : AppCompatActivity() {
     private lateinit var webView: WebView
@@ -51,13 +45,19 @@ class SheetMusicActivity : AppCompatActivity() {
     private lateinit var verseMatrixGrid: GridLayout
     private lateinit var previousVerseButton: Button
     private lateinit var nextVerseButton: Button
+    private lateinit var playMelodyButton: ImageButton
+    private lateinit var pdfExporter: SheetPdfExporter
+    private lateinit var gestureController: SheetGestureController
+    private val melodyPlayer = LiveMelodyPlayer()
     private lateinit var fileName: String
     private var currentLyricTextScale = DEFAULT_TEXT_SCALE
     private var currentScoreVerticalScale = DEFAULT_NOTE_SCALE
     private var currentTransposition = 0
+    private var lastPlaybackTempo = AppSettings.DEFAULT_PLAYBACK_TEMPO
+    private var lastPlaybackTimbre = AppSettings.DEFAULT_PLAYBACK_TIMBRE
     private var showNotes = true
     private var exportingPdf = false
-    private var pdfExportInProgress = false
+    private var stackedVerseFileNames: LinkedHashSet<String>? = null
 
     private var isFullscreen = false
     private val fullscreenBackCallback = object : OnBackPressedCallback(false) {
@@ -87,11 +87,13 @@ class SheetMusicActivity : AppCompatActivity() {
         }
 
         fileName = intent.getStringExtra(EXTRA_FILE_NAME) ?: DEFAULT_FILE_NAME
+        lastPlaybackTempo = AppSettings.playbackTempo(this)
+        lastPlaybackTimbre = AppSettings.playbackTimbre(this)
         currentLyricTextScale = roundScaleToGrid(AppSettings.textScale(this, DEFAULT_TEXT_SCALE), DEFAULT_TEXT_SCALE, TEXT_SCALE_STEP, MIN_TEXT_SCALE, MAX_TEXT_SCALE)
         currentScoreVerticalScale = roundScaleToGrid(AppSettings.noteScale(this, DEFAULT_NOTE_SCALE), DEFAULT_NOTE_SCALE, NOTE_SCALE_STEP, MIN_NOTE_SCALE, MAX_NOTE_SCALE)
         showNotes = !isTextOnlyAsset() && !AppSettings.textOnly(this)
         applyKeepScreenOn()
-        HymnRepository.refreshDownloadedContent(this)
+        HymnRepository.ensureLoaded(this)
         webView = findViewById(R.id.webView)
         psalmPickerTextView = findViewById(R.id.psalmPickerTextView)
         verseTitleTextView = findViewById(R.id.verseTitleTextView)
@@ -102,6 +104,24 @@ class SheetMusicActivity : AppCompatActivity() {
         verseMatrixGrid = findViewById(R.id.verseMatrixGrid)
         previousVerseButton = findViewById(R.id.prevVerseButton)
         nextVerseButton = findViewById(R.id.nextVerseButton)
+        playMelodyButton = findViewById(R.id.playMelodyButton)
+        pdfExporter = SheetPdfExporter(
+            activity = this,
+            webView = webView,
+            isTextOnlyAsset = ::isTextOnlyAsset,
+            titleProvider = ::buildPdfTitle,
+            setExportingPdf = { exportingPdf = it },
+            shouldRestoreScore = { showNotes && !isTextOnlyAsset() },
+            preferSinglePdfPage = ::preferSinglePdfPage
+        )
+        gestureController = SheetGestureController(
+            context = this,
+            onPreviousVerse = { openAdjacentVerse(previous = true) },
+            onNextVerse = { openAdjacentVerse(previous = false) },
+            onTextDoubleTap = { toggleFullscreen() },
+            onPinch = { scaleFactor -> applyPinchScaleFactor(scaleFactor) },
+            onPinchEnd = { savePinchScale() }
+        )
 
         setupButtons()
         setupWebView()
@@ -111,15 +131,22 @@ class SheetMusicActivity : AppCompatActivity() {
 
     private fun setupButtons() {
         findViewById<View>(R.id.backToIndexButton).setOnClickListener { finish() }
-        findViewById<View>(R.id.sharePdfButton).setOnClickListener { shareCurrentVerseAsPdf() }
+        findViewById<View>(R.id.sharePdfButton).setOnClickListener { pdfExporter.shareCurrentVerseAsPdf() }
+        playMelodyButton.setOnClickListener { toggleMelodyPlayback() }
         val optionsButton = findViewById<View>(R.id.optionsButton)
         optionsButton.setOnClickListener { showAppSettingsDialog { onSettingsChanged() } }
         psalmPickerTextView.setOnClickListener { showPsalmMenu() }
-        verseTitleTextView.setOnClickListener { showVerseMenu() }
+        verseTitleTextView.setOnClickListener { openCurrentVerseOverview() }
+        verseTitleTextView.setOnLongClickListener {
+            showVerseMultiSelectDialog()
+            true
+        }
         previousVerseButton.setOnClickListener { openAdjacentVerse(previous = true) }
         nextVerseButton.setOnClickListener { openAdjacentVerse(previous = false) }
         findViewById<Button>(R.id.textDownButton).setOnClickListener { adjustLyricTextScale(-TEXT_SCALE_STEP) }
         findViewById<Button>(R.id.textUpButton).setOnClickListener { adjustLyricTextScale(TEXT_SCALE_STEP) }
+        updateTopBarActionButtons()
+        updatePlayButtonIcon()
         updateControls()
     }
 
@@ -166,6 +193,7 @@ class SheetMusicActivity : AppCompatActivity() {
         super.onConfigurationChanged(newConfig)
         // Statusbalk opnieuw toepassen (landscape verbergt, portrait toont).
         applyFullscreenSystemBars()
+        updateTopBarActionButtons()
         updateHeaderDropdownIndicators()
         // De bladmuziek herberekenen zodat die op de nieuwe breedte past.
         if (showNotes && !isTextOnlyAsset()) {
@@ -174,11 +202,22 @@ class SheetMusicActivity : AppCompatActivity() {
     }
 
     private fun onSettingsChanged() {
+        val newTempo = AppSettings.playbackTempo(this)
+        val tempoChanged = newTempo != lastPlaybackTempo
+        lastPlaybackTempo = newTempo
+        val newTimbre = AppSettings.playbackTimbre(this)
+        val timbreChanged = newTimbre != lastPlaybackTimbre
+        lastPlaybackTimbre = newTimbre
+
         showNotes = !isTextOnlyAsset() && !AppSettings.textOnly(this)
         applyKeepScreenOn()
         applySheetTheme()
+        updateTopBarActionButtons()
         updateLyricsText()
         updateContentMode()
+        if ((tempoChanged || timbreChanged) && melodyPlayer.isPlaying) {
+            startMelodyPlayback()
+        }
         if (showNotes) {
             webView.evaluateJavascript("updateScore();", null)
         }
@@ -191,7 +230,7 @@ class SheetMusicActivity : AppCompatActivity() {
 
     private fun applySheetTheme() {
         val dark = isSheetDark()
-        webView.setBackgroundColor(if (dark) 0xFF121212.toInt() else Color.WHITE)
+        webView.setBackgroundColor(ContextCompat.getColor(this, if (dark) R.color.sheet_dark_bg else R.color.white))
     }
 
     private fun applyKeepScreenOn() {
@@ -207,11 +246,6 @@ class SheetMusicActivity : AppCompatActivity() {
     private fun displayNoteScalePercent(scale: Double): String = displayRelativePercent(scale, DEFAULT_NOTE_SCALE)
 
     private fun displayRelativePercent(scale: Double, defaultScale: Double): String = "${((scale / defaultScale) * 100).toInt()}%"
-
-    private fun scaleChangeLabel(current: Double, delta: Double, min: Double, max: Double, formatter: (Double) -> String): String {
-        val next = (current + delta).coerceIn(min, max)
-        return "${formatter(current)} -> ${formatter(next)}"
-    }
 
     private fun adjustLyricTextScale(delta: Double) {
         currentLyricTextScale = snapScale(currentLyricTextScale, delta, DEFAULT_TEXT_SCALE, TEXT_SCALE_STEP, MIN_TEXT_SCALE, MAX_TEXT_SCALE)
@@ -251,145 +285,124 @@ class SheetMusicActivity : AppCompatActivity() {
         webView.evaluateJavascript("updateScore();", null)
     }
 
-    private fun shareCurrentVerseAsPdf() {
-        if (pdfExportInProgress) return
-        if (isTextOnlyAsset()) {
-            Toast.makeText(this, "Voor dit item is geen bladmuziek-PDF beschikbaar.", Toast.LENGTH_SHORT).show()
-            return
-        }
-        pdfExportInProgress = true
-        exportingPdf = true
-        Toast.makeText(this, "PDF wordt gemaakt...", Toast.LENGTH_SHORT).show()
-        webView.evaluateJavascript("window.__pdfExport = true; document.documentElement.classList.add('pdf-export'); updateScore();") {
-            webView.postDelayed({
-                webView.scrollTo(0, 0)
-                writeCurrentWebViewToPdf()
-            }, 250)
-        }
-    }
-
-    private fun writeCurrentWebViewToPdf() {
-        val sharedDir = File(cacheDir, "shared").apply { mkdirs() }
-        val file = File(sharedDir, buildPdfFileName())
-        if (file.exists()) file.delete()
-
-        try {
-            @Suppress("DEPRECATION")
-            val picture = webView.capturePicture()
-            if (picture.width <= 0 || picture.height <= 0) {
-                throw IllegalStateException("PDF-bron is leeg.")
-            }
-            val pageWidth = 595
-            val pageHeight = 842
-            val margin = 28f
-            val scale = (pageWidth - margin * 2) / picture.width.toFloat().coerceAtLeast(1f)
-            val sourcePageHeight = (pageHeight - margin * 2) / scale
-            val pageCount = kotlin.math.ceil(picture.height / sourcePageHeight).toInt().coerceAtLeast(1)
-            val document = PdfDocument()
-
-            for (pageIndex in 0 until pageCount) {
-                val pageInfo = PdfDocument.PageInfo.Builder(pageWidth, pageHeight, pageIndex + 1).create()
-                val page = document.startPage(pageInfo)
-                page.canvas.translate(margin, margin)
-                page.canvas.scale(scale, scale)
-                page.canvas.translate(0f, -pageIndex * sourcePageHeight)
-                picture.draw(page.canvas)
-                document.finishPage(page)
-            }
-
-            file.outputStream().use { document.writeTo(it) }
-            document.close()
-            finishPdfExport()
-            sharePdfFile(file)
-        } catch (e: Exception) {
-            finishPdfExport()
-            Toast.makeText(this, e.message ?: "PDF maken is mislukt.", Toast.LENGTH_LONG).show()
-        }
-    }
-
-    private fun finishPdfExport() {
-        pdfExportInProgress = false
-        exportingPdf = false
-        if (showNotes && !isTextOnlyAsset()) {
-            webView.evaluateJavascript("window.__pdfExport = false; document.documentElement.classList.remove('pdf-export'); updateScore();", null)
-        }
-    }
-
-    private fun sharePdfFile(file: File) {
-        val uri = FileProvider.getUriForFile(this, "$packageName.fileprovider", file)
-        val intent = Intent(Intent.ACTION_SEND).apply {
-            type = "application/pdf"
-            putExtra(Intent.EXTRA_STREAM, uri)
-            putExtra(Intent.EXTRA_SUBJECT, buildPdfTitle())
-            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-        }
-        startActivity(Intent.createChooser(intent, "PDF delen"))
-    }
-
     private fun buildPdfTitle(): String {
         val verse = HymnRepository.verseByFileName(fileName)
-        return if (verse == null) getString(R.string.app_name) else "${verse.type} ${verse.number} vers ${verse.verse}"
+        if (verse == null) return getString(R.string.app_name)
+        if (shouldRenderStackedScoreInNotes(verse)) {
+            val selectedNumbers = selectedVersesForCurrentSong(verse).map { it.verse }
+            val versePart = selectedNumbers.joinToString("-")
+            return "${verse.type} ${verse.number} verzen $versePart"
+        }
+        return "${verse.type} ${verse.number} vers ${verse.verse}"
     }
-
-    private fun buildPdfFileName(): String = buildPdfTitle()
-        .lowercase()
-        .replace(Regex("[^a-z0-9]+"), "-")
-        .trim('-')
-        .ifBlank { "psalmverzen" } + ".pdf"
 
     private fun showVerseMenu() {
         val currentVerse = HymnRepository.verseByFileName(fileName) ?: return
         val verses = HymnRepository.versesFor(currentVerse.type, currentVerse.number)
         if (verses.isEmpty()) return
 
-        PopupMenu(this, verseTitleTextView).apply {
-            itemsFromCurrent(verses, currentVerse) { it.fileName }.forEach { verse ->
-                val item = menu.add("vers ${verse.verse}")
-                if (verse.fileName == currentVerse.fileName) {
-                    item.isCheckable = true
-                    item.isChecked = true
-                }
-                item.setOnMenuItemClickListener {
-                    if (verse.fileName != currentVerse.fileName) openVerse(verse)
-                    true
-                }
+        val currentIndex = verses.indexOfFirst { it.fileName == currentVerse.fileName }.coerceAtLeast(0)
+        AnchoredChoicePopup.show(
+            context = this,
+            anchor = verseTitleTextView,
+            labels = verses.map { "vers ${it.verse}" },
+            currentIndex = currentIndex,
+            minWidthDp = 128
+        ) { position ->
+            val verse = verses[position]
+            if (verse.fileName != currentVerse.fileName) {
+                stackedVerseFileNames = null
+                openVerse(verse)
             }
-            show()
         }
     }
 
-    /** Keuzelijst voor psalm/gezang: begint bij de huidige en loopt oplopend door,
-     *  zodat je snel naar een volgende/latere psalm of gezang kunt springen. */
+    private fun openCurrentVerseOverview() {
+        val currentVerse = HymnRepository.verseByFileName(fileName) ?: return
+        startActivity(
+            Intent(this, VerseListActivity::class.java)
+                .putExtra(VerseListActivity.EXTRA_TYPE, currentVerse.type)
+                .putExtra(VerseListActivity.EXTRA_NUMBER, currentVerse.number)
+                .putExtra(VerseListActivity.EXTRA_FOCUS_VERSE, currentVerse.verse)
+        )
+    }
+
+    /**
+     * Long-press op verslabel: kies meerdere verzen binnen dezelfde psalm/gezang.
+     * In tekstweergave worden gekozen verzen onder elkaar getoond.
+     */
+    private fun showVerseMultiSelectDialog() {
+        val currentVerse = HymnRepository.verseByFileName(fileName) ?: return
+        val verses = HymnRepository.versesFor(currentVerse.type, currentVerse.number)
+        if (verses.size <= 1) return
+
+        val labels = verses.map { "Vers ${it.verse}" }.toTypedArray()
+        val initialSelection = selectedVersesForCurrentSong(currentVerse).map { it.fileName }.toSet()
+        val checked = BooleanArray(verses.size) { idx -> initialSelection.contains(verses[idx].fileName) }
+        val allSelectedInitially = checked.all { it }
+
+        AlertDialog.Builder(this)
+            .setTitle("Kies verzen")
+            .setMultiChoiceItems(labels, checked) { _, which, isChecked ->
+                checked[which] = isChecked
+            }
+            .setNeutralButton(if (allSelectedInitially) "Alles uit" else "Alles") { _, _ ->
+                if (allSelectedInitially) {
+                    resetToSingleVerseDefault()
+                } else {
+                    stackedVerseFileNames = LinkedHashSet(verses.map { it.fileName })
+                    updateControls()
+                    if (showNotes && !isTextOnlyAsset()) {
+                        webView.evaluateJavascript("renderScore();", null)
+                    }
+                }
+            }
+            .setNegativeButton("Annuleren", null)
+            .setPositiveButton("Toon") { _, _ ->
+                val selectedFiles = verses.indices
+                    .filter { checked[it] }
+                    .map { verses[it].fileName }
+                when {
+                    selectedFiles.isEmpty() || selectedFiles.size == 1 -> {
+                        stackedVerseFileNames = null
+                        selectedFiles.firstOrNull()?.let { selected ->
+                            if (selected != fileName) {
+                                HymnRepository.verseByFileName(selected)?.let { openVerse(it) }
+                                return@setPositiveButton
+                            }
+                        }
+                    }
+                    else -> stackedVerseFileNames = LinkedHashSet(selectedFiles)
+                }
+                updateControls()
+                if (showNotes && !isTextOnlyAsset()) {
+                    webView.evaluateJavascript("renderScore();", null)
+                }
+            }
+            .show()
+    }
+
+    /** Keuzelijst voor psalm/gezang: houdt de normale nummering aan en scrollt naar de huidige. */
     private fun showPsalmMenu() {
         val currentVerse = HymnRepository.verseByFileName(fileName) ?: return
         val numbers = HymnRepository.availableNumbers(currentVerse.type)
         if (numbers.isEmpty()) return
 
-        PopupMenu(this, psalmPickerTextView).apply {
-            itemsFromCurrent(numbers, currentVerse.number) { it }.forEach { number ->
-                val item = menu.add("${currentVerse.type} $number")
-                if (number == currentVerse.number) {
-                    item.isCheckable = true
-                    item.isChecked = true
-                }
-                item.setOnMenuItemClickListener {
-                    if (number != currentVerse.number) openNumber(currentVerse.type, number)
-                    true
-                }
-            }
-            show()
+        AnchoredChoicePopup.show(
+            context = this,
+            anchor = psalmPickerTextView,
+            labels = numbers.map { "${currentVerse.type} $it" },
+            currentIndex = numbers.indexOf(currentVerse.number).coerceAtLeast(0),
+            minWidthDp = 176
+        ) { position ->
+            val number = numbers[position]
+            if (number != currentVerse.number) openNumber(currentVerse.type, number)
         }
-    }
-
-    private fun <T, K> itemsFromCurrent(items: List<T>, current: T, keyOf: (T) -> K): List<T> {
-        val currentKey = keyOf(current)
-        val currentIndex = items.indexOfFirst { keyOf(it) == currentKey }
-        if (currentIndex <= 0) return items
-        return items.drop(currentIndex) + items.take(currentIndex)
     }
 
     private fun openNumber(type: String, number: Int) {
         val first = HymnRepository.versesFor(type, number).firstOrNull() ?: return
+        stackedVerseFileNames = null
         openVerse(first)
     }
 
@@ -402,8 +415,12 @@ class SheetMusicActivity : AppCompatActivity() {
         webView.settings.useWideViewPort = true
         webView.settings.loadWithOverviewMode = false
         webView.addJavascriptInterface(SheetMusicBridge(), "Android")
-        setupGestures()
+        gestureController.attach(webView, findViewById(R.id.lyricsScrollView))
         webView.webViewClient = object : WebViewClient() {
+            override fun shouldOverrideUrlLoading(view: WebView, request: android.webkit.WebResourceRequest): Boolean {
+                // Alleen de ingebouwde asset-pagina toestaan; externe navigatie blokkeren.
+                return !request.url?.toString().orEmpty().startsWith("file:///android_asset/")
+            }
             override fun onPageFinished(view: WebView, url: String) {
                 if (isTextOnlyAsset()) {
                     showNotes = false
@@ -416,50 +433,16 @@ class SheetMusicActivity : AppCompatActivity() {
         webView.loadUrl("file:///android_asset/score_renderer.html")
     }
 
-    // --- Gebaren: horizontaal vegen = vorige/volgende vers; knijpen = noten+tekst samen zoomen ---
-    private val swipeDetector by lazy {
-        GestureDetector(this, object : GestureDetector.SimpleOnGestureListener() {
-            override fun onFling(e1: MotionEvent?, e2: MotionEvent, vx: Float, vy: Float): Boolean {
-                if (e1 == null) return false
-                val dx = e2.x - e1.x
-                val dy = e2.y - e1.y
-                if (Math.abs(dx) > Math.abs(dy) * 1.5f && Math.abs(dx) > 150f && Math.abs(vx) > 250f) {
-                    openAdjacentVerse(previous = dx > 0) // vegen naar rechts = vorige, naar links = volgende
-                    return true
-                }
-                return false
-            }
-        })
+    private fun applyPinchScaleFactor(scaleFactor: Double) {
+        currentLyricTextScale = (currentLyricTextScale * scaleFactor).coerceIn(MIN_TEXT_SCALE, MAX_TEXT_SCALE)
+        currentScoreVerticalScale = (currentScoreVerticalScale * scaleFactor).coerceIn(MIN_NOTE_SCALE, MAX_NOTE_SCALE)
+        applyPinchScale()
     }
 
-    // Dubbeltik = volledig scherm aan/uit. In de notenweergave wordt dit in JavaScript
-    // afgehandeld (alleen op de notenbalk/tekst, niet op de knoppen). Deze native detector
-    // is alleen voor de tekst-only weergave (op het tekstgebied).
-    private val doubleTapDetector by lazy {
-        GestureDetector(this, object : GestureDetector.SimpleOnGestureListener() {
-            override fun onDoubleTap(e: MotionEvent): Boolean {
-                toggleFullscreen()
-                return true
-            }
-        })
-    }
-
-    private val pinchDetector by lazy {
-        ScaleGestureDetector(this, object : ScaleGestureDetector.SimpleOnScaleGestureListener() {
-            override fun onScale(detector: ScaleGestureDetector): Boolean {
-                val f = detector.scaleFactor.toDouble()
-                currentLyricTextScale = (currentLyricTextScale * f).coerceIn(MIN_TEXT_SCALE, MAX_TEXT_SCALE)
-                currentScoreVerticalScale = (currentScoreVerticalScale * f).coerceIn(MIN_NOTE_SCALE, MAX_NOTE_SCALE)
-                applyPinchScale()
-                return true
-            }
-
-            override fun onScaleEnd(detector: ScaleGestureDetector) {
-                AppSettings.setTextScale(this@SheetMusicActivity, currentLyricTextScale)
-                AppSettings.setNoteScale(this@SheetMusicActivity, currentScoreVerticalScale)
-                updateTextScaleLabel()
-            }
-        })
+    private fun savePinchScale() {
+        AppSettings.setTextScale(this, currentLyricTextScale)
+        AppSettings.setNoteScale(this, currentScoreVerticalScale)
+        updateTextScaleLabel()
     }
 
     private fun applyPinchScale() {
@@ -469,24 +452,6 @@ class SheetMusicActivity : AppCompatActivity() {
         } else {
             applyTextOnlyTextSize()
         }
-    }
-
-    @SuppressLint("ClickableViewAccessibility")
-    private fun setupGestures() {
-        val touch = View.OnTouchListener { v, ev ->
-            pinchDetector.onTouchEvent(ev)
-            if (!pinchDetector.isInProgress) {
-                swipeDetector.onTouchEvent(ev)
-                // Dubbeltik-naar-fullscreen alleen op het tekstgebied (tekst-only weergave);
-                // in de notenweergave doet JavaScript dit op de notenbalk/tekst.
-                if (v.id == R.id.lyricsScrollView) {
-                    doubleTapDetector.onTouchEvent(ev)
-                }
-            }
-            false
-        }
-        webView.setOnTouchListener(touch)
-        findViewById<View>(R.id.lyricsScrollView).setOnTouchListener(touch)
     }
 
     private fun openAdjacentVerse(previous: Boolean) {
@@ -500,7 +465,22 @@ class SheetMusicActivity : AppCompatActivity() {
     }
 
     private fun openVerse(verse: Verse) {
+        if (melodyPlayer.isPlaying) {
+            stopMelodyPlayback()
+        }
+        val oldVerse = HymnRepository.verseByFileName(fileName)
+        val selectedFilesBeforeNavigate = stackedVerseFileNames
+        if (selectedFilesBeforeNavigate != null &&
+            selectedFilesBeforeNavigate.size > 1 &&
+            !selectedFilesBeforeNavigate.contains(verse.fileName)
+        ) {
+            // Bij swipen buiten de actieve multi-select vervalt de selectie.
+            stackedVerseFileNames = null
+        }
         fileName = verse.fileName
+        if (oldVerse == null || oldVerse.type != verse.type || oldVerse.number != verse.number) {
+            stackedVerseFileNames = null
+        }
         showNotes = !isTextOnlyAsset() && !AppSettings.textOnly(this)
         updateControls()
         updateLyricsText()
@@ -518,6 +498,7 @@ class SheetMusicActivity : AppCompatActivity() {
     private fun updateControls() {
         updateTitle()
         updateTextScaleLabel()
+        updatePlayButtonIcon()
         updateLyricsText()
         updateContentMode()
         updateVerseMatrix()
@@ -562,9 +543,8 @@ class SheetMusicActivity : AppCompatActivity() {
         }
     }
 
-    private fun dpToPx(value: Int): Int = (value * resources.displayMetrics.density).toInt()
-
     private fun updateContentMode() {
+        val verse = HymnRepository.verseByFileName(fileName)
         val notesVisible = showNotes && !isTextOnlyAsset()
         webView.visibility = if (notesVisible) View.VISIBLE else View.GONE
         lyricsContainer.visibility = if (notesVisible) View.GONE else View.VISIBLE
@@ -578,17 +558,31 @@ class SheetMusicActivity : AppCompatActivity() {
 
     /**
      * Bouwt de alleen-tekst weergave rechtstreeks uit het scoremodel (JSON tokens),
-     * niet via de MusicXML-omweg. Zo blijven apostroffen correct ('' i.p.v. &apos;)
-     * en worden kwartnoot-lettergrepen cursief getoond, net als in de notenweergave.
+        * zodat apostroffen correct blijven en kwartnoot-lettergrepen cursief worden
+        * getoond, net als in de notenweergave.
      */
     private fun buildStyledLyrics(): CharSequence {
-        val verse = HymnRepository.verseByFileName(fileName)
-        val sb = SpannableStringBuilder()
-        if (verse != null) {
-            sb.append("Vers ${verse.verse}\n")
+        val verse = HymnRepository.verseByFileName(fileName) ?: return fallbackLyrics()
+        if (isStackedVerseMode(verse) && !showNotes) {
+            val selected = selectedVersesForCurrentSong(verse)
+            if (selected.isNotEmpty()) {
+                val all = SpannableStringBuilder()
+                selected.forEachIndexed { index, selectedVerse ->
+                    all.append(buildStyledLyricsForVerse(selectedVerse))
+                    if (index < selected.lastIndex) all.append("\n\n")
+                }
+                return all
+            }
         }
+
+        return buildStyledLyricsForVerse(verse)
+    }
+
+    private fun buildStyledLyricsForVerse(verse: Verse): CharSequence {
+        val sb = SpannableStringBuilder()
+        sb.append("Vers ${verse.verse}\n")
         try {
-            val model = JSONObject(ScoreBundleRenderer.readScoreModel(this, verse ?: return fallbackLyrics()))
+            val model = JSONObject(ScoreBundleRenderer.readScoreModel(this, verse))
             val lines = model.getJSONArray("lines")
             for (li in 0 until lines.length()) {
                 val slots = lines.getJSONObject(li).getJSONArray("slots")
@@ -597,7 +591,14 @@ class SheetMusicActivity : AppCompatActivity() {
                     val slot = slots.getJSONObject(si)
                     if (slot.optBoolean("rest")) continue
                     val text = slot.optString("text")
-                    if (text.isEmpty()) continue
+                    if (text.isEmpty()) {
+                        // In alleen-tekstweergave melisma zichtbaar maken, maar
+                        // reeksen beperken tot één streepje.
+                        if (wroteOnLine && (sb.isEmpty() || sb[sb.length - 1] != '-')) {
+                            sb.append("-")
+                        }
+                        continue
+                    }
                     val syllabic = slot.optString("syllabic", "single")
                     val startsNewWord = syllabic == "single" || syllabic == "begin"
                     if (startsNewWord && wroteOnLine) sb.append(" ")
@@ -614,15 +615,34 @@ class SheetMusicActivity : AppCompatActivity() {
                 if (li < lines.length() - 1) sb.append("\n")
             }
         } catch (e: Exception) {
-            return fallbackLyrics()
+            return "Vers ${verse.verse}\n" +
+                ScoreBundleRenderer.readVerseText(this, verse).ifBlank { verse.firstLine }
         }
         return sb
     }
 
+    private fun isStackedVerseMode(currentVerse: Verse): Boolean {
+        val files = stackedVerseFileNames ?: return false
+        if (files.size <= 1) return false
+        val available = HymnRepository.versesFor(currentVerse.type, currentVerse.number).map { it.fileName }.toSet()
+        return files.any { available.contains(it) }
+    }
+
+    private fun selectedVersesForCurrentSong(currentVerse: Verse): List<Verse> {
+        val verses = HymnRepository.versesFor(currentVerse.type, currentVerse.number)
+        val files = stackedVerseFileNames ?: return listOf(currentVerse)
+        val selected = verses.filter { files.contains(it.fileName) }
+        return if (selected.isEmpty()) listOf(currentVerse) else selected
+    }
+
     private fun fallbackLyrics(): CharSequence = buildString {
         val verse = HymnRepository.verseByFileName(fileName)
-        if (verse != null) append("Vers ${verse.verse}\n")
-        append(readDisplayText())
+        if (verse == null) {
+            append(ContentStorage.readBundledAsset(this@SheetMusicActivity, fileName).trim())
+            return@buildString
+        }
+        append("Vers ${verse.verse}\n")
+        append(ScoreBundleRenderer.readVerseText(this@SheetMusicActivity, verse).ifBlank { verse.firstLine })
     }
 
     private fun isTextOnlyAsset(): Boolean = fileName.endsWith(".txt", ignoreCase = true)
@@ -639,8 +659,19 @@ class SheetMusicActivity : AppCompatActivity() {
             "${verse.type} ${verse.number}:${verse.verse}"
         }
         title = activityTitle
-        psalmPickerTextView.text = if (verse == null) getString(R.string.app_name) else "${verse.type} ${verse.number}"
-        verseTitleTextView.text = if (verse == null) "vers -" else "vers ${verse.verse}"
+        psalmPickerTextView.text = when {
+            verse == null -> getString(R.string.app_name)
+            verse.type == "Gezang" -> HymnRepository.hymnAbbreviation(verse.number) ?: "${verse.type} ${verse.number}"
+            else -> "${verse.type} ${verse.number}"
+        }
+        verseTitleTextView.text = when {
+            verse == null -> "vers -"
+            isStackedVerseMode(verse) -> {
+                val picked = selectedVersesForCurrentSong(verse).map { it.verse }
+                if (picked.size > 4) "verzen ${picked.first()}-${picked.last()}" else "verzen ${picked.joinToString(",")}" 
+            }
+            else -> "vers ${verse.verse}"
+        }
         updateHeaderDropdownIndicators()
     }
 
@@ -655,68 +686,89 @@ class SheetMusicActivity : AppCompatActivity() {
         }
     }
 
-    private fun readAsset(assetFileName: String): String = stripInstrumentLabels(
-        readRawMusicXml(assetFileName)
-    )
-
-    private fun readRawMusicXml(assetFileName: String): String {
-        val verse = HymnRepository.verseByFileName(assetFileName)
-        return if (verse == null) {
-            ContentStorage.readMusicXml(this, assetFileName)
+    private fun updateTopBarActionButtons() {
+        val shareButton = findViewById<View>(R.id.sharePdfButton)
+        val landscape = resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+        if (landscape) {
+            shareButton.visibility = View.VISIBLE
+            playMelodyButton.visibility = View.VISIBLE
+            return
+        }
+        if (AppSettings.topBarActionIcon(this) == AppSettings.TOPBAR_ACTION_PLAY) {
+            shareButton.visibility = View.GONE
+            playMelodyButton.visibility = View.VISIBLE
         } else {
-            ScoreBundleRenderer.readMusicXml(this, verse)
+            shareButton.visibility = View.VISIBLE
+            playMelodyButton.visibility = View.GONE
         }
     }
 
-    private fun readDisplayText(): String = if (isTextOnlyAsset()) {
-        ContentStorage.readMusicXml(this, fileName).trim()
-    } else {
-        SheetMusicXmlUtils.extractLyrics(
-            musicXml = readAsset(fileName),
-            fallbackFirstLine = HymnRepository.verseByFileName(fileName)?.firstLine.orEmpty()
+    private fun toggleMelodyPlayback() {
+        if (melodyPlayer.isPlaying) {
+            stopMelodyPlayback()
+        } else {
+            startMelodyPlayback()
+        }
+    }
+
+    private fun startMelodyPlayback() {
+        val currentVerse = HymnRepository.verseByFileName(fileName) ?: return
+        val verses = if (isStackedVerseMode(currentVerse)) {
+            selectedVersesForCurrentSong(currentVerse)
+        } else {
+            listOf(currentVerse)
+        }
+        val events = MelodyPlaybackModel.buildEvents(
+            context = this,
+            verses = verses,
+            tempoPercent = AppSettings.playbackTempo(this),
+            transposeSemitones = currentTransposition
         )
+        if (events.isEmpty()) return
+        melodyPlayer.play(events, currentTimbre()) { _ ->
+            runOnUiThread { updatePlayButtonIcon() }
+        }
+        updatePlayButtonIcon()
     }
 
-    private fun stripInstrumentLabels(musicXml: String): String =
-        SheetMusicXmlUtils.stripInstrumentLabels(musicXml)
-
-    private fun transposeKeyFifths(fifths: Int, semitones: Int): Int {
-        val targetPitchClass = Math.floorMod(fifths * 7 + semitones, 12)
-        return KEY_FIFTHS_BY_PITCH_CLASS[targetPitchClass]
+    private fun currentTimbre(): MelodyTimbre = when (AppSettings.playbackTimbre(this)) {
+        AppSettings.TIMBRE_HOLPIJP -> MelodyTimbre.HOLPIJP
+        AppSettings.TIMBRE_FLUIT -> MelodyTimbre.FLUIT
+        AppSettings.TIMBRE_STRINGS -> MelodyTimbre.STRINGS
+        AppSettings.TIMBRE_VOL16 -> MelodyTimbre.VOL16
+        else -> MelodyTimbre.PRESTANT
     }
 
-    private fun transposeScoreModel(model: JSONObject, semitones: Int) {
-        val originalFifths = model.optInt("fifths", 0)
-        val targetFifths = transposeKeyFifths(originalFifths, semitones)
-        val preferFlats = targetFifths < 0
-        model.put("fifths", targetFifths)
+    private fun stopMelodyPlayback() {
+        melodyPlayer.stop { _ ->
+            runOnUiThread { updatePlayButtonIcon() }
+        }
+        updatePlayButtonIcon()
+    }
 
-        val lines = model.optJSONArray("lines") ?: return
-        for (i in 0 until lines.length()) {
-            val slots = lines.getJSONObject(i).optJSONArray("slots") ?: continue
-            for (j in 0 until slots.length()) {
-                val notes = slots.getJSONObject(j).optJSONArray("notes") ?: continue
-                for (k in 0 until notes.length()) {
-                    val note = notes.getJSONObject(k)
-                    if (note.optBoolean("rest")) continue
-                    transposeModelNote(note, semitones, preferFlats)
-                }
+    private fun updatePlayButtonIcon() {
+        playMelodyButton.setImageResource(if (melodyPlayer.isPlaying) R.drawable.ic_pause else R.drawable.ic_play)
+    }
+
+    private fun resetToSingleVerseDefault() {
+        val currentVerse = HymnRepository.verseByFileName(fileName)
+        stackedVerseFileNames = null
+        if (currentVerse == null) {
+            updateControls()
+            if (showNotes && !isTextOnlyAsset()) {
+                webView.evaluateJavascript("renderScore();", null)
+            }
+            return
+        }
+        val firstVerse = HymnRepository.versesFor(currentVerse.type, currentVerse.number).firstOrNull()
+        if (firstVerse != null && firstVerse.fileName != fileName) {
+            openVerse(firstVerse)
+        } else {
+            updateControls()
+            if (showNotes && !isTextOnlyAsset()) {
+                webView.evaluateJavascript("renderScore();", null)
             }
         }
-    }
-
-    private fun transposeModelNote(note: JSONObject, semitones: Int, preferFlats: Boolean) {
-        val step = note.optString("step").ifBlank { return }
-        val alter = note.optInt("alter", 0)
-        val octave = note.optInt("octave")
-        val pitchClass = STEP_PITCH_CLASSES.getValue(step) + alter
-        val transposedMidi = octave * 12 + pitchClass + semitones
-        val transposedPitchClass = Math.floorMod(transposedMidi, 12)
-        val transposedOctave = Math.floorDiv(transposedMidi, 12)
-        val spelling = if (preferFlats) FLAT_SPELLINGS[transposedPitchClass] else SHARP_SPELLINGS[transposedPitchClass]
-        note.put("step", spelling.step)
-        note.put("alter", spelling.alter)
-        note.put("octave", transposedOctave)
     }
 
     inner class SheetMusicBridge {
@@ -724,9 +776,13 @@ class SheetMusicActivity : AppCompatActivity() {
         fun getScoreModel(): String {
             return try {
                 val verse = HymnRepository.verseByFileName(fileName) ?: return "{}"
-                val model = JSONObject(ScoreBundleRenderer.readScoreModel(this@SheetMusicActivity, verse))
+                val model = if (shouldRenderStackedScoreInNotes(verse)) {
+                    buildMergedScoreModel(selectedVersesForCurrentSong(verse))
+                } else {
+                    JSONObject(ScoreBundleRenderer.readScoreModel(this@SheetMusicActivity, verse))
+                }
                 if (currentTransposition != 0) {
-                    transposeScoreModel(model, currentTransposition)
+                    ScoreTransposer.transpose(model, currentTransposition)
                 }
                 model.toString()
             } catch (e: Exception) {
@@ -826,6 +882,45 @@ class SheetMusicActivity : AppCompatActivity() {
         }
     }
 
+    private fun shouldRenderStackedScoreInNotes(currentVerse: Verse): Boolean {
+        if (!showNotes || isTextOnlyAsset()) return false
+        if (!AppSettings.showLyrics(this)) return false
+        return isStackedVerseMode(currentVerse)
+    }
+
+    private fun preferSinglePdfPage(): Boolean {
+        val currentVerse = HymnRepository.verseByFileName(fileName) ?: return true
+        if (!shouldRenderStackedScoreInNotes(currentVerse)) return true
+        return selectedVersesForCurrentSong(currentVerse).size <= 2
+    }
+
+    private fun buildMergedScoreModel(verses: List<Verse>): JSONObject {
+        if (verses.isEmpty()) return JSONObject()
+
+        val firstModel = JSONObject(ScoreBundleRenderer.readScoreModel(this, verses.first()))
+        val mergedLines = JSONArray()
+
+        verses.forEach { selectedVerse ->
+            val verseModel = JSONObject(ScoreBundleRenderer.readScoreModel(this, selectedVerse))
+            val verseLines = verseModel.optJSONArray("lines") ?: JSONArray()
+            for (index in 0 until verseLines.length()) {
+                val copiedLine = JSONObject(verseLines.getJSONObject(index).toString())
+                if (index == 0) {
+                    copiedLine.put("verseStart", true)
+                    copiedLine.put("verseNumber", selectedVerse.verse)
+                }
+                if (index == verseLines.length() - 1) {
+                    copiedLine.put("verseEnd", true)
+                }
+                mergedLines.put(copiedLine)
+            }
+        }
+
+        firstModel.put("multiVerse", verses.size > 1)
+        firstModel.put("lines", mergedLines)
+        return firstModel
+    }
+
     companion object {
         const val EXTRA_FILE_NAME = "nl.psalmbladmuziek.app.extra.FILE_NAME"
         private const val DEFAULT_FILE_NAME = "Psalm001_v1.json"
@@ -838,20 +933,18 @@ class SheetMusicActivity : AppCompatActivity() {
         private const val MIN_NOTE_SCALE = 0.5
         private const val MAX_NOTE_SCALE = 1.2
         private const val NOTE_SCALE_STEP = 0.1
-        private val STEP_PITCH_CLASSES = mapOf("C" to 0, "D" to 2, "E" to 4, "F" to 5, "G" to 7, "A" to 9, "B" to 11)
-        private val KEY_FIFTHS_BY_PITCH_CLASS = intArrayOf(0, -5, 2, -3, 4, -1, 6, 1, -4, 3, -2, 5)
-        private val SHARP_SPELLINGS = arrayOf(
-            PitchSpelling("C", 0), PitchSpelling("C", 1), PitchSpelling("D", 0), PitchSpelling("D", 1),
-            PitchSpelling("E", 0), PitchSpelling("F", 0), PitchSpelling("F", 1), PitchSpelling("G", 0),
-            PitchSpelling("G", 1), PitchSpelling("A", 0), PitchSpelling("B", -1), PitchSpelling("B", 0)
-        )
-        private val FLAT_SPELLINGS = arrayOf(
-            PitchSpelling("C", 0), PitchSpelling("D", -1), PitchSpelling("D", 0), PitchSpelling("E", -1),
-            PitchSpelling("E", 0), PitchSpelling("F", 0), PitchSpelling("F", 1), PitchSpelling("G", 0),
-            PitchSpelling("A", -1), PitchSpelling("A", 0), PitchSpelling("B", -1), PitchSpelling("B", 0)
-        )
     }
 
-    private data class PitchSpelling(val step: String, val alter: Int)
+    override fun onStop() {
+        super.onStop()
+        if (melodyPlayer.isPlaying) {
+            stopMelodyPlayback()
+        }
+    }
+
+    override fun onDestroy() {
+        melodyPlayer.stop()
+        super.onDestroy()
+    }
 
 }
