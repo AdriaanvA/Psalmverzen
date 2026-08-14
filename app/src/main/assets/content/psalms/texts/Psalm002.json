@@ -150,7 +150,7 @@
           ]
         },
         {
-          "raw": "De vorsten zijn vermetel saamgekomen,",
+          "raw": "De vorsten zijn vermetel saamgeko_men,",
           "display": "De vorsten zijn vermetel saamgekomen,",
           "tokens": [
             {
@@ -191,6 +191,10 @@
             },
             {
               "text": "ko",
+              "syllabic": "middle"
+            },
+            {
+              "text": "",
               "syllabic": "middle"
             },
             {
@@ -539,7 +543,7 @@
           ]
         },
         {
-          "raw": "En spotten met den waan der dwaze volken,",
+          "raw": "En spotten met den waan der dwaze vol_ken,",
           "display": "En spotten met den waan der dwaze volken,",
           "tokens": [
             {
@@ -581,6 +585,10 @@
             {
               "text": "vol",
               "syllabic": "begin"
+            },
+            {
+              "text": "",
+              "syllabic": "middle"
             },
             {
               "text": "ken,",
@@ -928,7 +936,7 @@
           ]
         },
         {
-          "raw": "Ontziet Mijn toorn, verdoolde stervelingen.",
+          "raw": "Ontziet Mijn toorn, verdoolde sterveling_en.",
           "display": "Ontziet Mijn toorn, verdoolde stervelingen.",
           "tokens": [
             {
@@ -968,11 +976,15 @@
               "syllabic": "middle"
             },
             {
-              "text": "lin",
+              "text": "ling",
               "syllabic": "middle"
             },
             {
-              "text": "gen.",
+              "text": "",
+              "syllabic": "middle"
+            },
+            {
+              "text": "en.",
               "syllabic": "end"
             }
           ]
@@ -1317,7 +1329,7 @@
           ]
         },
         {
-          "raw": "Gij zijt Mijn Zoon, Gij zijt Mijn een geboren;",
+          "raw": "Gij zijt Mijn Zoon, Gij zijt Mijn een gebo_ren;",
           "display": "Gij zijt Mijn Zoon, Gij zijt Mijn een geboren;",
           "tokens": [
             {
@@ -1358,6 +1370,10 @@
             },
             {
               "text": "bo",
+              "syllabic": "middle"
+            },
+            {
+              "text": "",
               "syllabic": "middle"
             },
             {
@@ -1706,7 +1722,7 @@
           ]
         },
         {
-          "raw": "Of sla z’aan gruis, als pottenbakkersvaten!”",
+          "raw": "Of sla z’aan gruis, als pottenbakkersva_ten!”",
           "display": "Of sla z’aan gruis, als pottenbakkersvaten!”",
           "tokens": [
             {
@@ -1742,11 +1758,15 @@
               "syllabic": "middle"
             },
             {
-              "text": "ker",
+              "text": "kers",
               "syllabic": "middle"
             },
             {
-              "text": "sva",
+              "text": "va",
+              "syllabic": "middle"
+            },
+            {
+              "text": "",
               "syllabic": "middle"
             },
             {
@@ -2095,7 +2115,7 @@
           ]
         },
         {
-          "raw": "Eer u Zijn toorn verdelg’ voor aller ogen,",
+          "raw": "Eer u Zijn toorn verdelg’ voor aller o_gen,",
           "display": "Eer u Zijn toorn verdelg’ voor aller ogen,",
           "tokens": [
             {
@@ -2137,6 +2157,10 @@
             {
               "text": "o",
               "syllabic": "begin"
+            },
+            {
+              "text": "",
+              "syllabic": "middle"
             },
             {
               "text": "gen,",

@@ -1,4 +1,4 @@
-{
+﻿{
   "book": "psalms",
   "number": 2,
   "title": "Psalm 2 (Revius)",
@@ -150,7 +150,7 @@
           ]
         },
         {
-          "raw": "Om onder sich een raetslach te beramen?",
+          "raw": "Om onder sich een raetslach te beram_en?",
           "display": "Om onder sich een raetslach te beramen?",
           "tokens": [
             {
@@ -191,6 +191,10 @@
             },
             {
               "text": "ram",
+              "syllabic": "middle"
+            },
+            {
+              "text": "",
               "syllabic": "middle"
             },
             {
@@ -539,7 +543,7 @@
           ]
         },
         {
-          "raw": "Tot onsen dwanck aen onse halsen hangen.",
+          "raw": "Tot onsen dwanck aen onse halsen han_gen.",
           "display": "Tot onsen dwanck aen onse halsen hangen.",
           "tokens": [
             {
@@ -581,6 +585,10 @@
             {
               "text": "han",
               "syllabic": "begin"
+            },
+            {
+              "text": "",
+              "syllabic": "middle"
             },
             {
               "text": "gen.",
@@ -928,7 +936,7 @@
           ]
         },
         {
-          "raw": "In synen toorn die niemant can verdragen.",
+          "raw": "In synen toorn die niemant can verdra_gen.",
           "display": "In synen toorn die niemant can verdragen.",
           "tokens": [
             {
@@ -969,6 +977,10 @@
             },
             {
               "text": "dra",
+              "syllabic": "middle"
+            },
+            {
+              "text": "",
               "syllabic": "middle"
             },
             {
@@ -1317,7 +1329,7 @@
           ]
         },
         {
-          "raw": "Ghy zijt mijn Soon, dees dach uyt my gebooren.",
+          "raw": "Ghy zijt mijn Soon, dees dach uyt my geboo_ren.",
           "display": "Ghy zijt mijn Soon, dees dach uyt my gebooren.",
           "tokens": [
             {
@@ -1358,6 +1370,10 @@
             },
             {
               "text": "oo",
+              "syllabic": "middle"
+            },
+            {
+              "text": "",
               "syllabic": "middle"
             },
             {
@@ -1706,7 +1722,7 @@
           ]
         },
         {
-          "raw": "Te morssel slaen gelijck als aerden vaten.",
+          "raw": "Te morssel slaen gelijck als aerden va_ten.",
           "display": "Te morssel slaen gelijck als aerden vaten.",
           "tokens": [
             {
@@ -1748,6 +1764,10 @@
             {
               "text": "va",
               "syllabic": "begin"
+            },
+            {
+              "text": "",
+              "syllabic": "middle"
             },
             {
               "text": "ten.",
@@ -2095,7 +2115,7 @@
           ]
         },
         {
-          "raw": "Doch so dat ghy voor syne woorden bevet.",
+          "raw": "Doch so dat ghy voor syne woorden be_vet.",
           "display": "Doch so dat ghy voor syne woorden bevet.",
           "tokens": [
             {
@@ -2137,6 +2157,10 @@
             {
               "text": "be",
               "syllabic": "begin"
+            },
+            {
+              "text": "",
+              "syllabic": "middle"
             },
             {
               "text": "vet.",

@@ -1,4 +1,4 @@
-{
+﻿{
   "book": "psalms",
   "number": 10,
   "title": "Psalm 10 (Datheen)",
@@ -288,7 +288,7 @@
           ]
         },
         {
-          "raw": "Laet s’in haer listen self gevangen wesen.",
+          "raw": "Laet s’in haer listen self gevangen we_sen.",
           "display": "Laet s’in haer listen self gevangen wesen.",
           "tokens": [
             {
@@ -330,6 +330,10 @@
             {
               "text": "we",
               "syllabic": "begin"
+            },
+            {
+              "text": "",
+              "syllabic": "middle"
             },
             {
               "text": "sen.",
@@ -623,7 +627,7 @@
           ]
         },
         {
-          "raw": "Dat Godt niet is: dien hy so derf verachten.",
+          "raw": "Dat Godt niet is: dien hy so derf verach_ten.",
           "display": "Dat Godt niet is: dien hy so derf verachten.",
           "tokens": [
             {
@@ -664,6 +668,10 @@
             },
             {
               "text": "ach",
+              "syllabic": "middle"
+            },
+            {
+              "text": "",
               "syllabic": "middle"
             },
             {
@@ -958,7 +966,7 @@
           ]
         },
         {
-          "raw": "Nemmermeer sal ick met noodt sijn belaeden.",
+          "raw": "Nemmermeer sal ick met noodt sijn belae_den.",
           "display": "Nemmermeer sal ick met noodt sijn belaeden.",
           "tokens": [
             {
@@ -999,6 +1007,10 @@
             },
             {
               "text": "ae",
+              "syllabic": "middle"
+            },
+            {
+              "text": "",
               "syllabic": "middle"
             },
             {
@@ -1293,7 +1305,7 @@
           ]
         },
         {
-          "raw": "Hy bespiedt oock den armen in’t verborgen.",
+          "raw": "Hy bespiedt oock den armen in’t verbor_gen.",
           "display": "Hy bespiedt oock den armen in’t verborgen.",
           "tokens": [
             {
@@ -1334,6 +1346,10 @@
             },
             {
               "text": "bor",
+              "syllabic": "middle"
+            },
+            {
+              "text": "",
               "syllabic": "middle"
             },
             {
@@ -1628,7 +1644,7 @@
           ]
         },
         {
-          "raw": "Ende verderft met groot gewelt veel aermen.",
+          "raw": "Ende verderft met groot gewelt veel aer_men.",
           "display": "Ende verderft met groot gewelt veel aermen.",
           "tokens": [
             {
@@ -1670,6 +1686,10 @@
             {
               "text": "aer",
               "syllabic": "begin"
+            },
+            {
+              "text": "",
+              "syllabic": "middle"
             },
             {
               "text": "men.",
@@ -1963,7 +1983,7 @@
           ]
         },
         {
-          "raw": "Hen die in anxt end elend sijn geseten.",
+          "raw": "Hen die in anxt end elend sijn geset_en.",
           "display": "Hen die in anxt end elend sijn geseten.",
           "tokens": [
             {
@@ -2004,6 +2024,10 @@
             },
             {
               "text": "set",
+              "syllabic": "middle"
+            },
+            {
+              "text": "",
               "syllabic": "middle"
             },
             {
@@ -2298,7 +2322,7 @@
           ]
         },
         {
-          "raw": "Die een helper der weeskens sijt bevonden.",
+          "raw": "Die een helper der weeskens sijt bevon_den.",
           "display": "Die een helper der weeskens sijt bevonden.",
           "tokens": [
             {
@@ -2339,6 +2363,10 @@
             },
             {
               "text": "on",
+              "syllabic": "middle"
+            },
+            {
+              "text": "",
               "syllabic": "middle"
             },
             {
@@ -2633,7 +2661,7 @@
           ]
         },
         {
-          "raw": "Werden geroeyt al die schalcken met schanden.",
+          "raw": "Werden geroeyt al die schalcken met scha_nden.",
           "display": "Werden geroeyt al die schalcken met schanden.",
           "tokens": [
             {
@@ -2675,6 +2703,10 @@
             {
               "text": "scha",
               "syllabic": "begin"
+            },
+            {
+              "text": "",
+              "syllabic": "middle"
             },
             {
               "text": "nden.",
@@ -2968,7 +3000,7 @@
           ]
         },
         {
-          "raw": "End daer tegen hen nu voort niet meer stellen.",
+          "raw": "End daer tegen hen nu voort niet meer stel_len.",
           "display": "End daer tegen hen nu voort niet meer stellen.",
           "tokens": [
             {
@@ -3010,6 +3042,10 @@
             {
               "text": "stel",
               "syllabic": "begin"
+            },
+            {
+              "text": "",
+              "syllabic": "middle"
             },
             {
               "text": "len.",

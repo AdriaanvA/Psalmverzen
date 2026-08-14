@@ -1,4 +1,4 @@
-{
+﻿{
   "book": "psalms",
   "number": 99,
   "title": "Psalm 99 (Revius)",
@@ -892,7 +892,7 @@
       "number": 5,
       "lines": [
         {
-          "raw": "Die, en Samuel",
+          "raw": "Die, en Sam_uel",
           "display": "Die, en Samuel",
           "tokens": [
             {
@@ -906,6 +906,10 @@
             {
               "text": "Sam",
               "syllabic": "begin"
+            },
+            {
+              "text": "",
+              "syllabic": "middle"
             },
             {
               "text": "uel",

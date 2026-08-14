@@ -126,7 +126,7 @@
           ]
         },
         {
-          "raw": "Van mij Uw vriend’lijk aanschijn wenden?",
+          "raw": "Van mij Uw vriend’lijk aanschijn wen_den?",
           "display": "Van mij Uw vriend’lijk aanschijn wenden?",
           "tokens": [
             {
@@ -160,6 +160,10 @@
             {
               "text": "wen",
               "syllabic": "begin"
+            },
+            {
+              "text": "",
+              "syllabic": "middle"
             },
             {
               "text": "den?",
@@ -329,7 +333,7 @@
           ]
         },
         {
-          "raw": "Hoe lang zal mij mijn vijand plagen;",
+          "raw": "Hoe lang zal mij mijn vijand pla_gen;",
           "display": "Hoe lang zal mij mijn vijand plagen;",
           "tokens": [
             {
@@ -363,6 +367,10 @@
             {
               "text": "pla",
               "syllabic": "begin"
+            },
+            {
+              "text": "",
+              "syllabic": "middle"
             },
             {
               "text": "gen;",
@@ -532,7 +540,7 @@
           ]
         },
         {
-          "raw": "En laat Uw goedheid niet gedogen,",
+          "raw": "En laat Uw goedheid niet gedo_gen,",
           "display": "En laat Uw goedheid niet gedogen,",
           "tokens": [
             {
@@ -565,6 +573,10 @@
             },
             {
               "text": "do",
+              "syllabic": "middle"
+            },
+            {
+              "text": "",
               "syllabic": "middle"
             },
             {
@@ -735,7 +747,7 @@
           ]
         },
         {
-          "raw": "Noch in mijn wanklen zich beroeme,",
+          "raw": "Noch in mijn wanklen zich beroe_me,",
           "display": "Noch in mijn wanklen zich beroeme,",
           "tokens": [
             {
@@ -768,6 +780,10 @@
             },
             {
               "text": "roe",
+              "syllabic": "middle"
+            },
+            {
+              "text": "",
               "syllabic": "middle"
             },
             {
@@ -938,7 +954,7 @@
           ]
         },
         {
-          "raw": "Ik zal den HEER’ mijn lofzang wijden,",
+          "raw": "Ik zal den HEER’ mijn lofzang wij_den,",
           "display": "Ik zal den HEER’ mijn lofzang wijden,",
           "tokens": [
             {
@@ -972,6 +988,10 @@
             {
               "text": "wij",
               "syllabic": "begin"
+            },
+            {
+              "text": "",
+              "syllabic": "middle"
             },
             {
               "text": "den,",

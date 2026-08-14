@@ -1,4 +1,4 @@
-{
+﻿{
   "book": "psalms",
   "number": 45,
   "title": "Psalm 45 (Datheen)",
@@ -1513,7 +1513,7 @@
           ]
         },
         {
-          "raw": "Daer jeghlick t’uwer eeren bereydt staet.",
+          "raw": "Daer jeghlick t’uwer eeren bereydt _staet.",
           "display": "Daer jeghlick t’uwer eeren bereydt staet.",
           "tokens": [
             {
@@ -1547,6 +1547,10 @@
             {
               "text": "eydt",
               "syllabic": "end"
+            },
+            {
+              "text": "",
+              "syllabic": "middle"
             },
             {
               "text": "staet.",

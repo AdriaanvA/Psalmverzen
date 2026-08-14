@@ -1,4 +1,4 @@
-{
+﻿{
   "book": "psalms",
   "number": 138,
   "title": "Psalm 138 (Revius)",
@@ -240,7 +240,7 @@
           ]
         },
         {
-          "raw": "Uw’ naem te singen.",
+          "raw": "Uw’ naem te sin_gen.",
           "display": "Uw’ naem te singen.",
           "tokens": [
             {
@@ -258,6 +258,10 @@
             {
               "text": "sin",
               "syllabic": "begin"
+            },
+            {
+              "text": "",
+              "syllabic": "middle"
             },
             {
               "text": "gen.",
@@ -589,7 +593,7 @@
           ]
         },
         {
-          "raw": "V sullen eeren,",
+          "raw": "V sullen ee_ren,",
           "display": "V sullen eeren,",
           "tokens": [
             {
@@ -607,6 +611,10 @@
             {
               "text": "ee",
               "syllabic": "begin"
+            },
+            {
+              "text": "",
+              "syllabic": "middle"
             },
             {
               "text": "ren,",
@@ -938,7 +946,7 @@
           ]
         },
         {
-          "raw": "Den mensch deemoedich.",
+          "raw": "Den mensch deemoed_ich.",
           "display": "Den mensch deemoedich.",
           "tokens": [
             {
@@ -955,6 +963,10 @@
             },
             {
               "text": "moed",
+              "syllabic": "middle"
+            },
+            {
+              "text": "",
               "syllabic": "middle"
             },
             {
@@ -1287,7 +1299,7 @@
           ]
         },
         {
-          "raw": "Moet eeuwich blijven.",
+          "raw": "Moet eeuwich blij_ven.",
           "display": "Moet eeuwich blijven.",
           "tokens": [
             {
@@ -1305,6 +1317,10 @@
             {
               "text": "blij",
               "syllabic": "begin"
+            },
+            {
+              "text": "",
+              "syllabic": "middle"
             },
             {
               "text": "ven.",

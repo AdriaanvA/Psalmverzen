@@ -1,4 +1,4 @@
-{
+﻿{
   "book": "psalms",
   "number": 2,
   "title": "Psalm 2 (Datheen)",
@@ -150,7 +150,7 @@
           ]
         },
         {
-          "raw": "End raetslaen van dinghen die niet betamen?",
+          "raw": "End raetslaen van dinghen die niet betam_en?",
           "display": "End raetslaen van dinghen die niet betamen?",
           "tokens": [
             {
@@ -191,6 +191,10 @@
             },
             {
               "text": "tam",
+              "syllabic": "middle"
+            },
+            {
+              "text": "",
               "syllabic": "middle"
             },
             {
@@ -539,7 +543,7 @@
           ]
         },
         {
-          "raw": "Laet ons verwerpen end breken in sticken.",
+          "raw": "Laet ons verwerpen end breken in stic_ken.",
           "display": "Laet ons verwerpen end breken in sticken.",
           "tokens": [
             {
@@ -581,6 +585,10 @@
             {
               "text": "stic",
               "syllabic": "begin"
+            },
+            {
+              "text": "",
+              "syllabic": "middle"
             },
             {
               "text": "ken.",
@@ -928,7 +936,7 @@
           ]
         },
         {
-          "raw": "In syn toornicheit die seer is te duchten.",
+          "raw": "In syn toornicheit die seer is te duc_hten.",
           "display": "In syn toornicheit die seer is te duchten.",
           "tokens": [
             {
@@ -970,6 +978,10 @@
             {
               "text": "duc",
               "syllabic": "begin"
+            },
+            {
+              "text": "",
+              "syllabic": "middle"
             },
             {
               "text": "hten.",
@@ -1317,7 +1329,7 @@
           ]
         },
         {
-          "raw": "Ghy sijt myn Soen huyden van my geboren.",
+          "raw": "Ghy sijt myn Soen huyden van my gebor_en.",
           "display": "Ghy sijt myn Soen huyden van my geboren.",
           "tokens": [
             {
@@ -1358,6 +1370,10 @@
             },
             {
               "text": "bor",
+              "syllabic": "middle"
+            },
+            {
+              "text": "",
               "syllabic": "middle"
             },
             {
@@ -1706,7 +1722,7 @@
           ]
         },
         {
-          "raw": "End morselen als een eerden vat teere.",
+          "raw": "End morselen als een eerden vat te_ere.",
           "display": "End morselen als een eerden vat teere.",
           "tokens": [
             {
@@ -1748,6 +1764,10 @@
             {
               "text": "te",
               "syllabic": "begin"
+            },
+            {
+              "text": "",
+              "syllabic": "middle"
             },
             {
               "text": "ere.",
@@ -2095,7 +2115,7 @@
           ]
         },
         {
-          "raw": "Siet dat ghy hem geen oorsaeck geeft te klaegen.",
+          "raw": "Siet dat ghy hem geen oorsaeck geeft te klae_gen.",
           "display": "Siet dat ghy hem geen oorsaeck geeft te klaegen.",
           "tokens": [
             {
@@ -2137,6 +2157,10 @@
             {
               "text": "klae",
               "syllabic": "begin"
+            },
+            {
+              "text": "",
+              "syllabic": "middle"
             },
             {
               "text": "gen.",

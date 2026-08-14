@@ -2,6 +2,7 @@ package nl.psalmbladmuziek.app
 
 import android.content.Context
 import org.json.JSONObject
+import kotlin.math.pow
 
 /** Eén afspeel-event: een toon of stilte met een duur in seconden. */
 data class PlaybackEvent(
@@ -89,6 +90,6 @@ object MelodyPlaybackModel {
     }
 
     private fun midiToFrequencyHz(midi: Int): Double {
-        return 440.0 * Math.pow(2.0, (midi - 69) / 12.0)
+        return 440.0 * 2.0.pow((midi - 69) / 12.0)
     }
 }

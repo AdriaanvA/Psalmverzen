@@ -240,7 +240,7 @@
           ]
         },
         {
-          "raw": "Het hof der hoven,",
+          "raw": "Het hof der ho_ven,",
           "display": "Het hof der hoven,",
           "tokens": [
             {
@@ -258,6 +258,10 @@
             {
               "text": "ho",
               "syllabic": "begin"
+            },
+            {
+              "text": "",
+              "syllabic": "middle"
             },
             {
               "text": "ven,",
@@ -589,7 +593,7 @@
           ]
         },
         {
-          "raw": "Alom doen horen,",
+          "raw": "Alom doen ho_ren,",
           "display": "Alom doen horen,",
           "tokens": [
             {
@@ -607,6 +611,10 @@
             {
               "text": "ho",
               "syllabic": "begin"
+            },
+            {
+              "text": "",
+              "syllabic": "middle"
             },
             {
               "text": "ren,",
@@ -938,7 +946,7 @@
           ]
         },
         {
-          "raw": "Die need’rig knielen;",
+          "raw": "Die need’rig knie_len;",
           "display": "Die need’rig knielen;",
           "tokens": [
             {
@@ -956,6 +964,10 @@
             {
               "text": "knie",
               "syllabic": "begin"
+            },
+            {
+              "text": "",
+              "syllabic": "middle"
             },
             {
               "text": "len;",
@@ -1287,7 +1299,7 @@
           ]
         },
         {
-          "raw": "Voor mij volenden,",
+          "raw": "Voor mij volen_den,",
           "display": "Voor mij volenden,",
           "tokens": [
             {
@@ -1304,6 +1316,10 @@
             },
             {
               "text": "len",
+              "syllabic": "middle"
+            },
+            {
+              "text": "",
               "syllabic": "middle"
             },
             {

@@ -24,11 +24,7 @@
               "syllabic": "end"
             },
             {
-              "text": "’t",
-              "syllabic": "single"
-            },
-            {
-              "text": "heil",
+              "text": "’t heil",
               "syllabic": "single"
             },
             {
@@ -278,8 +274,12 @@
               "syllabic": "single"
             },
             {
-              "text": "’s maaiers",
-              "syllabic": "single"
+              "text": "’s maai",
+              "syllabic": "begin"
+            },
+            {
+              "text": "ers",
+              "syllabic": "end"
             },
             {
               "text": "zeis",
@@ -1037,11 +1037,7 @@
           "display": "’t Ontsteek’ uw drift, noch baar’ u zielsverdriet;",
           "tokens": [
             {
-              "text": "’t",
-              "syllabic": "single"
-            },
-            {
-              "text": "Ont",
+              "text": "’t Ont",
               "syllabic": "begin"
             },
             {
@@ -4284,11 +4280,7 @@
               "syllabic": "single"
             },
             {
-              "text": "’s",
-              "syllabic": "single"
-            },
-            {
-              "text": "Hoog",
+              "text": "’s Hoog",
               "syllabic": "begin"
             },
             {

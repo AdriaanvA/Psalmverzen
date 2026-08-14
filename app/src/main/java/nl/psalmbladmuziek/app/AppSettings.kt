@@ -25,6 +25,7 @@ object AppSettings {
     private const val KEY_TOPBAR_ACTION_ICON = "topbar_action_icon"
     private const val KEY_PLAYBACK_TEMPO = "playback_tempo"
     private const val KEY_PLAYBACK_TIMBRE = "playback_timbre"
+    private const val KEY_PLAYBACK_REGISTRATION = "playback_registration"
     /** Themamodus: 0 = systeem volgen, 1 = altijd licht, 2 = altijd donker. */
     const val THEME_SYSTEM = 0
     const val THEME_LIGHT = 1
@@ -59,13 +60,36 @@ object AppSettings {
     const val MAX_PLAYBACK_TEMPO = 150
     const val DEFAULT_PLAYBACK_TEMPO = 100
 
-    /** Klankprofiel voor de live speler. */
-    const val TIMBRE_PRESTANT = 0
-    const val TIMBRE_HOLPIJP = 1
-    const val TIMBRE_FLUIT = 2
-    const val TIMBRE_STRINGS = 3
-    const val TIMBRE_VOL16 = 4
-    const val DEFAULT_PLAYBACK_TIMBRE = TIMBRE_PRESTANT
+    /** Orgelregistratie: bitmask met afzonderlijk inschakelbare registers. */
+    const val REGISTER_BOURDON16 = 1
+    const val REGISTER_PRESTANT8 = 2
+    const val REGISTER_HOLPIJP8 = 4
+    const val REGISTER_ROERFLUIT8 = 8
+    const val REGISTER_GEDEKT8 = 16
+    const val REGISTER_OCTAAF4 = 32
+    const val REGISTER_FLUIT4 = 64
+    const val REGISTER_QUINTFLUIT = 128
+    const val REGISTER_FLUIT_SOLO = 256
+    const val REGISTER_ORCHESTRAL_STRINGS = 512
+    const val REGISTER_TREMULANT = 1024
+    const val MAX_PLAYBACK_REGISTRATION_WEIGHT = 5
+    const val DEFAULT_PLAYBACK_REGISTRATION = REGISTER_HOLPIJP8
+    private const val ALL_PLAYBACK_REGISTERS = REGISTER_BOURDON16 or REGISTER_PRESTANT8 or REGISTER_HOLPIJP8 or
+        REGISTER_ROERFLUIT8 or REGISTER_GEDEKT8 or REGISTER_OCTAAF4 or REGISTER_FLUIT4 or REGISTER_QUINTFLUIT or
+        REGISTER_FLUIT_SOLO or REGISTER_ORCHESTRAL_STRINGS or REGISTER_TREMULANT
+    private val PLAYBACK_REGISTRATION_ORDER = intArrayOf(
+        REGISTER_BOURDON16,
+        REGISTER_PRESTANT8,
+        REGISTER_HOLPIJP8,
+        REGISTER_ROERFLUIT8,
+        REGISTER_GEDEKT8,
+        REGISTER_OCTAAF4,
+        REGISTER_FLUIT4,
+        REGISTER_QUINTFLUIT,
+        REGISTER_TREMULANT,
+        REGISTER_FLUIT_SOLO,
+        REGISTER_ORCHESTRAL_STRINGS
+    )
 
     private fun prefs(context: Context) =
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
@@ -215,13 +239,51 @@ object AppSettings {
         prefs(context).edit().putInt(KEY_PLAYBACK_TEMPO, value.coerceIn(MIN_PLAYBACK_TEMPO, MAX_PLAYBACK_TEMPO)).apply()
     }
 
-    fun playbackTimbre(context: Context): Int =
-        prefs(context)
-            .getInt(KEY_PLAYBACK_TIMBRE, DEFAULT_PLAYBACK_TIMBRE)
-            .coerceIn(TIMBRE_PRESTANT, TIMBRE_VOL16)
+    fun playbackRegistration(context: Context): Int {
+        val p = prefs(context)
+        val stored = if (p.contains(KEY_PLAYBACK_REGISTRATION)) {
+            p.getInt(KEY_PLAYBACK_REGISTRATION, DEFAULT_PLAYBACK_REGISTRATION)
+        } else {
+            registrationFromLegacyTimbre(p.getInt(KEY_PLAYBACK_TIMBRE, 0))
+        }
+        return coercePlaybackRegistration(stored)
+    }
 
-    fun setPlaybackTimbre(context: Context, value: Int) {
-        prefs(context).edit().putInt(KEY_PLAYBACK_TIMBRE, value.coerceIn(TIMBRE_PRESTANT, TIMBRE_VOL16)).apply()
+    fun setPlaybackRegistration(context: Context, value: Int) {
+        prefs(context).edit().putInt(KEY_PLAYBACK_REGISTRATION, coercePlaybackRegistration(value)).apply()
+    }
+
+    private fun registrationFromLegacyTimbre(value: Int): Int = when (value.coerceIn(0, 7)) {
+        1 -> REGISTER_HOLPIJP8
+        2 -> REGISTER_FLUIT_SOLO
+        3 -> REGISTER_ORCHESTRAL_STRINGS
+        4 -> REGISTER_BOURDON16 or REGISTER_PRESTANT8 or REGISTER_OCTAAF4 or REGISTER_FLUIT4
+        5 -> REGISTER_ROERFLUIT8
+        6 -> REGISTER_PRESTANT8 or REGISTER_OCTAAF4
+        7 -> REGISTER_GEDEKT8 or REGISTER_FLUIT4
+        else -> DEFAULT_PLAYBACK_REGISTRATION
+    }
+
+    private fun coercePlaybackRegistration(value: Int): Int {
+        val masked = value and ALL_PLAYBACK_REGISTERS
+        if (masked == 0) return 0
+        var result = 0
+        var weight = 0
+        for (register in PLAYBACK_REGISTRATION_ORDER) {
+            if (masked and register == 0) continue
+            val registerWeight = playbackRegisterWeight(register)
+            if (weight + registerWeight <= MAX_PLAYBACK_REGISTRATION_WEIGHT) {
+                result = result or register
+                weight += registerWeight
+            }
+        }
+        return result
+    }
+
+    private fun playbackRegisterWeight(register: Int): Int = when (register) {
+        REGISTER_TREMULANT -> 0
+        REGISTER_ORCHESTRAL_STRINGS -> 2
+        else -> 1
     }
 
     /** Past de opgeslagen themavoorkeur toe (recreëert actieve schermen indien nodig). */

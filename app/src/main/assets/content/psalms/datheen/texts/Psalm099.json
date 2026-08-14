@@ -1,4 +1,4 @@
-{
+﻿{
   "book": "psalms",
   "number": 99,
   "title": "Psalm 99 (Datheen)",
@@ -892,7 +892,7 @@
       "number": 5,
       "lines": [
         {
-          "raw": "Die end Samuel",
+          "raw": "Die end Sam_uel",
           "display": "Die end Samuel",
           "tokens": [
             {
@@ -906,6 +906,10 @@
             {
               "text": "Sam",
               "syllabic": "begin"
+            },
+            {
+              "text": "",
+              "syllabic": "middle"
             },
             {
               "text": "uel",

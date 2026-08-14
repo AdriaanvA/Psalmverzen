@@ -1,4 +1,4 @@
-{
+﻿{
   "book": "psalms",
   "number": 106,
   "title": "Psalm 106 (Datheen)",
@@ -3699,7 +3699,7 @@
           ]
         },
         {
-          "raw": "Der dooden afgoden offranden:",
+          "raw": "Der dooden afgoden offran__den:",
           "display": "Der dooden afgoden offranden:",
           "tokens": [
             {
@@ -3724,6 +3724,14 @@
             },
             {
               "text": "ran",
+              "syllabic": "middle"
+            },
+            {
+              "text": "",
+              "syllabic": "middle"
+            },
+            {
+              "text": "",
               "syllabic": "middle"
             },
             {
@@ -5816,11 +5824,7 @@
               "syllabic": "begin"
             },
             {
-              "text": "eva",
-              "syllabic": "middle"
-            },
-            {
-              "text": "en,",
+              "text": "evaen,",
               "syllabic": "end"
             }
           ]

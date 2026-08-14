@@ -1,4 +1,4 @@
-{
+﻿{
   "book": "psalms",
   "number": 10,
   "title": "Psalm 10 (Revius)",
@@ -288,7 +288,7 @@
           ]
         },
         {
-          "raw": "Geeft dat sy vall’ in hare eygen stricken.",
+          "raw": "Geeft dat sy vall’ in hare eygen stri_cken.",
           "display": "Geeft dat sy vall’ in hare eygen stricken.",
           "tokens": [
             {
@@ -330,6 +330,10 @@
             {
               "text": "stri",
               "syllabic": "begin"
+            },
+            {
+              "text": "",
+              "syllabic": "middle"
             },
             {
               "text": "cken.",
@@ -623,7 +627,7 @@
           ]
         },
         {
-          "raw": "Dat God niet is, of niet en is te achten.",
+          "raw": "Dat God niet is, of niet en is te ach_ten.",
           "display": "Dat God niet is, of niet en is te achten.",
           "tokens": [
             {
@@ -665,6 +669,10 @@
             {
               "text": "ach",
               "syllabic": "begin"
+            },
+            {
+              "text": "",
+              "syllabic": "middle"
             },
             {
               "text": "ten.",
@@ -958,7 +966,7 @@
           ]
         },
         {
-          "raw": "Het ongeluck sal ick wel van my weeren.",
+          "raw": "Het ongeluck sal ick wel van my wee_ren.",
           "display": "Het ongeluck sal ick wel van my weeren.",
           "tokens": [
             {
@@ -1000,6 +1008,10 @@
             {
               "text": "wee",
               "syllabic": "begin"
+            },
+            {
+              "text": "",
+              "syllabic": "middle"
             },
             {
               "text": "ren.",
@@ -1293,7 +1305,7 @@
           ]
         },
         {
-          "raw": "Om onversiens een armen man te worgen.",
+          "raw": "Om onversiens een armen man te wor_gen.",
           "display": "Om onversiens een armen man te worgen.",
           "tokens": [
             {
@@ -1335,6 +1347,10 @@
             {
               "text": "wor",
               "syllabic": "begin"
+            },
+            {
+              "text": "",
+              "syllabic": "middle"
             },
             {
               "text": "gen.",
@@ -1628,7 +1644,7 @@
           ]
         },
         {
-          "raw": "Die hy verslint en niet en wil ontfermen.",
+          "raw": "Die hy verslint en niet en wil ontfer_men.",
           "display": "Die hy verslint en niet en wil ontfermen.",
           "tokens": [
             {
@@ -1669,6 +1685,10 @@
             },
             {
               "text": "fer",
+              "syllabic": "middle"
+            },
+            {
+              "text": "",
               "syllabic": "middle"
             },
             {
@@ -1963,7 +1983,7 @@
           ]
         },
         {
-          "raw": "Die hier in angst en droefheyt zijn geseten.",
+          "raw": "Die hier in angst en droefheyt zijn geset_en.",
           "display": "Die hier in angst en droefheyt zijn geseten.",
           "tokens": [
             {
@@ -2004,6 +2024,10 @@
             },
             {
               "text": "set",
+              "syllabic": "middle"
+            },
+            {
+              "text": "",
               "syllabic": "middle"
             },
             {
@@ -2298,7 +2322,7 @@
           ]
         },
         {
-          "raw": "Verlaten sich de hulpeloose weesen.",
+          "raw": "Verlaten sich de hulpeloose wee_sen.",
           "display": "Verlaten sich de hulpeloose weesen.",
           "tokens": [
             {
@@ -2340,6 +2364,10 @@
             {
               "text": "wee",
               "syllabic": "begin"
+            },
+            {
+              "text": "",
+              "syllabic": "middle"
             },
             {
               "text": "sen.",
@@ -2633,7 +2661,7 @@
           ]
         },
         {
-          "raw": "Syn uytgevaecht uyt alle syne landen.",
+          "raw": "Syn uytgevaecht uyt alle syne lan_den.",
           "display": "Syn uytgevaecht uyt alle syne landen.",
           "tokens": [
             {
@@ -2675,6 +2703,10 @@
             {
               "text": "lan",
               "syllabic": "begin"
+            },
+            {
+              "text": "",
+              "syllabic": "middle"
             },
             {
               "text": "den.",
@@ -2968,7 +3000,7 @@
           ]
         },
         {
-          "raw": "Noch hem soo trots op aerden aen en stelle.",
+          "raw": "Noch hem soo trots op aerden aen en ste_lle.",
           "display": "Noch hem soo trots op aerden aen en stelle.",
           "tokens": [
             {
@@ -3010,6 +3042,10 @@
             {
               "text": "ste",
               "syllabic": "begin"
+            },
+            {
+              "text": "",
+              "syllabic": "middle"
             },
             {
               "text": "lle.",

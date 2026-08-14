@@ -1,4 +1,4 @@
-{
+﻿{
   "book": "psalms",
   "number": 106,
   "title": "Psalm 106 (Revius)",
@@ -3699,7 +3699,7 @@
           ]
         },
         {
-          "raw": "Dat sy der dooden offer aten.",
+          "raw": "Dat sy der dooden offer __aten.",
           "display": "Dat sy der dooden offer aten.",
           "tokens": [
             {
@@ -3725,6 +3725,14 @@
             {
               "text": "offer",
               "syllabic": "single"
+            },
+            {
+              "text": "",
+              "syllabic": "middle"
+            },
+            {
+              "text": "",
+              "syllabic": "middle"
             },
             {
               "text": "aten.",
@@ -5808,11 +5816,7 @@
               "syllabic": "begin"
             },
             {
-              "text": "mhe",
-              "syllabic": "middle"
-            },
-            {
-              "text": "rt",
+              "text": "mhert",
               "syllabic": "middle"
             },
             {

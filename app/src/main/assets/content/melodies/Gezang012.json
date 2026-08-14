@@ -83,8 +83,7 @@
           "duration": 48,
           "type": "half",
           "rest": true,
-          "lyricSlot": false,
-          "hidden": true
+          "lyricSlot": false
         }
       ],
       [
@@ -164,8 +163,7 @@
           "duration": 48,
           "type": "half",
           "rest": true,
-          "lyricSlot": false,
-          "hidden": true
+          "lyricSlot": false
         }
       ],
       [
@@ -240,6 +238,12 @@
           "step": "G",
           "alter": null,
           "octave": 4
+        },
+        {
+          "duration": 48,
+          "type": "half",
+          "rest": true,
+          "lyricSlot": false
         }
       ],
       [
@@ -314,13 +318,6 @@
           "step": "G",
           "alter": null,
           "octave": 4
-        },
-        {
-          "duration": 84,
-          "type": "whole",
-          "rest": true,
-          "lyricSlot": false,
-          "hidden": true
         }
       ]
     ]

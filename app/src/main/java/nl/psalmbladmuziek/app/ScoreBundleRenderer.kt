@@ -118,8 +118,12 @@ object ScoreBundleRenderer {
                     if (note.safeBoolean("hidden")) continue
                     val noteJson = noteJsonModel(note, isometric)
                     val isRest = note.safeBoolean("rest")
+                    val isTrailingVerseRest = isRest && lineIndex == lineCount - 1 && !notes.hasVisibleNoteAfter(noteIndex)
                     val hasLyric = note.safeBoolean("lyricSlot") && tokenIndex < tokens.length()
                     when {
+                        isTrailingVerseRest -> {
+                            currentSlot = null
+                        }
                         isRest -> {
                             slots.put(
                                 JSONObject()
@@ -180,6 +184,14 @@ object ScoreBundleRenderer {
             .put("type", type)
             .put("dot", if (isometric && !rest && originalType == "quarter") false else note.safeBoolean("dot"))
             .put("rest", rest)
+    }
+
+    private fun JSONArray.hasVisibleNoteAfter(index: Int): Boolean {
+        for (nextIndex in index + 1 until length()) {
+            val note = safeJSONObject(nextIndex) ?: continue
+            if (!note.safeBoolean("hidden") && !note.safeBoolean("rest")) return true
+        }
+        return false
     }
 
     private fun readTextForVerse(context: Context, verse: Verse): JSONObject {

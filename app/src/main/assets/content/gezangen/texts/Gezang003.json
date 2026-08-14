@@ -37,7 +37,11 @@
               "syllabic": "begin"
             },
             {
-              "text": "rael,",
+              "text": "ra",
+              "syllabic": "middle"
+            },
+            {
+              "text": "el,",
               "syllabic": "end"
             }
           ]
@@ -430,8 +434,12 @@
               "syllabic": "single"
             },
             {
-              "text": "ge meld,",
-              "syllabic": "single"
+              "text": "ge ,",
+              "syllabic": "begin"
+            },
+            {
+              "text": "meld,",
+              "syllabic": "end"
             }
           ]
         },
@@ -819,11 +827,15 @@
               "syllabic": "single"
             },
             {
-              "text": "t'",
-              "syllabic": "single"
+              "text": "t' al",
+              "syllabic": "begin"
             },
             {
-              "text": "al len tijd,",
+              "text": "len",
+              "syllabic": "end"
+            },
+            {
+              "text": "tijd,",
               "syllabic": "single"
             }
           ]
@@ -895,11 +907,11 @@
               "syllabic": "single"
             },
             {
-              "text": "bev",
+              "text": "be",
               "syllabic": "begin"
             },
             {
-              "text": "rijd,",
+              "text": "vrijd,",
               "syllabic": "end"
             }
           ]
@@ -1204,11 +1216,11 @@
               "syllabic": "single"
             },
             {
-              "text": "Hee",
+              "text": "Heer",
               "syllabic": "begin"
             },
             {
-              "text": "ren",
+              "text": "en",
               "syllabic": "end"
             },
             {
@@ -1216,8 +1228,12 @@
               "syllabic": "single"
             },
             {
-              "text": "ge leid,",
-              "syllabic": "single"
+              "text": "ge",
+              "syllabic": "begin"
+            },
+            {
+              "text": "leid,",
+              "syllabic": "end"
             }
           ]
         },
@@ -1314,11 +1330,11 @@
               "syllabic": "end"
             },
             {
-              "text": "schul",
+              "text": "schuld",
               "syllabic": "begin"
             },
             {
-              "text": "dver",
+              "text": "ver",
               "syllabic": "middle"
             },
             {
@@ -1394,11 +1410,11 @@
               "syllabic": "single"
             },
             {
-              "text": "bar",
+              "text": "barm",
               "syllabic": "begin"
             },
             {
-              "text": "mhar",
+              "text": "har",
               "syllabic": "middle"
             },
             {
@@ -1482,12 +1498,12 @@
               "syllabic": "end"
             },
             {
-              "text": "t'",
-              "syllabic": "single"
+              "text": "t' ont",
+              "syllabic": "begin"
             },
             {
-              "text": "ont slaan,",
-              "syllabic": "single"
+              "text": "slaan,",
+              "syllabic": "end"
             }
           ]
         },
@@ -1609,7 +1625,11 @@
               "syllabic": "begin"
             },
             {
-              "text": "ter dwaalt,",
+              "text": "ter",
+              "syllabic": "end"
+            },
+            {
+              "text": "dwaalt,",
               "syllabic": "single"
             }
           ]
@@ -1727,36 +1747,6 @@
               "syllabic": "single"
             }
           ]
-        },
-        {
-          "raw": "",
-          "display": "",
-          "tokens": []
-        },
-        {
-          "raw": "",
-          "display": "",
-          "tokens": []
-        },
-        {
-          "raw": "",
-          "display": "",
-          "tokens": []
-        },
-        {
-          "raw": "",
-          "display": "",
-          "tokens": []
-        },
-        {
-          "raw": "",
-          "display": "",
-          "tokens": []
-        },
-        {
-          "raw": "",
-          "display": "",
-          "tokens": []
         }
       ]
     }

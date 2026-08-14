@@ -1,4 +1,4 @@
-{
+﻿{
   "book": "psalms",
   "number": 34,
   "title": "Psalm 34 (Revius)",
@@ -527,7 +527,7 @@
           ]
         },
         {
-          "raw": "Ben ick geworden vry.",
+          "raw": "Ben ick geworden _vry.",
           "display": "Ben ick geworden vry.",
           "tokens": [
             {
@@ -545,6 +545,10 @@
             {
               "text": "rden",
               "syllabic": "end"
+            },
+            {
+              "text": "",
+              "syllabic": "middle"
             },
             {
               "text": "vry.",

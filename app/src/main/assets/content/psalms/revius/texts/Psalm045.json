@@ -1,4 +1,4 @@
-{
+﻿{
   "book": "psalms",
   "number": 45,
   "title": "Psalm 45 (Revius)",
@@ -1513,7 +1513,7 @@
           ]
         },
         {
-          "raw": "Als ghy uyt u yvooren camer gaet.",
+          "raw": "Als ghy uyt u yvooren camer _gaet.",
           "display": "Als ghy uyt u yvooren camer gaet.",
           "tokens": [
             {
@@ -1547,6 +1547,10 @@
             {
               "text": "camer",
               "syllabic": "single"
+            },
+            {
+              "text": "",
+              "syllabic": "middle"
             },
             {
               "text": "gaet.",

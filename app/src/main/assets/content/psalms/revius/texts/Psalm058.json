@@ -1,4 +1,4 @@
-{
+﻿{
   "book": "psalms",
   "number": 58,
   "title": "Psalm 58 (Revius)",
@@ -206,7 +206,7 @@
           ]
         },
         {
-          "raw": "Dat ghy soo aerdichlijck belegt?",
+          "raw": "Dat ghy soo aerdichlijck _belegt?",
           "display": "Dat ghy soo aerdichlijck belegt?",
           "tokens": [
             {
@@ -232,6 +232,10 @@
             {
               "text": "ijck",
               "syllabic": "end"
+            },
+            {
+              "text": "",
+              "syllabic": "middle"
             },
             {
               "text": "belegt?",

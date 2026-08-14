@@ -9,6 +9,8 @@ import com.google.android.material.tabs.TabLayoutMediator
 
 class MainActivity : AppCompatActivity() {
 
+    private lateinit var viewPager: ViewPager2
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         configureReadableSystemBars()
@@ -16,13 +18,13 @@ class MainActivity : AppCompatActivity() {
         bindStatusBarBackground(findViewById(R.id.mainRoot), findViewById(R.id.statusBarBackground))
 
         val tabLayout = findViewById<TabLayout>(R.id.tabLayout)
-        val viewPager = findViewById<ViewPager2>(R.id.viewPager)
+        viewPager = findViewById(R.id.viewPager)
 
         HymnRepository.loadAsync(this) { refreshBookFragments() }
 
         val adapter = BookPagerAdapter(this, HymnRepository.bookTitles)
         viewPager.adapter = adapter
-        viewPager.setCurrentItem(0, false)
+        selectInitialBookTab()
 
         TabLayoutMediator(tabLayout, viewPager) { tab, position ->
             tab.text = HymnRepository.bookTitles[position]
@@ -48,11 +50,30 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    override fun onNewIntent(intent: android.content.Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        selectInitialBookTab()
+    }
+
+    private fun selectInitialBookTab() {
+        val bookType = intent.getStringExtra(EXTRA_BOOK_TYPE)
+        val index = when (bookType) {
+            "Gezang" -> HymnRepository.bookTitles.indexOf(HymnRepository.HYMNS_TITLE)
+            else -> HymnRepository.bookTitles.indexOf(HymnRepository.PSALMS_TITLE)
+        }.coerceAtLeast(0)
+        viewPager.setCurrentItem(index, false)
+    }
+
     private fun getPsalmFragment(): BookFragment? =
         supportFragmentManager.fragments.filterIsInstance<BookFragment>()
             .find { it.arguments?.getString("BOOK_TYPE") == HymnRepository.PSALMS_TITLE }
 
     private fun refreshBookFragments() {
         supportFragmentManager.fragments.filterIsInstance<BookFragment>().forEach { it.refresh() }
+    }
+
+    companion object {
+        const val EXTRA_BOOK_TYPE = "nl.psalmbladmuziek.app.extra.BOOK_TYPE"
     }
 }

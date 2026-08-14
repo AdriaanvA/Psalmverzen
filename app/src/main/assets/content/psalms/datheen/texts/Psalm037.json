@@ -1,4 +1,4 @@
-{
+﻿{
   "book": "psalms",
   "number": 37,
   "title": "Psalm 37 (Datheen)",
@@ -12,12 +12,8 @@
           "display": "Quelt u daer met niet so ghy in dit leven,",
           "tokens": [
             {
-              "text": "Qu",
-              "syllabic": "begin"
-            },
-            {
-              "text": "elt",
-              "syllabic": "end"
+              "text": "Quelt",
+              "syllabic": "single"
             },
             {
               "text": "u",
@@ -254,7 +250,7 @@
           ]
         },
         {
-          "raw": "End oock ghelyck dat gras verdorren saen.",
+          "raw": "End oock ghelyck dat gras verdorren _saen.",
           "display": "End oock ghelyck dat gras verdorren saen.",
           "tokens": [
             {
@@ -288,6 +284,10 @@
             {
               "text": "ren",
               "syllabic": "end"
+            },
+            {
+              "text": "",
+              "syllabic": "middle"
             },
             {
               "text": "saen.",
@@ -1073,11 +1073,7 @@
               "syllabic": "begin"
             },
             {
-              "text": "dr",
-              "syllabic": "middle"
-            },
-            {
-              "text": "iet.",
+              "text": "driet.",
               "syllabic": "end"
             }
           ]
@@ -4268,12 +4264,8 @@
               "syllabic": "single"
             },
             {
-              "text": "vr",
+              "text": "vrom",
               "syllabic": "begin"
-            },
-            {
-              "text": "om",
-              "syllabic": "middle"
             },
             {
               "text": "en",

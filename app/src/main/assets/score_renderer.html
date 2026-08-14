@@ -985,7 +985,7 @@
         var midY = staffTopY + 2 * S;
         var glyph, y;
         if (note.type === "whole") { glyph = "\uD834\uDD3B"; y = staffTopY + 1.9 * S; }
-        else if (note.type === "half") { glyph = "\uD834\uDD3C"; y = staffTopY + 2.8 * S; }
+        else if (note.type === "half") { glyph = "\uD834\uDD3C"; y = staffTopY + 2.75 * S; }
         else if (note.type === "eighth") { glyph = "\uD834\uDD3E"; y = midY + 0.9 * S; }
         else { glyph = "\uD834\uDD3D"; y = midY + 1.15 * S; }
         var t = el("text", {

@@ -54,7 +54,7 @@ class SheetMusicActivity : AppCompatActivity() {
     private var currentScoreVerticalScale = DEFAULT_NOTE_SCALE
     private var currentTransposition = 0
     private var lastPlaybackTempo = AppSettings.DEFAULT_PLAYBACK_TEMPO
-    private var lastPlaybackTimbre = AppSettings.DEFAULT_PLAYBACK_TIMBRE
+    private var lastPlaybackRegistration = AppSettings.DEFAULT_PLAYBACK_REGISTRATION
     private var showNotes = true
     private var exportingPdf = false
     private var stackedVerseFileNames: LinkedHashSet<String>? = null
@@ -88,7 +88,7 @@ class SheetMusicActivity : AppCompatActivity() {
 
         fileName = intent.getStringExtra(EXTRA_FILE_NAME) ?: DEFAULT_FILE_NAME
         lastPlaybackTempo = AppSettings.playbackTempo(this)
-        lastPlaybackTimbre = AppSettings.playbackTimbre(this)
+        lastPlaybackRegistration = AppSettings.playbackRegistration(this)
         currentLyricTextScale = roundScaleToGrid(AppSettings.textScale(this, DEFAULT_TEXT_SCALE), DEFAULT_TEXT_SCALE, TEXT_SCALE_STEP, MIN_TEXT_SCALE, MAX_TEXT_SCALE)
         currentScoreVerticalScale = roundScaleToGrid(AppSettings.noteScale(this, DEFAULT_NOTE_SCALE), DEFAULT_NOTE_SCALE, NOTE_SCALE_STEP, MIN_NOTE_SCALE, MAX_NOTE_SCALE)
         showNotes = !isTextOnlyAsset() && !AppSettings.textOnly(this)
@@ -129,13 +129,21 @@ class SheetMusicActivity : AppCompatActivity() {
         onBackPressedDispatcher.addCallback(this, fullscreenBackCallback)
     }
 
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        val newFileName = intent.getStringExtra(EXTRA_FILE_NAME) ?: return
+        val verse = HymnRepository.verseByFileName(newFileName) ?: return
+        stackedVerseFileNames = null
+        openVerse(verse)
+    }
+
     private fun setupButtons() {
-        findViewById<View>(R.id.backToIndexButton).setOnClickListener { finish() }
+        findViewById<View>(R.id.backToIndexButton).setOnClickListener { openMainOverview() }
         findViewById<View>(R.id.sharePdfButton).setOnClickListener { pdfExporter.shareCurrentVerseAsPdf() }
         playMelodyButton.setOnClickListener { toggleMelodyPlayback() }
         val optionsButton = findViewById<View>(R.id.optionsButton)
         optionsButton.setOnClickListener { showAppSettingsDialog { onSettingsChanged() } }
-        psalmPickerTextView.setOnClickListener { showPsalmMenu() }
+        psalmPickerTextView.setOnClickListener { openMainOverview() }
         verseTitleTextView.setOnClickListener { openCurrentVerseOverview() }
         verseTitleTextView.setOnLongClickListener {
             showVerseMultiSelectDialog()
@@ -148,6 +156,15 @@ class SheetMusicActivity : AppCompatActivity() {
         updateTopBarActionButtons()
         updatePlayButtonIcon()
         updateControls()
+    }
+
+    private fun openMainOverview() {
+        val currentVerse = HymnRepository.verseByFileName(fileName)
+        startActivity(
+            Intent(this, MainActivity::class.java)
+                .putExtra(MainActivity.EXTRA_BOOK_TYPE, currentVerse?.type ?: "Psalm")
+                .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+        )
     }
 
     /**
@@ -205,9 +222,10 @@ class SheetMusicActivity : AppCompatActivity() {
         val newTempo = AppSettings.playbackTempo(this)
         val tempoChanged = newTempo != lastPlaybackTempo
         lastPlaybackTempo = newTempo
-        val newTimbre = AppSettings.playbackTimbre(this)
-        val timbreChanged = newTimbre != lastPlaybackTimbre
-        lastPlaybackTimbre = newTimbre
+        val newRegistration = AppSettings.playbackRegistration(this)
+        val previousRegistration = lastPlaybackRegistration
+        val registrationChanged = newRegistration != lastPlaybackRegistration
+        lastPlaybackRegistration = newRegistration
 
         showNotes = !isTextOnlyAsset() && !AppSettings.textOnly(this)
         applyKeepScreenOn()
@@ -215,8 +233,12 @@ class SheetMusicActivity : AppCompatActivity() {
         updateTopBarActionButtons()
         updateLyricsText()
         updateContentMode()
-        if ((tempoChanged || timbreChanged) && melodyPlayer.isPlaying) {
+        if (melodyPlayer.isPlaying && tempoChanged) {
             startMelodyPlayback()
+        } else if (melodyPlayer.isPlaying && registrationChanged && !hasSoundingRegistration(previousRegistration) && hasSoundingRegistration(newRegistration)) {
+            startMelodyPlayback()
+        } else if (melodyPlayer.isPlaying && registrationChanged) {
+            melodyPlayer.updateRegistration(currentRegistration(), currentEffects())
         }
         if (showNotes) {
             webView.evaluateJavascript("updateScore();", null)
@@ -302,19 +324,18 @@ class SheetMusicActivity : AppCompatActivity() {
         if (verses.isEmpty()) return
 
         val currentIndex = verses.indexOfFirst { it.fileName == currentVerse.fileName }.coerceAtLeast(0)
-        AnchoredChoicePopup.show(
-            context = this,
-            anchor = verseTitleTextView,
-            labels = verses.map { "vers ${it.verse}" },
-            currentIndex = currentIndex,
-            minWidthDp = 128
-        ) { position ->
-            val verse = verses[position]
-            if (verse.fileName != currentVerse.fileName) {
-                stackedVerseFileNames = null
-                openVerse(verse)
+        val labels = verses.map { "vers ${it.verse}" }.toTypedArray()
+        AlertDialog.Builder(this)
+            .setTitle("Kies vers")
+            .setSingleChoiceItems(labels, currentIndex) { dialog, position ->
+                dialog.dismiss()
+                val verse = verses[position]
+                if (verse.fileName != currentVerse.fileName) {
+                    stackedVerseFileNames = null
+                    openVerse(verse)
+                }
             }
-        }
+            .show()
     }
 
     private fun openCurrentVerseOverview() {
@@ -324,6 +345,7 @@ class SheetMusicActivity : AppCompatActivity() {
                 .putExtra(VerseListActivity.EXTRA_TYPE, currentVerse.type)
                 .putExtra(VerseListActivity.EXTRA_NUMBER, currentVerse.number)
                 .putExtra(VerseListActivity.EXTRA_FOCUS_VERSE, currentVerse.verse)
+                .putExtra(VerseListActivity.EXTRA_RETURN_TO_SHEET, true)
         )
     }
 
@@ -380,24 +402,6 @@ class SheetMusicActivity : AppCompatActivity() {
                 }
             }
             .show()
-    }
-
-    /** Keuzelijst voor psalm/gezang: houdt de normale nummering aan en scrollt naar de huidige. */
-    private fun showPsalmMenu() {
-        val currentVerse = HymnRepository.verseByFileName(fileName) ?: return
-        val numbers = HymnRepository.availableNumbers(currentVerse.type)
-        if (numbers.isEmpty()) return
-
-        AnchoredChoicePopup.show(
-            context = this,
-            anchor = psalmPickerTextView,
-            labels = numbers.map { "${currentVerse.type} $it" },
-            currentIndex = numbers.indexOf(currentVerse.number).coerceAtLeast(0),
-            minWidthDp = 176
-        ) { position ->
-            val number = numbers[position]
-            if (number != currentVerse.number) openNumber(currentVerse.type, number)
-        }
     }
 
     private fun openNumber(type: String, number: Int) {
@@ -718,26 +722,61 @@ class SheetMusicActivity : AppCompatActivity() {
         } else {
             listOf(currentVerse)
         }
-        val events = MelodyPlaybackModel.buildEvents(
-            context = this,
-            verses = verses,
-            tempoPercent = AppSettings.playbackTempo(this),
-            transposeSemitones = currentTransposition
-        )
-        if (events.isEmpty()) return
-        melodyPlayer.play(events, currentTimbre()) { _ ->
-            runOnUiThread { updatePlayButtonIcon() }
-        }
+        val tempoPercent = AppSettings.playbackTempo(this)
+        val transposeSemitones = currentTransposition
+        val registration = currentRegistration()
+        val effects = currentEffects()
+        val appContext = applicationContext
+        // Events bouwen op een worker: bij stacked multi-verse worden meerdere verzen geparset,
+        // wat de UI-thread vlak voor het afspelen niet mag blokkeren.
+        Thread {
+            val events = MelodyPlaybackModel.buildEvents(
+                context = appContext,
+                verses = verses,
+                tempoPercent = tempoPercent,
+                transposeSemitones = transposeSemitones
+            )
+            if (events.isEmpty()) return@Thread
+            melodyPlayer.play(events, registration, effects) { _ ->
+                runOnUiThread { updatePlayButtonIcon() }
+            }
+        }.apply { name = "MelodyEventBuilder" }.start()
         updatePlayButtonIcon()
     }
 
-    private fun currentTimbre(): MelodyTimbre = when (AppSettings.playbackTimbre(this)) {
-        AppSettings.TIMBRE_HOLPIJP -> MelodyTimbre.HOLPIJP
-        AppSettings.TIMBRE_FLUIT -> MelodyTimbre.FLUIT
-        AppSettings.TIMBRE_STRINGS -> MelodyTimbre.STRINGS
-        AppSettings.TIMBRE_VOL16 -> MelodyTimbre.VOL16
-        else -> MelodyTimbre.PRESTANT
+    // Eén centrale bron voor register-bit -> timbre, in vaste volgorde (16' -> laag -> solo/strings/tremulant).
+    private val registerTimbreOrder: List<Pair<Int, MelodyTimbre>> = listOf(
+        AppSettings.REGISTER_BOURDON16 to MelodyTimbre.BOURDON16,
+        AppSettings.REGISTER_PRESTANT8 to MelodyTimbre.PRESTANT8,
+        AppSettings.REGISTER_HOLPIJP8 to MelodyTimbre.HOLPIJP8,
+        AppSettings.REGISTER_ROERFLUIT8 to MelodyTimbre.ROERFLUIT8,
+        AppSettings.REGISTER_GEDEKT8 to MelodyTimbre.GEDEKT8,
+        AppSettings.REGISTER_OCTAAF4 to MelodyTimbre.OCTAAF4,
+        AppSettings.REGISTER_FLUIT4 to MelodyTimbre.FLUIT4,
+        AppSettings.REGISTER_QUINTFLUIT to MelodyTimbre.QUINTFLUIT,
+        AppSettings.REGISTER_FLUIT_SOLO to MelodyTimbre.FLUIT_SOLO,
+        AppSettings.REGISTER_ORCHESTRAL_STRINGS to MelodyTimbre.ORCHESTRAL_STRINGS
+    )
+
+    private fun currentRegistration(): List<MelodyTimbre> {
+        val registration = AppSettings.playbackRegistration(this)
+        return registerTimbreOrder
+            .filter { (bit, _) -> registration and bit != 0 }
+            .map { (_, timbre) -> timbre }
     }
+
+    // Tremulant is een effect (geen pijpstem) en loopt via een aparte MelodyEffect-set.
+    private fun currentEffects(): Set<MelodyEffect> {
+        val registration = AppSettings.playbackRegistration(this)
+        return if (registration and AppSettings.REGISTER_TREMULANT != 0) {
+            setOf(MelodyEffect.TREMULANT)
+        } else {
+            emptySet()
+        }
+    }
+
+    private fun hasSoundingRegistration(registration: Int): Boolean =
+        registerTimbreOrder.any { (bit, _) -> registration and bit != 0 }
 
     private fun stopMelodyPlayback() {
         melodyPlayer.stop { _ ->

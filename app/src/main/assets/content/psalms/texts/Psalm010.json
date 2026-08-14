@@ -288,7 +288,7 @@
           ]
         },
         {
-          "raw": "In ’t warnet breng’, en schielijk om doe komen!",
+          "raw": "In ’t warnet breng’, en schielijk om doe ko_men!",
           "display": "In ’t warnet breng’, en schielijk om doe komen!",
           "tokens": [
             {
@@ -330,6 +330,10 @@
             {
               "text": "ko",
               "syllabic": "begin"
+            },
+            {
+              "text": "",
+              "syllabic": "middle"
             },
             {
               "text": "men!",
@@ -623,7 +627,7 @@
           ]
         },
         {
-          "raw": "„Daar is geen God, geen loon, noch straf te wachten”.",
+          "raw": "„Daar is geen God, geen loon, noch straf te wa_chten”.",
           "display": "„Daar is geen God, geen loon, noch straf te wachten”.",
           "tokens": [
             {
@@ -663,11 +667,15 @@
               "syllabic": "single"
             },
             {
-              "text": "wach",
+              "text": "wa",
               "syllabic": "begin"
             },
             {
-              "text": "ten”.",
+              "text": "",
+              "syllabic": "middle"
+            },
+            {
+              "text": "chten”.",
               "syllabic": "end"
             }
           ]
@@ -958,7 +966,7 @@
           ]
         },
         {
-          "raw": "Op mijnen weg geen tegenspoeden wachte”.",
+          "raw": "Op mijnen weg geen tegenspoeden wa_chte”.",
           "display": "Op mijnen weg geen tegenspoeden wachte”.",
           "tokens": [
             {
@@ -998,11 +1006,15 @@
               "syllabic": "end"
             },
             {
-              "text": "wach",
+              "text": "wa",
               "syllabic": "begin"
             },
             {
-              "text": "te”.",
+              "text": "",
+              "syllabic": "middle"
+            },
+            {
+              "text": "chte”.",
               "syllabic": "end"
             }
           ]
@@ -1293,7 +1305,7 @@
           ]
         },
         {
-          "raw": "Maar sluit zijn oog voor ’t bitter leed der armen.",
+          "raw": "Maar sluit zijn oog voor ’t bitter leed der ar_men.",
           "display": "Maar sluit zijn oog voor ’t bitter leed der armen.",
           "tokens": [
             {
@@ -1335,6 +1347,10 @@
             {
               "text": "ar",
               "syllabic": "begin"
+            },
+            {
+              "text": "",
+              "syllabic": "middle"
             },
             {
               "text": "men.",
@@ -1628,7 +1644,7 @@
           ]
         },
         {
-          "raw": "Valt d’arme hoop hem in de sterke poten.",
+          "raw": "Valt d’arme hoop hem in de sterke po_ten.",
           "display": "Valt d’arme hoop hem in de sterke poten.",
           "tokens": [
             {
@@ -1670,6 +1686,10 @@
             {
               "text": "po",
               "syllabic": "begin"
+            },
+            {
+              "text": "",
+              "syllabic": "middle"
             },
             {
               "text": "ten.",
@@ -1963,7 +1983,7 @@
           ]
         },
         {
-          "raw": "En raad en hulp den armen te verschaffen.",
+          "raw": "En raad en hulp den armen te verschaf_fen.",
           "display": "En raad en hulp den armen te verschaffen.",
           "tokens": [
             {
@@ -2004,6 +2024,10 @@
             },
             {
               "text": "schaf",
+              "syllabic": "middle"
+            },
+            {
+              "text": "",
               "syllabic": "middle"
             },
             {
@@ -2298,7 +2322,7 @@
           ]
         },
         {
-          "raw": "Gij immers zijt een trouwe hulp der wezen.",
+          "raw": "Gij immers zijt een trouwe hulp der we_zen.",
           "display": "Gij immers zijt een trouwe hulp der wezen.",
           "tokens": [
             {
@@ -2340,6 +2364,10 @@
             {
               "text": "we",
               "syllabic": "begin"
+            },
+            {
+              "text": "",
+              "syllabic": "middle"
             },
             {
               "text": "zen.",
@@ -2633,7 +2661,7 @@
           ]
         },
         {
-          "raw": "Het heidendom is uit zijn land verdreven.",
+          "raw": "Het heidendom is uit zijn land verdre_ven.",
           "display": "Het heidendom is uit zijn land verdreven.",
           "tokens": [
             {
@@ -2674,6 +2702,10 @@
             },
             {
               "text": "dre",
+              "syllabic": "middle"
+            },
+            {
+              "text": "",
               "syllabic": "middle"
             },
             {
@@ -2968,7 +3000,7 @@
           ]
         },
         {
-          "raw": "Niet voortga door geweld de rust te storen.",
+          "raw": "Niet voortga door geweld de rust te sto_ren.",
           "display": "Niet voortga door geweld de rust te storen.",
           "tokens": [
             {
@@ -3010,6 +3042,10 @@
             {
               "text": "sto",
               "syllabic": "begin"
+            },
+            {
+              "text": "",
+              "syllabic": "middle"
             },
             {
               "text": "ren.",

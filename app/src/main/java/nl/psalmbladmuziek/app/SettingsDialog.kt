@@ -1,15 +1,24 @@
 package nl.psalmbladmuziek.app
 
 import android.content.Intent
+import android.content.pm.ApplicationInfo
 import android.net.Uri
 import android.view.Gravity
+import android.view.View
+import android.view.ViewGroup
+import android.widget.ArrayAdapter
 import android.widget.LinearLayout
+import android.widget.ListView
 import android.widget.SeekBar
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SwitchCompat
 import androidx.core.content.ContextCompat
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+import kotlin.math.min
 
 /** Bestemming van de 'Steun de app'-knop (tip jar). */
 private const val SUPPORT_URL = "https://arianappel.github.io/Psalmverzen/"
@@ -111,7 +120,7 @@ fun AppCompatActivity.showAppSettingsDialog(onChanged: () -> Unit = {}) {
             valueView.text = displayModeName(AppSettings.displayMode(this)); onChanged()
         }
     }
-    chooserRow("Psalmen", { psalmVersionName(AppSettings.psalmVersion(this)) }) { valueView ->
+    chooserRow("Psalmberijming", { psalmVersionName(AppSettings.psalmVersion(this)) }) { valueView ->
         showPsalmVersionChooser {
             valueView.text = psalmVersionName(AppSettings.psalmVersion(this)); onChanged()
         }
@@ -140,9 +149,9 @@ fun AppCompatActivity.showAppSettingsDialog(onChanged: () -> Unit = {}) {
             valueView.text = "${AppSettings.playbackTempo(this)}"; onChanged()
         }
     }
-    chooserRow("Klank", { timbreName(AppSettings.playbackTimbre(this)) }) { valueView ->
-        showTimbreChooser {
-            valueView.text = timbreName(AppSettings.playbackTimbre(this)); onChanged()
+    chooserRow("Registratie", { registrationName(AppSettings.playbackRegistration(this)) }) { valueView ->
+        showRegistrationChooser {
+            valueView.text = registrationName(AppSettings.playbackRegistration(this)); onChanged()
         }
     }
 
@@ -157,7 +166,7 @@ fun AppCompatActivity.showAppSettingsDialog(onChanged: () -> Unit = {}) {
     toggleRow("Twee zinnen op één regel", AppSettings.combineLines(this)) {
         AppSettings.setCombineLines(this, it); onChanged()
     }
-    toggleRow("Rusttekens aan", AppSettings.showRests(this)) {
+    toggleRow("Rusttekens weergeven", AppSettings.showRests(this)) {
         AppSettings.setShowRests(this, it); onChanged()
     }
     chooserRow("Tekst uitlijning", { textAlignName(AppSettings.textAlign(this)) }) { valueView ->
@@ -185,15 +194,25 @@ fun AppCompatActivity.showAppSettingsDialog(onChanged: () -> Unit = {}) {
         } catch (_: Exception) {}
     }
 
-    val versionName = try {
-        packageManager.getPackageInfo(packageName, 0).versionName
-    } catch (_: Exception) { null } ?: ""
+    val packageInfo = try {
+        packageManager.getPackageInfo(packageName, 0)
+    } catch (_: Exception) { null }
+    val versionName = packageInfo?.versionName.orEmpty()
+    val isDebuggable = (applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE) != 0
+    val versionLabel = if (versionName.isNotEmpty() && isDebuggable && packageInfo != null) {
+        val timestamp = SimpleDateFormat("dd-MM HH:mm", Locale.getDefault()).format(Date(packageInfo.lastUpdateTime))
+        "v$versionName $timestamp"
+    } else if (versionName.isNotEmpty()) {
+        "v$versionName"
+    } else {
+        ""
+    }
 
     val scroll = android.widget.ScrollView(this).apply { addView(root) }
     val dialog = AlertDialog.Builder(this)
         .setTitle("Instellingen")
         .setView(scroll)
-        .setNeutralButton(if (versionName.isNotEmpty()) "v$versionName" else "", null)
+        .setNeutralButton(versionLabel, null)
         .setPositiveButton("Klaar", null)
         .create()
     // Menu heel licht doorschijnend (~5%) en de achtergrond nauwelijks verduisteren,
@@ -245,12 +264,31 @@ private fun topBarActionName(value: Int): String = when (value) {
     else -> "Delen"
 }
 
-private fun timbreName(value: Int): String = when (value) {
-    AppSettings.TIMBRE_HOLPIJP -> "Holpijp"
-    AppSettings.TIMBRE_FLUIT -> "Fluit"
-    AppSettings.TIMBRE_STRINGS -> "Strings"
-    AppSettings.TIMBRE_VOL16 -> "Plenum 16'"
-    else -> "Prestant"
+private data class RegistrationOption(val label: String, val mask: Int, val weight: Int = 1) {
+    override fun toString(): String = label
+}
+
+private val registrationOptions = arrayOf(
+    RegistrationOption("Bourdon 16'", AppSettings.REGISTER_BOURDON16),
+    RegistrationOption("Prestant 8'", AppSettings.REGISTER_PRESTANT8),
+    RegistrationOption("Holpijp 8'", AppSettings.REGISTER_HOLPIJP8),
+    RegistrationOption("Roerfluit 8'", AppSettings.REGISTER_ROERFLUIT8),
+    RegistrationOption("Gedekt 8'", AppSettings.REGISTER_GEDEKT8),
+    RegistrationOption("Octaaf 4'", AppSettings.REGISTER_OCTAAF4),
+    RegistrationOption("Fluit 4'", AppSettings.REGISTER_FLUIT4),
+    RegistrationOption("Quintfluit 3'", AppSettings.REGISTER_QUINTFLUIT),
+    RegistrationOption("Tremulant", AppSettings.REGISTER_TREMULANT, weight = 0),
+    RegistrationOption("Fluit solo", AppSettings.REGISTER_FLUIT_SOLO),
+    RegistrationOption("Orchestral strings", AppSettings.REGISTER_ORCHESTRAL_STRINGS, weight = 2)
+)
+
+private fun registrationName(value: Int): String {
+    val selected = registrationOptions.filter { value and it.mask != 0 }
+    return when (selected.size) {
+        0 -> "Geen register"
+        1 -> selected.first().label
+        else -> "Multi"
+    }
 }
 
 private fun AppCompatActivity.showDisplayModeChooser(onChanged: () -> Unit) {
@@ -343,15 +381,62 @@ private fun AppCompatActivity.showTempoChooser(onChanged: () -> Unit) {
         .show()
 }
 
-private fun AppCompatActivity.showTimbreChooser(onChanged: () -> Unit) {
-    val options = arrayOf("Prestant", "Holpijp", "Fluit", "Strings", "Plenum 16'")
-    AlertDialog.Builder(this)
-        .setTitle("Klank")
-        .setSingleChoiceItems(options, AppSettings.playbackTimbre(this)) { dialog, which ->
-            AppSettings.setPlaybackTimbre(this, which)
-            dialog.dismiss()
-            onChanged()
+private fun AppCompatActivity.showRegistrationChooser(onChanged: () -> Unit) {
+    val density = resources.displayMetrics.density
+    fun dp(value: Int) = (value * density).toInt()
+
+    var selectedMask = AppSettings.playbackRegistration(this)
+    fun selectedWeight(): Int = registrationOptions.sumOf { if (selectedMask and it.mask != 0) it.weight else 0 }
+    fun isPossible(option: RegistrationOption): Boolean = selectedMask and option.mask != 0 || selectedWeight() + option.weight <= AppSettings.MAX_PLAYBACK_REGISTRATION_WEIGHT
+
+    val root = LinearLayout(this).apply {
+        orientation = LinearLayout.VERTICAL
+        setPadding(0, dp(6), 0, 0)
+    }
+
+    val listView = ListView(this).apply {
+        choiceMode = ListView.CHOICE_MODE_MULTIPLE
+        divider = null
+        layoutParams = LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT,
+            min((resources.displayMetrics.heightPixels * 0.62).toInt(), dp(430))
+        )
+    }
+    val adapter = object : ArrayAdapter<RegistrationOption>(this, android.R.layout.simple_list_item_multiple_choice, registrationOptions) {
+        override fun areAllItemsEnabled(): Boolean = false
+
+        override fun isEnabled(position: Int): Boolean = isPossible(getItem(position)!!)
+
+        override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
+            val view = super.getView(position, convertView, parent)
+            view.alpha = if (isEnabled(position)) 1.0f else 0.38f
+            return view
         }
+    }
+    listView.adapter = adapter
+    registrationOptions.forEachIndexed { index, option ->
+        listView.setItemChecked(index, selectedMask and option.mask != 0)
+    }
+    listView.setOnItemClickListener { _, _, which, _ ->
+        val option = registrationOptions[which]
+        selectedMask = if (selectedMask and option.mask != 0) {
+            selectedMask and option.mask.inv()
+        } else {
+            selectedMask or option.mask
+        }
+        registrationOptions.forEachIndexed { index, registrationOption ->
+            listView.setItemChecked(index, selectedMask and registrationOption.mask != 0)
+        }
+        AppSettings.setPlaybackRegistration(this, selectedMask)
+        adapter.notifyDataSetChanged()
+        onChanged()
+    }
+    root.addView(listView)
+
+    AlertDialog.Builder(this)
+        .setTitle("Registratie")
+        .setView(root)
+        .setPositiveButton("Sluiten", null)
         .show()
 }
 

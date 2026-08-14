@@ -1,4 +1,4 @@
-{
+﻿{
   "book": "psalms",
   "number": 58,
   "title": "Psalm 58 (Datheen)",
@@ -206,7 +206,7 @@
           ]
         },
         {
-          "raw": "Soeckt ghy recht te doen yderman?",
+          "raw": "Soeckt ghy recht te doen yder_man?",
           "display": "Soeckt ghy recht te doen yderman?",
           "tokens": [
             {
@@ -232,6 +232,10 @@
             {
               "text": "yder",
               "syllabic": "begin"
+            },
+            {
+              "text": "",
+              "syllabic": "middle"
             },
             {
               "text": "man?",

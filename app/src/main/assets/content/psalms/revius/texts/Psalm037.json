@@ -1,4 +1,4 @@
-{
+﻿{
   "book": "psalms",
   "number": 37,
   "title": "Psalm 37 (Revius)",
@@ -12,12 +12,8 @@
           "display": "Quelt u dies niet, soo ghy in desen leven",
           "tokens": [
             {
-              "text": "Qu",
-              "syllabic": "begin"
-            },
-            {
-              "text": "elt",
-              "syllabic": "end"
+              "text": "Quelt",
+              "syllabic": "single"
             },
             {
               "text": "u",
@@ -254,7 +250,7 @@
           ]
         },
         {
-          "raw": "En als het gras seer haestelijck vergaen.",
+          "raw": "En als het gras seer haestelijck _vergaen.",
           "display": "En als het gras seer haestelijck vergaen.",
           "tokens": [
             {
@@ -288,6 +284,10 @@
             {
               "text": "ijck",
               "syllabic": "end"
+            },
+            {
+              "text": "",
+              "syllabic": "middle"
             },
             {
               "text": "vergaen.",
@@ -1073,11 +1073,7 @@
               "syllabic": "begin"
             },
             {
-              "text": "dr",
-              "syllabic": "middle"
-            },
-            {
-              "text": "iet,",
+              "text": "driet,",
               "syllabic": "end"
             }
           ]
@@ -4284,12 +4280,8 @@
               "syllabic": "single"
             },
             {
-              "text": "wij",
+              "text": "wijsh",
               "syllabic": "begin"
-            },
-            {
-              "text": "sh",
-              "syllabic": "middle"
             },
             {
               "text": "eyt",
