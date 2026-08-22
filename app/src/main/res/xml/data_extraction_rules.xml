@@ -1,9 +1,12 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8" ?>
 <data-extraction-rules>
     <cloud-backup>
         <exclude domain="file" path="content/" />
+        <!-- Verse install start met defaults; app-updates behouden lokale voorkeuren. -->
+        <exclude domain="sharedpref" path="psalmenapp_settings.xml" />
     </cloud-backup>
     <device-transfer>
         <exclude domain="file" path="content/" />
+        <!-- Bij toestelwissel gaan instellingen wel mee (geen sharedpref-uitsluiting). -->
     </device-transfer>
 </data-extraction-rules>

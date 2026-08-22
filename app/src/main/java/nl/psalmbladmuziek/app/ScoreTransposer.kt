@@ -23,6 +23,26 @@ object ScoreTransposer {
         }
     }
 
+    fun transposeHarmony(model: JSONObject, semitones: Int) {
+        val originalFifths = model.optInt("fifths", 0)
+        val targetFifths = transposeKeyFifths(originalFifths, semitones)
+        val preferFlats = targetFifths < 0
+        model.put("fifths", targetFifths)
+        val parts = model.optJSONArray("parts") ?: return
+        for (partIndex in 0 until parts.length()) {
+            val lines = parts.getJSONObject(partIndex).optJSONArray("lines") ?: continue
+            for (lineIndex in 0 until lines.length()) {
+                val notes = lines.optJSONArray(lineIndex) ?: continue
+                for (noteIndex in 0 until notes.length()) {
+                    val note = notes.optJSONObject(noteIndex) ?: continue
+                    if (!note.optBoolean("rest")) {
+                        transposeModelNote(note, semitones, preferFlats)
+                    }
+                }
+            }
+        }
+    }
+
     private fun transposeKeyFifths(fifths: Int, semitones: Int): Int {
         val targetPitchClass = Math.floorMod(fifths * 7 + semitones, 12)
         return KEY_FIFTHS_BY_PITCH_CLASS[targetPitchClass]

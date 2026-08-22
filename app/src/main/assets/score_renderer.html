@@ -31,6 +31,10 @@
             width: 100%;
             display: block;
         }
+        :root { --playback-highlight: #00695C; }
+        .playback-note.playback-active { stroke: var(--playback-highlight) !important; }
+        .playback-note-filled.playback-active,
+        .playback-lyric.playback-active { fill: var(--playback-highlight) !important; }
         .verse-matrix {
             display: flex;
             flex-wrap: wrap;
@@ -83,9 +87,12 @@
             background: #ffffff;
         }
         .ctrl-row .label {
-            width: 96px;
+            width: 132px;
             font: 600 15px sans-serif;
             color: #4a4f4a;
+        }
+        .ctrl-row .label-icon {
+            display: none;
         }
         .ctrl-row .value {
             min-width: 56px;
@@ -94,13 +101,16 @@
             color: #4a4f4a;
         }
         .ctrl-row button {
-            width: 52px;
+            width: 48px;
             height: 42px;
-            border: 1px solid #d5d9d2;
-            background: #ffffff;
+            border: none;
+            background: transparent;
             color: #4a4f4a;
-            border-radius: 4px;
             font: 700 20px sans-serif;
+            padding: 0;
+        }
+        .ctrl-row button svg {
+            display: none;
         }
         .error {
             color: #b00020;
@@ -158,20 +168,22 @@
     var BASE_S = 8;            // basis-afstand tussen twee balklijnen (compacte balk)
     var BASE_FONT = 12;       // basis lettergrootte (voor de tekst-zoom); genormaliseerd zodat korte-regel psalmen niet te groot worden
     var MAX_STRETCH = 1.8;    // maximale horizontale rek van een regel (voorkomt te grote woordafstand)
+    var SHORT_LINE_STRETCH = 1.2; // korte regels krijgen iets meer ademruimte als de breedte dat toelaat
     var S = BASE_S;
     var FONT_SIZE = BASE_FONT;
     var ASCENT = 4.6 * S;     // ruimte boven de balk (hoge noten/stokken)
     var DESCENT = 3.6 * S;    // ruimte onder de balk (lage noten/stokken)
     var TEXT_GAP = 9;         // ruimte tussen balk en tekst (tekst iets lager)
     var LINE_GAP = 2;         // ruimte tussen frase-regels
-    var LEFT_MARGIN = 8;
-    var RIGHT_MARGIN = 10;
+    var LEFT_MARGIN = 4;
+    var RIGHT_MARGIN = 5;
     var CLEF_WIDTH = 26;      // gereserveerde ruimte voor sleutel + voortekening
     var WORD_GAP = S * 1.3;   // ruimte tussen woorden
     var LARGE_TEXT = false;   // 'grote letters'-modus: minimale woordafstand
     var ALLOW_WRAP = false;   // 'regelafbreking toestaan': lange regel over 2 rijen
     var SHOW_LYRICS = true;   // weergave 'noten': tekst onder de noten verbergen
     var HAS_EIGHTH_NOTES = false; // bij achtste-noten-muziek geen kwart-cursief en rusten altijd tonen
+    var ACTIVE_PLAYBACK_ID = "";
     var SYL_GAP = S * 0.12;   // minieme ruimte binnen een woord
     var MIN_SLOT = S * 1.1;
     var NOTE_STEP = S * 2.25; // minimale afstand tussen melisma-noten binnen één lettergreep
@@ -240,6 +252,63 @@
     function renderScore() { renderScoreInternal(true); }
     function updateScore() { renderScoreInternal(false); }
 
+    function appendTrebleClef(svg, x, staffTop, staffGap) {
+        var clef = el("text", {
+            x: x,
+            y: staffTop + 4.15 * staffGap,
+            "font-size": 3.5 * staffGap,
+            "font-family": "Bravura, 'Noto Music', Georgia, serif",
+            fill: "#16110a"
+        });
+        clef.textContent = "\uD834\uDD1E";
+        svg.appendChild(clef);
+        return clef;
+    }
+
+    // Grand-staff clefs: natural proportions, placed by measured glyph bounds on the
+    // MusicXML reference lines (G sign on line 2, F sign on line 4, counted from the bottom).
+    var GRAND_CLEF_FONT = "Bravura, 'Noto Music', 'Segoe UI Symbol', Georgia, serif";
+
+    function appendGrandTrebleClef(svg, x, staffTop, staffGap) {
+        var clef = el("text", { x: 0, y: 0, "font-size": 5.6 * staffGap, "font-family": GRAND_CLEF_FONT, fill: "#16110a" });
+        clef.textContent = "\uD834\uDD1E";
+        svg.appendChild(clef);
+        var box = clef.getBBox();
+        var centerTarget = staffTop + 3 * staffGap; // line 2 from bottom (G)
+        clef.setAttribute("transform", "translate(" + (x - box.x) + " " + (centerTarget - (box.y + box.height / 2)) + ")");
+        return clef;
+    }
+
+    function appendGrandBassClef(svg, x, staffTop, staffGap) {
+        var clef = el("text", { x: 0, y: 0, "font-size": 3.3 * staffGap, "font-family": GRAND_CLEF_FONT, fill: "#16110a" });
+        clef.textContent = "\uD834\uDD22";
+        svg.appendChild(clef);
+        var box = clef.getBBox();
+        var topTarget = staffTop - 0.1 * staffGap; // glyph top at the top staff line
+        clef.setAttribute("transform", "translate(" + (x - box.x) + " " + (topTarget - box.y) + ")");
+        return clef;
+    }
+
+    function setPlaybackHighlight(playbackId) {
+        ACTIVE_PLAYBACK_ID = playbackId || "";
+        document.querySelectorAll(".playback-active").forEach(function(node) {
+            node.classList.remove("playback-active");
+        });
+        if (!ACTIVE_PLAYBACK_ID) return;
+        document.querySelectorAll("[data-playback-id], [data-playback-ids]").forEach(function(node) {
+            var exact = node.getAttribute("data-playback-id");
+            var group = (node.getAttribute("data-playback-ids") || "").split("|");
+            if (exact === ACTIVE_PLAYBACK_ID || group.indexOf(ACTIVE_PLAYBACK_ID) !== -1) {
+                node.classList.add("playback-active");
+            }
+        });
+    }
+
+    function setPlaybackHighlightColor(color) {
+        var safe = /^#[0-9A-Fa-f]{6}$/.test(color) ? color : "#00695C";
+        document.documentElement.style.setProperty("--playback-highlight", safe);
+    }
+
     // Rusten: standaard aan het EIND van de vorige regel (niet vóór een zin). Wanneer
     // rusten uitstaan worden ze volledig weggelaten.
     // Deze functie is pure: bronmodel blijft ongewijzigd.
@@ -300,6 +369,148 @@
         return false;
     }
 
+    function renderFourPartScore(svg, harmony, width, noteScale) {
+        var parts = harmony.parts || [];
+        if (parts.length !== 4) return false;
+        var lineCount = Math.min.apply(null, parts.map(function(part) {
+            return (part.lines || []).length;
+        }));
+        if (!lineCount) return false;
+
+        var staffGap = Math.max(7, 10 * noteScale);
+        var left = 58;
+        var right = width - 12;
+        var systemGap = staffGap * 17;
+        var totalHeight = 8 + lineCount * systemGap;
+        svg.setAttribute("width", width);
+        svg.setAttribute("height", totalHeight);
+        svg.setAttribute("viewBox", "0 0 " + width + " " + totalHeight);
+        svg.appendChild(el("rect", {
+            x: 0, y: 0, width: width, height: totalHeight,
+            fill: "transparent", "pointer-events": "all"
+        }));
+
+        function drawStaff(top) {
+            for (var staffLine = 0; staffLine < 5; staffLine++) {
+                var y = top + staffLine * staffGap;
+                svg.appendChild(el("line", {
+                    x1: left, y1: y, x2: right, y2: y,
+                    stroke: "#16110a", "stroke-width": 1
+                }));
+            }
+        }
+
+        function drawHarmonyKeySignature(top, clef) {
+            var sharpSteps = clef === "G"
+                ? [{ step: "F", octave: 5 }, { step: "C", octave: 5 }]
+                : [{ step: "F", octave: 3 }, { step: "C", octave: 3 }];
+            var count = Math.min(Math.max(harmony.fifths || 0, 0), sharpSteps.length);
+            for (var keyIndex = 0; keyIndex < count; keyIndex++) {
+                var keyNote = sharpSteps[keyIndex];
+                var accidental = el("text", {
+                    x: left + 47 + keyIndex * staffGap * 1.4,
+                    y: noteY(keyNote, top, clef) + staffGap * 0.55,
+                    "font-size": staffGap * 2.0,
+                    "font-family": "Georgia, serif",
+                    fill: "#16110a"
+                });
+                accidental.textContent = "\u266F";
+                svg.appendChild(accidental);
+            }
+        }
+
+        function noteY(note, top, clef) {
+            var bottomReference = clef === "G" ? 30 : 18; // E4 resp. G2
+            return top + 4 * staffGap - (diatonic(note.step, note.octave) - bottomReference) * staffGap / 2;
+        }
+
+        function drawHarmonyNote(note, x, top, clef, stemUp, playbackId) {
+            if (!note || note.rest) return;
+            var y = noteY(note, top, clef);
+            var topLine = top;
+            var bottomLine = top + 4 * staffGap;
+            var ledgerHalf = staffGap * 0.9;
+            for (var ledger = topLine - staffGap; ledger >= y - staffGap / 2; ledger -= staffGap) {
+                svg.appendChild(el("line", { x1: x - ledgerHalf, y1: ledger, x2: x + ledgerHalf, y2: ledger, stroke: "#16110a" }));
+            }
+            for (ledger = bottomLine + staffGap; ledger <= y + staffGap / 2; ledger += staffGap) {
+                svg.appendChild(el("line", { x1: x - ledgerHalf, y1: ledger, x2: x + ledgerHalf, y2: ledger, stroke: "#16110a" }));
+            }
+            var keyAlter = keyAlterForStep(note.step, harmony.fifths || 0);
+            var alter = note.alter == null ? 0 : note.alter;
+            if (alter !== keyAlter) {
+                var glyph = alter > 0 ? "\u266F" : (alter < 0 ? "\u266D" : "\u266E");
+                var accidental = el("text", {
+                    x: x - staffGap * 1.25, y: y + staffGap * 0.5, "font-size": staffGap * 1.6,
+                    "font-family": "Georgia, serif",
+                    fill: "#16110a",
+                    "class": playbackId ? "playback-note-filled" : "",
+                    "data-playback-id": playbackId || ""
+                });
+                accidental.textContent = glyph;
+                svg.appendChild(accidental);
+            }
+            var open = note.type === "half" || note.type === "whole";
+            svg.appendChild(el("ellipse", {
+                cx: x, cy: y, rx: staffGap * 0.6, ry: staffGap * 0.46,
+                transform: "rotate(-20 " + x + " " + y + ")",
+                fill: open ? "none" : "#16110a", stroke: "#16110a",
+                "stroke-width": open ? 1.5 : 1,
+                "class": playbackId ? (open ? "playback-note" : "playback-note playback-note-filled") : "",
+                "data-playback-id": playbackId || ""
+            }));
+            if (note.type !== "whole") {
+                var stemX = stemUp ? x + staffGap * 0.56 : x - staffGap * 0.56;
+                var stemEnd = stemUp ? y - staffGap * 3.0 : y + staffGap * 3.0;
+                svg.appendChild(el("line", {
+                    x1: stemX, y1: y, x2: stemX, y2: stemEnd,
+                    stroke: "#16110a", "stroke-width": 1.4,
+                    "class": playbackId ? "playback-note" : "",
+                    "data-playback-id": playbackId || ""
+                }));
+            }
+        }
+
+        // Two voices per staff: upper stem up, lower stem down; offset noteheads a
+        // second/unison apart so they do not collide (standard chorale engraving).
+        function drawChoralePair(upper, lower, x, top, clef, upperPlaybackId) {
+            var collide = upper && lower && !upper.rest && !lower.rest &&
+                Math.abs(diatonic(upper.step, upper.octave) - diatonic(lower.step, lower.octave)) <= 1;
+            drawHarmonyNote(upper, x, top, clef, true, upperPlaybackId);
+            drawHarmonyNote(lower, collide ? x - staffGap * 1.15 : x, top, clef, false, "");
+        }
+
+        for (var lineIndex = 0; lineIndex < lineCount; lineIndex++) {
+            var systemTop = 8 + lineIndex * systemGap;
+            var trebleTop = systemTop + staffGap * 1.8;
+            var bassTop = systemTop + staffGap * 9.6;
+            drawStaff(trebleTop);
+            drawStaff(bassTop);
+            svg.appendChild(el("line", { x1: left, y1: trebleTop, x2: left, y2: bassTop + 4 * staffGap, stroke: "#16110a", "stroke-width": 1.5 }));
+            appendGrandTrebleClef(svg, left + 6, trebleTop, staffGap);
+            appendGrandBassClef(svg, left + 8, bassTop, staffGap);
+            drawHarmonyKeySignature(trebleTop, "G");
+            drawHarmonyKeySignature(bassTop, "F");
+
+            var sopranoLine = parts[0].lines[lineIndex] || [];
+            var totalDuration = sopranoLine.reduce(function(sum, note) { return sum + (note.duration || 2); }, 0) || 1;
+            var cursor = 0;
+            var noteStart = left + 96;
+            for (var eventIndex = 0; eventIndex < sopranoLine.length; eventIndex++) {
+                var duration = sopranoLine[eventIndex].duration || 2;
+                var x = noteStart + (right - noteStart - 14) * (cursor + duration / 2) / totalDuration;
+                cursor += duration;
+                var playbackId = sopranoLine[eventIndex].playbackId || "";
+                drawChoralePair(sopranoLine[eventIndex], parts[1].lines[lineIndex][eventIndex], x, trebleTop, "G", playbackId);
+                drawChoralePair(parts[2].lines[lineIndex][eventIndex], parts[3].lines[lineIndex][eventIndex], x, bassTop, "F", "");
+            }
+            svg.appendChild(el("line", { x1: right, y1: trebleTop, x2: right, y2: trebleTop + 4 * staffGap, stroke: "#16110a", "stroke-width": 2 }));
+            svg.appendChild(el("line", { x1: right, y1: bassTop, x2: right, y2: bassTop + 4 * staffGap, stroke: "#16110a", "stroke-width": 2 }));
+        }
+        window.__verseRanges = [{ startY: 0, endY: totalHeight }];
+        return true;
+    }
+
     function renderScoreInternal(scrollToScore) {
         var previousScroll = window.scrollY || window.pageYOffset || 0;
         var svg = document.getElementById("score");
@@ -342,6 +553,32 @@
             return;
         }
 
+        var showFourPart = false;
+        var harmony = null;
+        try {
+            showFourPart = Android.getShowFourPartScore() === true;
+            setPlaybackHighlightColor(Android.getPlaybackHighlightColor());
+            if (showFourPart) harmony = JSON.parse(Android.getHarmonyModel());
+        } catch (e) {
+            showFourPart = false;
+        }
+        if (showFourPart && harmony && harmony.parts && harmony.parts.length === 4) {
+            var harmonyWidth = document.getElementById("root").clientWidth || window.innerWidth || 800;
+            var harmonyScale = readNumber(function() { return Android.getScoreVerticalScale(); }, 1);
+            try { document.documentElement.classList.toggle("dark", Android.getSheetDark() === true); } catch (e) {}
+            if (renderFourPartScore(svg, harmony, harmonyWidth, harmonyScale)) {
+                window.__hasModel = true;
+                renderControls();
+                setPlaybackHighlight(ACTIVE_PLAYBACK_ID);
+                window.requestAnimationFrame(function() {
+                    var top = document.getElementById("controls-top");
+                    var topH = top ? top.offsetHeight : 0;
+                    window.scrollTo(0, scrollToScore ? topH : previousScroll);
+                });
+                return;
+            }
+        }
+
         var showRests = true;
         try { showRests = (Android.getShowRests() !== false); } catch (e) { showRests = true; }
     HAS_EIGHTH_NOTES = modelHasEighthNotes(model);
@@ -374,8 +611,8 @@
         function staffStartXFor(showClef) {
             var keysigWidth = Math.abs(fifths) * 8;
             return showClef
-                ? LEFT_MARGIN + CLEF_WIDTH + keysigWidth + 6
-                : LEFT_MARGIN + keysigWidth + 8;
+                ? LEFT_MARGIN + CLEF_WIDTH + keysigWidth + 2
+                : LEFT_MARGIN + keysigWidth + 3;
         }
 
         var baseMetrics = { font: FONT_SIZE, wordGap: WORD_GAP, sylGap: SYL_GAP, minSlot: MIN_SLOT };
@@ -548,10 +785,10 @@
             minSlot: MIN_SLOT * globalScale
         };
 
-        // Links-modus: de LANGSTE regel vult de breedte; diezelfde spatiering geldt voor
-        // alle regels (kortere regels blijven zichtbaar korter, maar niet te dicht opeen).
+        // Links en centrisch gebruiken dezelfde compacte spatiering: de langste regel
+        // bepaalt de schaal; centrisch verplaatst daarna alleen de complete regel.
         var leftFillStretch = 1;
-        if (TEXT_ALIGN === 0) {
+        if (TEXT_ALIGN === 0 || TEXT_ALIGN === 1) {
             var maxNat = 0, availAtMax = 1;
             rows.forEach(function(r) {
                 if (r.cont) return;
@@ -569,6 +806,9 @@
             var available = Math.max(1, width - staffStartX - RIGHT_MARGIN);
             var layout = computeLayout({ slots: r.slots }, metrics);
             var rawStretch = layout.naturalWidth > 0 ? available / layout.naturalWidth : 1;
+            var relativeShortLineStretch = maxNat > 0
+                ? 1 + (SHORT_LINE_STRETCH - 1) * (1 - layout.naturalWidth / maxNat)
+                : 1;
             var stretch, xOffset;
             if (r.cont) {
                 // 2e rij van een afgebroken regel: niet oprekken, rechts uitlijnen.
@@ -579,12 +819,12 @@
                 stretch = rawStretch;
                 xOffset = 0;
             } else if (TEXT_ALIGN === 0) {
-                // Links: langste regel vult de breedte; kortere regels korter (zelfde spatiering).
-                stretch = Math.min(leftFillStretch, rawStretch);
+                // Links: langste regel bepaalt de schaal; korte regels krijgen beperkte extra ruimte.
+                stretch = Math.min(relativeShortLineStretch * leftFillStretch, rawStretch);
                 xOffset = 0;
             } else {
-                // Centrisch (standaard): licht oprekken en centreren.
-                stretch = Math.min(rawStretch, MAX_STRETCH);
+                // Centrisch: dezelfde relatieve verruiming als links, als geheel gecentreerd.
+                stretch = Math.min(relativeShortLineStretch * leftFillStretch, rawStretch);
                 xOffset = Math.max(0, (available - layout.naturalWidth * stretch) / 2);
             }
             renderLine(
@@ -611,6 +851,7 @@
 
         window.__hasModel = true;
         renderControls();
+        setPlaybackHighlight(ACTIVE_PLAYBACK_ID);
 
         // Knoppen staan boven de balk. Bij openen/vers-wissel scrollen we voorbij
         // de bovenste knoppen (muziek bovenaan); bij knop-aanpassingen behouden we de positie.
@@ -716,15 +957,7 @@
 
         // Vioolsleutel (alleen op de eerste regel)
         if (showClef) {
-            var clef = el("text", {
-                x: LEFT_MARGIN + 2,
-                y: staffTopY + 4.15 * S,
-                "font-size": 3.5 * S,
-                "font-family": "Bravura, 'Noto Music', Georgia, serif",
-                fill: "#16110a"
-            });
-            clef.textContent = "\uD834\uDD1E"; // 𝄞
-            svg.appendChild(clef);
+            appendTrebleClef(svg, LEFT_MARGIN + 2, staffTopY, S);
         }
 
         // Voortekening (op elke regel, muzikaal correct). Op regels zonder sleutel
@@ -767,7 +1000,7 @@
                     return;
                 }
                 var head = drawNoteHead(svg, note, nx, staffTopY, yFor, fifths);
-                lineNotes.push({ note: note, x: nx, dia: head.dia, y: head.y });
+                lineNotes.push({ note: note, x: nx, dia: head.dia, y: head.y, playbackId: note.playbackId || "" });
             });
         });
         drawStemsAndBeams(svg, lineNotes);
@@ -794,7 +1027,14 @@
                 var t = kSlot.text || "";
                 if (t) {
                     // Cursief per lettergreep; lettergrepen blijven aaneengesloten.
-                    syllables.push({ text: t, italic: layout.items[k].italic });
+                    var playbackIds = (kSlot.notes || []).map(function(note) {
+                        return note.playbackId || "";
+                    }).filter(Boolean);
+                    syllables.push({
+                        text: t,
+                        italic: layout.items[k].italic,
+                        playbackIds: playbackIds
+                    });
                     // Melisma via MEERDERE noten op één lettergreep (lyricSlot=false in de
                     // melodie): een liggend streepje per vervolgnoot (bv. gezangen).
                     var extraNotes = (kSlot.notes || []).length - 1;
@@ -865,7 +1105,9 @@
         var stemY2 = stemUp ? n.y - 3.3 * S : n.y + 3.3 * S;
         svg.appendChild(el("line", {
             x1: stemX, y1: n.y, x2: stemX, y2: stemY2,
-            stroke: "#16110a", "stroke-width": 1.5
+            stroke: "#16110a", "stroke-width": 1.5,
+            "class": "playback-note",
+            "data-playback-id": n.playbackId || ""
         }));
         // Vlag bij losse achtste noten (rechts van de stok, krult naar de kop toe)
         if (withFlag) {
@@ -876,7 +1118,9 @@
                            (stemX + S * 0.6) + " " + (stemY2 + d * S * 2.1) +
                    " Q " + (stemX + S * 1.0) + " " + (stemY2 + d * S * 0.9) + " " +
                            stemX + " " + (stemY2 + d * S * 0.7) + " Z",
-                fill: "#16110a"
+                fill: "#16110a",
+                "class": "playback-note-filled",
+                "data-playback-id": n.playbackId || ""
             }));
         }
     }
@@ -901,7 +1145,9 @@
             xs.push(stemX);
             svg.appendChild(el("line", {
                 x1: stemX, y1: lineNotes[k].y, x2: stemX, y2: beamY,
-                stroke: "#16110a", "stroke-width": 1.5
+                stroke: "#16110a", "stroke-width": 1.5,
+                "class": "playback-note",
+                "data-playback-id": lineNotes[k].playbackId || ""
             }));
         }
         var beamThick = S * 0.55;
@@ -928,7 +1174,11 @@
         });
         // Lettergrepen aaneengesloten binnen het woord (cursief per lettergreep).
         syllables.forEach(function(syl) {
-            var tspan = el("tspan", { "font-style": syl.italic ? "italic" : "normal" });
+            var tspan = el("tspan", {
+                "font-style": syl.italic ? "italic" : "normal",
+                "class": syl.playbackIds && syl.playbackIds.length ? "playback-lyric" : "",
+                "data-playback-ids": syl.playbackIds ? syl.playbackIds.join("|") : ""
+            });
             // Melisma-streepje iets kleiner dan de tekst.
             if (syl.dash) { tspan.setAttribute("font-size", (font * 0.7).toFixed(2)); }
             tspan.textContent = syl.text;
@@ -954,6 +1204,8 @@
                 "text-anchor": "middle",
                 "font-size": 2.2 * S,
                 "font-family": "Georgia, serif",
+                "class": "playback-note-filled",
+                "data-playback-id": note.playbackId || "",
                 fill: "#16110a"
             });
             acc.textContent = glyph;
@@ -965,6 +1217,8 @@
             cx: x, cy: y,
             rx: S * 0.62, ry: S * 0.48,
             transform: "rotate(-18 " + x + " " + y + ")",
+            "class": open ? "playback-note" : "playback-note playback-note-filled",
+            "data-playback-id": note.playbackId || "",
             fill: open ? "none" : "#16110a",
             stroke: "#16110a",
             "stroke-width": open ? 1.6 : 1
@@ -973,7 +1227,10 @@
         // Punt (dotted)
         if (note.dot) {
             svg.appendChild(el("circle", {
-                cx: x + S * 0.95, cy: y - S * 0.15, r: S * 0.16, fill: "#16110a"
+                cx: x + S * 0.95, cy: y - S * 0.15, r: S * 0.16,
+                "class": "playback-note-filled",
+                "data-playback-id": note.playbackId || "",
+                fill: "#16110a"
             }));
         }
 
@@ -1042,16 +1299,16 @@
         section.innerHTML = "";
 
         // Boven de balk: tekst/notengrootte eerst; toonsoort het dichtst bij de noten.
-        top.appendChild(stepperRow("Tekst", safeCall(function() { return Android.getTextScaleLabel(); }, ""),
-            function() { Android.adjustTextScale(-0.2); },
-            function() { Android.adjustTextScale(0.2); }));
-        var notenRow = stepperRow("Noten", safeCall(function() { return Android.getNoteScaleLabel(); }, ""),
-            function() { Android.adjustNoteScale(-0.1); },
-            function() { Android.adjustNoteScale(0.1); });
+        top.appendChild(stepperRow("", "Tekstgrootte", safeCall(function() { return Android.getTextScaleLabel(); }, ""),
+            "text_decrease", function() { Android.adjustTextScale(-0.2); },
+            "text_increase", function() { Android.adjustTextScale(0.2); }));
+        var notenRow = stepperRow("", "Notenbalk", safeCall(function() { return Android.getNoteScaleLabel(); }, ""),
+            "zoom_out", function() { Android.adjustNoteScale(-0.1); },
+            "zoom_in", function() { Android.adjustNoteScale(0.1); });
         top.appendChild(notenRow);
-        top.appendChild(stepperRow("Toonsoort", safeCall(function() { return Android.getTranspositionLabel(); }, "0"),
-            function() { Android.transposeBy(-1); },
-            function() { Android.transposeBy(1); }));
+        top.appendChild(stepperRow("", "Toonsoort", safeCall(function() { return Android.getTranspositionLabel(); }, ""),
+            "chevron_left", function() { Android.transposeBy(-1); },
+            "chevron_right", function() { Android.transposeBy(1); }));
 
         // Onder de balk: gebruik ná de muziek/zang (Vorige/Volgende + versnummers).
         var items = [];
@@ -1095,16 +1352,39 @@
         }
     }
 
-    function stepperRow(label, value, onMinus, onPlus) {
+    var MATERIAL_PATHS = {
+        format_size: "M5 4v3h5.5v12h3V7H19V4H5z",
+        text_decrease: "M2 4h14v2H2V4zm0 7h10v2H2v-2zm0 7h7v2H2v-2zm18-8v2h-2v2h-2v-2h-2v-2h2V8h2v2h2z",
+        text_increase: "M2 4h14v2H2V4zm0 7h10v2H2v-2zm0 7h7v2H2v-2zm16-8V7h-2V5h2V2h2v3h2v2h-2v3h-2z",
+        music_note: "M12 3v10.55A4 4 0 1 0 14 17V7h4V3h-6z",
+        queue_music: "M15 6H3v2h12V6zm0 4H3v2h12v-2zM3 16h8v2H3v-2zm13-5v8.5c0 .83-.67 1.5-1.5 1.5S13 20.33 13 19.5s.67-1.5 1.5-1.5c.18 0 .34.03.5.09V9h5v2h-3z",
+        zoom_out: "M9 4a5 5 0 1 0 3.54 8.54L16.5 16.5l1.5-1.5-3.96-3.96A5 5 0 0 0 9 4zm0 2a3 3 0 1 1 0 6 3 3 0 0 1 0-6zm-2 2v2h4V8H7z",
+        zoom_in: "M9 4a5 5 0 1 0 3.54 8.54L16.5 16.5l1.5-1.5-3.96-3.96A5 5 0 0 0 9 4zm0 2a3 3 0 1 1 0 6 3 3 0 0 1 0-6zm-1 1v2H6v2h2v2h2v-2h2V9h-2V7H8z",
+        chevron_left: "M15.41 7.41 14 6l-6 6 6 6 1.41-1.41L10.83 12z",
+        chevron_right: "M10 6 8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"
+    };
+
+    function materialIcon(name, className) {
+        var svg = document.createElementNS(SVGNS, "svg");
+        svg.setAttribute("viewBox", "0 0 24 24");
+        svg.setAttribute("class", className || "");
+        var path = document.createElementNS(SVGNS, "path");
+        path.setAttribute("d", MATERIAL_PATHS[name] || MATERIAL_PATHS.music_note);
+        svg.appendChild(path);
+        return svg;
+    }
+
+    function stepperRow(iconName, label, value, minusIcon, onMinus, plusIcon, onPlus) {
         var row = document.createElement("div");
         row.className = "ctrl-row";
 
         var name = document.createElement("div");
         name.className = "label";
-        name.textContent = label;
+        name.appendChild(document.createTextNode(label));
 
         var minus = document.createElement("button");
-        minus.textContent = "\u2212";
+        minus.textContent = "−";
+        minus.setAttribute("aria-label", "Verkleinen");
         minus.addEventListener("click", onMinus);
 
         var val = document.createElement("div");
@@ -1113,6 +1393,7 @@
 
         var plus = document.createElement("button");
         plus.textContent = "+";
+        plus.setAttribute("aria-label", "Vergroten of verhogen");
         plus.addEventListener("click", onPlus);
 
         row.appendChild(name);

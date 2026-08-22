@@ -30,7 +30,9 @@ data class PipeSpectrum(
     val bloomDepth: Double = 0.0,
     val bloomTime: Double = 0.18,
     val breathBrightness: Double = 0.0,
-    val vibratoOnsetTime: Double = 0.0
+    val vibratoOnsetTime: Double = 0.0,
+    val toneAttackDelay: Double = 0.0,
+    val breathAttackTime: Double = 0.0
 )
 
 /**
@@ -91,11 +93,16 @@ class PipeVoice private constructor(
 
     fun sample(sampleRate: Int, frameInNote: Int, totalFrames: Int): Double {
         val time = frameInNote.toDouble() / sampleRate
-        val attackEnvelope = (1.0 - exp(-time / attackShapeTime)).coerceIn(0.0, 1.0)
+        val toneTime = (time - spectrum.toneAttackDelay).coerceAtLeast(0.0)
+        val attackEnvelope = if (time < spectrum.toneAttackDelay) {
+            0.0
+        } else {
+            (1.0 - exp(-toneTime / attackShapeTime)).coerceIn(0.0, 1.0)
+        }
         val releaseEnvelope = releaseEnvelope(frameInNote, totalFrames, sampleRate)
         val noteEnvelope = min(attackEnvelope, releaseEnvelope)
 
-        val attackTransient = exp(-time / spectrum.attackTime.coerceAtLeast(0.004))
+        val attackTransient = exp(-toneTime / spectrum.attackTime.coerceAtLeast(0.004))
         // Vibrato zwelt na de inzet aan, zodat de toonkern zuiver begint en pas daarna gaat 'zingen'.
         currentVibratoDepth = if (spectrum.vibratoOnsetTime > 0.0) {
             (time / spectrum.vibratoOnsetTime).coerceIn(0.0, 1.0)
@@ -134,7 +141,9 @@ class PipeVoice private constructor(
             // breathBrightness mengt de ongefilterde ruis erbij voor een luchtiger, minder gedekte fluitadem.
             val shapedNoise = breathState + spectrum.breathBrightness * (rawNoise - breathState)
             val breathEnvelope = spectrum.breathSustain + (1.0 - spectrum.breathSustain) * attackTransient
-            shapedNoise * spectrum.breathLevel * breathEnvelope * attackEnvelope
+            val breathAttackTime = spectrum.breathAttackTime.takeIf { it > 0.0 } ?: attackShapeTime
+            val breathAttackEnvelope = (1.0 - exp(-time / breathAttackTime)).coerceIn(0.0, 1.0)
+            shapedNoise * spectrum.breathLevel * breathEnvelope * breathAttackEnvelope * releaseEnvelope
         } else {
             0.0
         }
@@ -263,7 +272,7 @@ class PipeVoice private constructor(
                 MelodyTimbre.FLUIT_SOLO -> PipeSpectrum(
                     harmonics = doubleArrayOf(0.30, 0.95, 0.120, 0.035, 0.010, 0.003),
                     attackBrightness = 0.06,
-                    attackTime = 0.028,
+                    attackTime = 0.038,
                     breathLevel = 0.040,
                     breathSustain = 0.24,
                     pitchDriftCents = 3.0,
@@ -278,6 +287,8 @@ class PipeVoice private constructor(
                     amplitudeDriftHz = 4.6,
                     breathBrightness = 0.46,
                     vibratoOnsetTime = 0.35,
+                    toneAttackDelay = 0.012,
+                    breathAttackTime = 0.004,
                     bloomDepth = 0.0,
                     bloomTime = 0.10
                 )

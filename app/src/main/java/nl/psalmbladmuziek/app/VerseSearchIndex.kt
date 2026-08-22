@@ -61,7 +61,7 @@ object VerseSearchIndex {
 
     private fun build(context: Context): List<Entry> {
         val result = ArrayList<Entry>()
-        HymnRepository.bookTitles.forEach { book ->
+        HymnRepository.bookTitles(context).forEach { book ->
             HymnRepository.groupsForBook(book).forEach { group ->
                 val first = group.verses.firstOrNull() ?: return@forEach
                 val linesByVerse = ScoreBundleRenderer.readVerseLines(context, first.type, first.number)

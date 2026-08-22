@@ -4,7 +4,11 @@ import android.media.AudioAttributes
 import android.media.AudioFormat
 import android.media.AudioManager
 import android.media.AudioTrack
+import kotlin.math.ceil
+import kotlin.math.cos
+import kotlin.math.ln
 import kotlin.math.min
+import kotlin.math.roundToInt
 import kotlin.math.sin
 import kotlin.math.sqrt
 import kotlin.math.tanh
@@ -36,7 +40,8 @@ class LiveMelodyPlayer {
     private class PlaybackSession(
         val onStateChanged: (Boolean) -> Unit,
         initialTimbres: List<MelodyTimbre>,
-        initialEffects: Set<MelodyEffect>
+        initialEffects: Set<MelodyEffect>,
+        initialTempoPercent: Int
     ) {
         @Volatile
         var stopRequested: Boolean = false
@@ -52,24 +57,42 @@ class LiveMelodyPlayer {
 
         @Volatile
         var effects: Set<MelodyEffect> = initialEffects
+
+        @Volatile
+        var tempoPercent: Int = initialTempoPercent
     }
 
+    private data class VoiceKey(
+        val timbre: MelodyTimbre,
+        val frequencyHz: Double
+    )
+
     private data class ActiveVoice(
+        val key: VoiceKey,
         val voice: PipeVoice,
-        val startFrame: Int
+        val startFrame: Int,
+        val leftPanGain: Double,
+        val rightPanGain: Double
     )
 
     private data class FadingVoice(
-        val timbre: MelodyTimbre,
-        val voice: PipeVoice,
-        val startFrame: Int,
+        val activeVoice: ActiveVoice,
         val fadeStartFrame: Int
     )
+
+    private class SynthesisState {
+        val activeVoices = LinkedHashMap<VoiceKey, ActiveVoice>()
+        val fadingVoices = ArrayList<FadingVoice>()
+        var tremulantPhase = 0.0
+        var frameIndex = 0
+    }
 
     fun play(
         events: List<PlaybackEvent>,
         timbres: List<MelodyTimbre>,
         effects: Set<MelodyEffect>,
+        tempoPercent: Int,
+        onEventChanged: (String?) -> Unit,
         onStateChanged: (Boolean) -> Unit
     ) {
         if (!stopActiveSession(waitMs = 500)) return
@@ -78,7 +101,7 @@ class LiveMelodyPlayer {
             return
         }
 
-        val session = PlaybackSession(onStateChanged, timbres, effects)
+        val session = PlaybackSession(onStateChanged, timbres, effects, tempoPercent)
         val thread = Thread {
             val sampleRate = 44_100
             var localTrack: AudioTrack? = null
@@ -86,10 +109,10 @@ class LiveMelodyPlayer {
             try {
                 val minBuffer = AudioTrack.getMinBufferSize(
                     sampleRate,
-                    AudioFormat.CHANNEL_OUT_MONO,
+                    AudioFormat.CHANNEL_OUT_STEREO,
                     AudioFormat.ENCODING_PCM_16BIT
                 )
-                val bufferSize = maxOf(minBuffer, 4096)
+                val bufferSize = maxOf(minBuffer, 8192)
 
                 val createdTrack = AudioTrack(
                     AudioAttributes.Builder()
@@ -99,7 +122,7 @@ class LiveMelodyPlayer {
                     AudioFormat.Builder()
                         .setSampleRate(sampleRate)
                         .setEncoding(AudioFormat.ENCODING_PCM_16BIT)
-                        .setChannelMask(AudioFormat.CHANNEL_OUT_MONO)
+                        .setChannelMask(AudioFormat.CHANNEL_OUT_STEREO)
                         .build(),
                     bufferSize,
                     AudioTrack.MODE_STREAM,
@@ -112,14 +135,26 @@ class LiveMelodyPlayer {
 
                 createdTrack.play()
                 setPlayingForSession(session, true)
+                val synthesisState = SynthesisState()
                 for (event in events) {
                     if (session.stopRequested) break
-                    writeEvent(createdTrack, event, sampleRate, reverb, session)
+                    onEventChanged(event.playbackId)
+                    writeEvent(createdTrack, event, sampleRate, reverb, session, synthesisState)
                 }
                 if (!session.stopRequested) {
+                    onEventChanged(null)
+                    writeEvent(
+                        createdTrack,
+                        PlaybackEvent(frequenciesHz = emptyList(), durationBeats = FINAL_RELEASE_BEATS),
+                        sampleRate,
+                        reverb,
+                        session,
+                        synthesisState
+                    )
                     writeReverbRelease(createdTrack, sampleRate, reverb, session)
                 }
             } finally {
+                onEventChanged(null)
                 try {
                     localTrack?.pause()
                     localTrack?.flush()
@@ -161,6 +196,13 @@ class LiveMelodyPlayer {
             session.timbres = timbres
             session.effects = effects
         }
+    }
+
+    fun updateTempo(tempoPercent: Int) {
+        synchronized(playbackLock) { activeSession }?.tempoPercent = tempoPercent.coerceIn(
+            AppSettings.MIN_PLAYBACK_TEMPO,
+            AppSettings.MAX_PLAYBACK_TEMPO
+        )
     }
 
     fun stop(onStateChanged: (Boolean) -> Unit = {}) {
@@ -210,84 +252,102 @@ class LiveMelodyPlayer {
         event: PlaybackEvent,
         sampleRate: Int,
         reverb: OrganReverb,
-        session: PlaybackSession
+        session: PlaybackSession,
+        state: SynthesisState
     ) {
-        val totalFrames = maxOf(1, (event.durationSec * sampleRate).toInt())
         val chunk = 1024
-        val frequencyHz = event.frequencyHz
-        val voicesByTimbre = LinkedHashMap<MelodyTimbre, ActiveVoice>()
-        val fadingVoices = ArrayList<FadingVoice>()
-        var activeTimbres = emptyList<MelodyTimbre>()
-        var tremulantPhase = 0.0
 
-        fun syncVoices(currentFrame: Int) {
-            val requestedTimbres = session.timbres
-            val requestedSet = requestedTimbres.toSet()
-            val removedTimbres = voicesByTimbre.keys.filter { it !in requestedSet }
-            for (timbre in removedTimbres) {
-                val removedVoice = voicesByTimbre.remove(timbre)
+        fun syncVoices(currentFrame: Int, retrigger: Boolean) {
+            val requestedKeys = session.timbres.flatMap { timbre ->
+                event.frequenciesHz.map { frequencyHz -> VoiceKey(timbre, frequencyHz) }
+            }
+            val requestedSet = requestedKeys.toSet()
+            val removedKeys = if (retrigger) {
+                state.activeVoices.keys.toList()
+            } else {
+                state.activeVoices.keys.filter { it !in requestedSet }
+            }
+            for (key in removedKeys) {
+                val removedVoice = state.activeVoices.remove(key)
                 if (removedVoice != null) {
-                    fadingVoices += FadingVoice(timbre, removedVoice.voice, removedVoice.startFrame, currentFrame)
+                    state.fadingVoices += FadingVoice(removedVoice, currentFrame)
                 }
             }
-            fadingVoices.removeAll { fadingVoice ->
-                fadingVoice.timbre in requestedSet || currentFrame - fadingVoice.fadeStartFrame >= FADE_OUT_FRAMES
+            state.fadingVoices.removeAll { fadingVoice ->
+                currentFrame - fadingVoice.fadeStartFrame >= FADE_OUT_FRAMES
             }
-            for (timbre in requestedTimbres) {
-                if (voicesByTimbre[timbre] == null) {
-                    val voice = PipeVoice.forTimbre(timbre).also { voice ->
-                        if (frequencyHz != null) voice.startNote(frequencyHz)
-                    }
-                    voicesByTimbre[timbre] = ActiveVoice(voice, currentFrame)
+            for (key in requestedKeys) {
+                if (state.activeVoices[key] == null) {
+                    val (leftPanGain, rightPanGain) = stereoPanGains(key.frequencyHz)
+                    val voice = PipeVoice.forTimbre(key.timbre).also { it.startNote(key.frequencyHz) }
+                    state.activeVoices[key] = ActiveVoice(
+                        key = key,
+                        voice = voice,
+                        startFrame = currentFrame,
+                        leftPanGain = leftPanGain,
+                        rightPanGain = rightPanGain
+                    )
                 }
             }
-            activeTimbres = requestedTimbres
         }
 
-        syncVoices(0)
+        syncVoices(state.frameIndex, retrigger = true)
 
-        var frameIndex = 0
-        while (frameIndex < totalFrames && !session.stopRequested) {
-            syncVoices(frameIndex)
-            val count = min(chunk, totalFrames - frameIndex)
-            val pcm = ShortArray(count)
+        var beatsPlayed = 0.0
+        while (beatsPlayed < event.durationBeats && !session.stopRequested) {
+            syncVoices(state.frameIndex, retrigger = false)
+            val beatsPerFrame = MelodyPlaybackModel.beatsPerSecond(session.tempoPercent) / sampleRate
+            val remainingBeats = event.durationBeats - beatsPlayed
+            val remainingFrames = maxOf(1, ceil(remainingBeats / beatsPerFrame).toInt())
+            val count = min(chunk, remainingFrames)
+            val pcm = ShortArray(count * 2)
             for (i in 0 until count) {
-                val absoluteIndex = frameIndex + i
-                val drySample = if (frequencyHz == null || (activeTimbres.isEmpty() && fadingVoices.isEmpty())) {
-                    0.0
-                } else {
-                    var mixed = 0.0
-                    for (timbre in activeTimbres) {
-                        val activeVoice = voicesByTimbre[timbre]
-                        if (activeVoice != null) {
-                            mixed += activeVoice.voice.sample(
-                                sampleRate,
-                                absoluteIndex - activeVoice.startFrame,
-                                totalFrames - activeVoice.startFrame
-                            )
-                        }
-                    }
-                    val soundingCount = activeTimbres.size + fadingVoices.size
-                    val mixGain = 0.82 / sqrt(maxOf(1, soundingCount).toDouble())
-                    // Tremulant currently models wind/volume undulation, not pitch modulation.
-                    val tremulant = if (MelodyEffect.TREMULANT in session.effects) 1.0 + 0.08 * sin(tremulantPhase) else 1.0
-                    for (fadingVoice in fadingVoices) {
-                        val fadeFrame = absoluteIndex - fadingVoice.fadeStartFrame
-                        if (fadeFrame in 0 until FADE_OUT_FRAMES) {
-                            val fade = 1.0 - fadeFrame.toDouble() / FADE_OUT_FRAMES
-                            mixed += fadingVoice.voice.sample(
-                                sampleRate,
-                                absoluteIndex - fadingVoice.startFrame,
-                                totalFrames - fadingVoice.startFrame
-                            ) * fade * fade
-                        }
-                    }
-                    mixed * mixGain * tremulant
+                val absoluteIndex = state.frameIndex + i
+                var mixedMono = 0.0
+                var mixedLeft = 0.0
+                var mixedRight = 0.0
+                for (activeVoice in state.activeVoices.values) {
+                    val voiceSample = activeVoice.voice.sample(
+                        sampleRate,
+                        absoluteIndex - activeVoice.startFrame,
+                        Int.MAX_VALUE
+                    )
+                    mixedMono += voiceSample
+                    mixedLeft += voiceSample * activeVoice.leftPanGain
+                    mixedRight += voiceSample * activeVoice.rightPanGain
                 }
-                tremulantPhase += TWO_PI * TREMULANT_HZ / sampleRate
-                if (tremulantPhase >= TWO_PI) tremulantPhase -= TWO_PI
-                val sample = reverb.process(drySample)
-                pcm[i] = (softLimit(sample) * Short.MAX_VALUE).toInt().toShort()
+                for (fadingVoice in state.fadingVoices) {
+                    val fadeFrame = absoluteIndex - fadingVoice.fadeStartFrame
+                    if (fadeFrame in 0 until FADE_OUT_FRAMES) {
+                        val fade = 1.0 - fadeFrame.toDouble() / FADE_OUT_FRAMES
+                        val activeVoice = fadingVoice.activeVoice
+                        val voiceSample = activeVoice.voice.sample(
+                            sampleRate,
+                            absoluteIndex - activeVoice.startFrame,
+                            Int.MAX_VALUE
+                        ) * fade * fade
+                        mixedMono += voiceSample
+                        mixedLeft += voiceSample * activeVoice.leftPanGain
+                        mixedRight += voiceSample * activeVoice.rightPanGain
+                    }
+                }
+                val soundingCount = state.activeVoices.size + state.fadingVoices.size
+                val mixGain = 0.82 / sqrt(maxOf(1, soundingCount).toDouble())
+                val tremulant = if (MelodyEffect.TREMULANT in session.effects) {
+                    1.0 + 0.08 * sin(state.tremulantPhase)
+                } else {
+                    1.0
+                }
+                mixedMono *= mixGain * tremulant
+                mixedLeft *= mixGain * tremulant
+                mixedRight *= mixGain * tremulant
+                state.tremulantPhase += TWO_PI * TREMULANT_HZ / sampleRate
+                if (state.tremulantPhase >= TWO_PI) state.tremulantPhase -= TWO_PI
+                val wetSample = reverb.processWet(mixedMono)
+                val left = reverb.applyDryLevel(mixedLeft) + wetSample * CENTER_GAIN
+                val right = reverb.applyDryLevel(mixedRight) + wetSample * CENTER_GAIN
+                pcm[i * 2] = (softLimit(left) * Short.MAX_VALUE).toInt().toShort()
+                pcm[i * 2 + 1] = (softLimit(right) * Short.MAX_VALUE).toInt().toShort()
             }
             val written = try {
                 track.write(pcm, 0, pcm.size)
@@ -299,7 +359,8 @@ class LiveMelodyPlayer {
                 session.stopRequested = true
                 break
             }
-            frameIndex += count
+            state.frameIndex += count
+            beatsPlayed += count * beatsPerFrame
         }
     }
 
@@ -314,10 +375,12 @@ class LiveMelodyPlayer {
         var frameIndex = 0
         while (frameIndex < totalFrames && !session.stopRequested) {
             val count = min(chunk, totalFrames - frameIndex)
-            val pcm = ShortArray(count)
+            val pcm = ShortArray(count * 2)
             for (i in 0 until count) {
-                val sample = reverb.process(0.0)
-                pcm[i] = (softLimit(sample) * Short.MAX_VALUE).toInt().toShort()
+                val wetSample = reverb.processWet(0.0) * CENTER_GAIN
+                val sample = (softLimit(wetSample) * Short.MAX_VALUE).toInt().toShort()
+                pcm[i * 2] = sample
+                pcm[i * 2 + 1] = sample
             }
             val written = try {
                 track.write(pcm, 0, pcm.size)
@@ -338,7 +401,19 @@ class LiveMelodyPlayer {
         private const val TREMULANT_HZ = 5.2
         private const val REVERB_RELEASE_SECONDS = 0.85
         private const val FADE_OUT_FRAMES = 768
+        private const val FINAL_RELEASE_BEATS = 0.12
+        private const val WINDCHEST_PAN = 0.18
+        private const val CENTER_GAIN = 0.7071067811865476
+        private const val LN_TWO = 0.6931471805599453
 
         private fun softLimit(sample: Double): Double = tanh(sample * 1.15)
+
+        private fun stereoPanGains(frequencyHz: Double?): Pair<Double, Double> {
+            if (frequencyHz == null || frequencyHz <= 0.0) return CENTER_GAIN to CENTER_GAIN
+            val midi = (69.0 + 12.0 * ln(frequencyHz / 440.0) / LN_TWO).roundToInt()
+            val pan = if (midi and 1 == 0) -WINDCHEST_PAN else WINDCHEST_PAN
+            val angle = (pan + 1.0) * Math.PI / 4.0
+            return cos(angle) to sin(angle)
+        }
     }
 }

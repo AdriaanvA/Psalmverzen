@@ -1,4 +1,7 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8" ?>
 <full-backup-content>
    <exclude domain="file" path="content/" />
+   <!-- Instellingen niet herstellen bij verse install: verse install start met defaults.
+        App-updates behouden de lokale voorkeuren (herstel draait alleen bij install). -->
+   <exclude domain="sharedpref" path="psalmenapp_settings.xml" />
 </full-backup-content>

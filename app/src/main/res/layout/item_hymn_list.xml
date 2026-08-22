@@ -27,4 +27,14 @@
         android:maxLines="1"
         android:textColor="@color/app_text_secondary"
         android:textSize="16sp" />
+
+    <ImageButton
+        android:id="@+id/hymnInfoTextView"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="Informatie over Schriftliederen"
+        android:scaleType="centerInside"
+        android:src="@drawable/ic_info"
+        android:visibility="gone" />
 </LinearLayout>

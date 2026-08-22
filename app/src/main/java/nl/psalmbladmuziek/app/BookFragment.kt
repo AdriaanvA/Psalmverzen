@@ -1,14 +1,21 @@
 package nl.psalmbladmuziek.app
 
 import android.content.Intent
+import android.net.Uri
 import android.graphics.Typeface
 import android.os.Bundle
+import android.text.SpannableStringBuilder
+import android.text.Spanned
+import android.text.style.ClickableSpan
+import android.text.style.StyleSpan
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
+import android.widget.AbsListView
 import android.widget.BaseAdapter
 import android.widget.GridView
+import android.widget.ImageButton
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
@@ -64,9 +71,10 @@ class BookFragment : Fragment() {
         if (bookType == HymnRepository.PSALMS_TITLE) {
             emptyTextView.visibility = View.GONE
             gridView.visibility = View.VISIBLE
-            gridView.numColumns = 8
+            gridView.numColumns = AppSettings.psalmGridColumns(requireContext())
             gridView.verticalSpacing = 0
             gridView.horizontalSpacing = 0
+            gridView.stretchMode = GridView.STRETCH_COLUMN_WIDTH
 
             val cat = activeCategory
             val psalmNumbers = if (cat != null) {
@@ -75,15 +83,30 @@ class BookFragment : Fragment() {
                 (1..150).map { it.toString() }
             }
 
-            val bookAccent = ContextCompat.getColor(requireContext(), R.color.psalm_book_accent)
+            val bookNumberAccent = ContextCompat.getColor(requireContext(), R.color.psalm_book_number_accent)
             gridView.adapter = object : ArrayAdapter<String>(requireContext(), R.layout.item_number_grid, psalmNumbers) {
                 override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
                     val itemView = super.getView(position, convertView, parent)
+                    val tileHeight = gridTileHeight(parent)
+                    if (tileHeight > 0) {
+                        itemView.layoutParams = (itemView.layoutParams ?: AbsListView.LayoutParams(-1, -2)).apply {
+                            height = tileHeight
+                        }
+                    }
                     val n = psalmNumbers[position].toInt()
                     val inAccentedBook = n in 42..72 || n in 90..106
-                    itemView.setBackgroundColor(if (inAccentedBook) bookAccent else 0)
+                    (itemView as TextView).setTextColor(
+                        if (inAccentedBook) bookNumberAccent else ContextCompat.getColor(
+                            requireContext(),
+                            R.color.app_text_primary
+                        )
+                    )
                     return itemView
                 }
+            }
+            gridView.post {
+                gridView.requestLayout()
+                gridView.invalidateViews()
             }
             gridView.setOnItemClickListener { _, _, position, _ ->
                 openPsalmOrGezang("Psalm", psalmNumbers[position].toInt())
@@ -91,22 +114,36 @@ class BookFragment : Fragment() {
             return
         }
 
-        val rows = gezangRows()
+        val rows = if (bookType == HymnRepository.PSALTERS_TITLE) psalterRows() else gezangRows()
         if (rows.isNotEmpty()) {
             emptyTextView.visibility = View.GONE
             gridView.visibility = View.VISIBLE
             gridView.numColumns = 1
-            gridView.verticalSpacing = requireContext().dpToPx(4)
+            gridView.verticalSpacing = 0
             val secondary = androidx.core.content.ContextCompat.getColor(requireContext(), R.color.app_text_secondary)
             val primary = androidx.core.content.ContextCompat.getColor(requireContext(), R.color.app_text_primary)
             gridView.adapter = object : ArrayAdapter<HymnRow>(requireContext(), R.layout.item_hymn_list, rows) {
                 override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
                     val itemView = convertView ?: layoutInflater.inflate(R.layout.item_hymn_list, parent, false)
                     val row = getItem(position) ?: return itemView
+                    val tileHeight = gridTileHeight(parent)
+                    if (tileHeight > 0) {
+                        itemView.layoutParams = (itemView.layoutParams ?: AbsListView.LayoutParams(-1, -2)).apply {
+                            height = tileHeight
+                        }
+                    }
                     val numberTv = itemView.findViewById<TextView>(R.id.hymnNumberTextView)
                     val titleTv = itemView.findViewById<TextView>(R.id.hymnFirstLineTextView)
+                    val infoButton = itemView.findViewById<ImageButton>(R.id.hymnInfoTextView)
                     numberTv.text = row.number
                     titleTv.text = row.title
+                    val showInfo = row.kind == KIND_HEADER &&
+                        (row.title == "Schriftliederen" || row.title == "Psalters")
+                    infoButton.visibility = if (showInfo) View.VISIBLE else View.GONE
+                    infoButton.setColorFilter(if (row.title == "Schriftliederen") secondary else primary)
+                    infoButton.setOnClickListener(if (showInfo) View.OnClickListener {
+                        if (row.title == "Psalters") showPsaltersAbout() else showSchriftliederenAbout()
+                    } else null)
                     when (row.kind) {
                         KIND_HEADER -> {
                             titleTv.setTypeface(null, Typeface.BOLD)
@@ -127,6 +164,10 @@ class BookFragment : Fragment() {
                     return itemView
                 }
             }
+            gridView.post {
+                gridView.requestLayout()
+                gridView.invalidateViews()
+            }
             gridView.setOnItemClickListener { _, _, position, _ ->
                 val row = rows[position]
                 when (row.kind) {
@@ -136,13 +177,29 @@ class BookFragment : Fragment() {
                         Toast.LENGTH_SHORT
                     ).show()
                     KIND_HEADER -> {}
-                    else -> row.openNumber?.let { openPsalmOrGezang("Gezang", it) }
+                    else -> row.openNumber?.let {
+                        openPsalmOrGezang(if (bookType == HymnRepository.PSALTERS_TITLE) "Psalter" else "Gezang", it)
+                    }
                 }
             }
         } else {
             gridView.visibility = View.GONE
             emptyTextView.visibility = View.VISIBLE
-            emptyTextView.text = "Nog geen gezangen toegevoegd."
+            emptyTextView.text = if (bookType == HymnRepository.PSALTERS_TITLE) {
+                "Nog geen psalters toegevoegd."
+            } else {
+                "Nog geen gezangen toegevoegd."
+            }
+        }
+    }
+
+    private fun gridTileHeight(parent: ViewGroup): Int {
+        val columns = AppSettings.psalmGridColumns(requireContext())
+        val tileWidth = ((parent.width - parent.paddingLeft - parent.paddingRight) / columns.toFloat()).toInt()
+        return if (tileWidth > 0) {
+            (tileWidth * 1.05f).toInt().coerceIn(requireContext().dpToPx(48), requireContext().dpToPx(104))
+        } else {
+            0
         }
     }
 
@@ -153,11 +210,45 @@ class BookFragment : Fragment() {
      */
     fun showCurrentInfo() {
         val cat = activeCategory ?: PSALM_CATEGORY_DEFAULT
-        AlertDialog.Builder(requireContext())
+        val message = SpannableStringBuilder(cat.description)
+        if (activeCategory == null) {
+            val quote = "“Wij moeten liederen hebben die niet alleen eerbaar, maar ook heilig zijn, die ons aansporen tot het bidden en loven van God, tot het overdenken van Zijn werken, opdat wij Hem liefhebben, vrezen, eren en verheerlijken.\n\nWij zullen geen betere liederen vinden, noch liederen die geschikter zijn voor dit doel, dan de Psalmen van David, die de Heilige Geest hem heeft ingegeven en gemaakt.\n\nEn daarom, wanneer wij ze zingen, zijn wij ervan verzekerd dat God ons de woorden in de mond legt, alsof Hij Zelf in ons zingt, om Zijn heerlijkheid te verheerlijken.”"
+            message.append("\n\n")
+            val quoteStart = message.length
+            message.append(quote)
+            message.setSpan(StyleSpan(Typeface.BOLD), quoteStart, message.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+
+            message.append("\n\n")
+            val attributionStart = message.length
+            message.append("— Johannes Calvijn, Voorrede bij het Geneefse Psalter (1543)")
+            message.setSpan(StyleSpan(Typeface.ITALIC), attributionStart, message.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+
+            message.append("\n\n")
+            val signatureStart = message.length
+            message.append("S.D.G.")
+            message.setSpan(StyleSpan(Typeface.ITALIC), signatureStart, message.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+        }
+        message.append("\n\n")
+        val linkStart = message.length
+        message.append("Meer informatie over de functies van deze app")
+        message.setSpan(object : ClickableSpan() {
+            override fun onClick(widget: View) {
+                try {
+                    startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://adriaanva.github.io/Psalmverzen/")))
+                } catch (_: Exception) {
+                    // Geen browser beschikbaar.
+                }
+            }
+        }, linkStart, message.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+        val dialog = AlertDialog.Builder(requireContext())
             .setTitle(cat.name)
-            .setMessage(cat.description)
+            .setMessage(message)
             .setPositiveButton("Sluiten", null)
-            .show()
+            .create()
+        dialog.setOnShowListener {
+            dialog.findViewById<TextView>(android.R.id.message)?.movementMethod = android.text.method.LinkMovementMethod.getInstance()
+        }
+        dialog.show()
     }
 
     fun showCategoryChooser() {
@@ -248,6 +339,30 @@ class BookFragment : Fragment() {
         return rows
     }
 
+    private fun showSchriftliederenAbout() {
+        AlertDialog.Builder(requireContext())
+            .setTitle("Schriftliederen")
+            .setMessage(SCHRIFTLIEDEREN_ABOUT)
+            .setPositiveButton("Sluiten", null)
+            .show()
+    }
+
+    private fun showPsaltersAbout() {
+        AlertDialog.Builder(requireContext())
+            .setTitle("Psalters")
+            .setMessage(PSALTERS_ABOUT)
+            .setPositiveButton("Sluiten", null)
+            .show()
+    }
+
+    private fun psalterRows(): List<HymnRow> = buildList {
+        add(HymnRow("", "Psalters", KIND_HEADER, null))
+        addAll(HymnRepository.groupsForBook(HymnRepository.PSALTERS_TITLE).mapNotNull { group ->
+            val number = group.verses.firstOrNull()?.number ?: return@mapNotNull null
+            HymnRow(number.toString(), group.title, KIND_NORMAL, number)
+        })
+    }
+
     private fun openFirstAvailableVerseOrExplain(type: String, number: Int) {
         val firstVerse = HymnRepository.versesFor(type, number).firstOrNull()
         if (firstVerse == null) {
@@ -263,10 +378,7 @@ class BookFragment : Fragment() {
             Toast.makeText(requireContext(), "$type $number heeft nog geen noten.", Toast.LENGTH_SHORT).show()
             return
         }
-        // Eén vers zonder toelichting: direct openen. Anders (meerdere verzen, of een
-        // 'About'-knop aanwezig) eerst het versoverzicht tonen zodat de toelichting zichtbaar is.
-        val hasAbout = ScoreBundleRenderer.readAbout(requireContext(), type, number) != null
-        if (verses.size == 1 && !hasAbout) {
+        if (shouldOpenDirectly(verses.size)) {
             openVerse(verses.first())
         } else {
             startActivity(
@@ -285,6 +397,8 @@ class BookFragment : Fragment() {
     }
 
     companion object {
+        internal fun shouldOpenDirectly(verseCount: Int): Boolean = verseCount == 1
+
         fun newInstance(bookType: String): BookFragment {
             val fragment = BookFragment()
             val args = Bundle()

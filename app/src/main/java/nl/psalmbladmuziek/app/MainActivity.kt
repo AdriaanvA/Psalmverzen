@@ -10,6 +10,9 @@ import com.google.android.material.tabs.TabLayoutMediator
 class MainActivity : AppCompatActivity() {
 
     private lateinit var viewPager: ViewPager2
+    private lateinit var tabLayout: TabLayout
+    private var bookTabMediator: TabLayoutMediator? = null
+    private var attachedBookTitles: List<String> = emptyList()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -17,18 +20,15 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         bindStatusBarBackground(findViewById(R.id.mainRoot), findViewById(R.id.statusBarBackground))
 
-        val tabLayout = findViewById<TabLayout>(R.id.tabLayout)
+        tabLayout = findViewById(R.id.tabLayout)
         viewPager = findViewById(R.id.viewPager)
 
         HymnRepository.loadAsync(this) { refreshBookFragments() }
 
-        val adapter = BookPagerAdapter(this, HymnRepository.bookTitles)
-        viewPager.adapter = adapter
+        rebuildBookPager()
         selectInitialBookTab()
 
-        TabLayoutMediator(tabLayout, viewPager) { tab, position ->
-            tab.text = HymnRepository.bookTitles[position]
-        }.attach()
+        attachBookTabs()
 
         findViewById<View>(R.id.infoButton).setOnClickListener {
             getPsalmFragment()?.showCurrentInfo()
@@ -59,8 +59,9 @@ class MainActivity : AppCompatActivity() {
     private fun selectInitialBookTab() {
         val bookType = intent.getStringExtra(EXTRA_BOOK_TYPE)
         val index = when (bookType) {
-            "Gezang" -> HymnRepository.bookTitles.indexOf(HymnRepository.HYMNS_TITLE)
-            else -> HymnRepository.bookTitles.indexOf(HymnRepository.PSALMS_TITLE)
+            "Gezang" -> HymnRepository.bookTitles(this).indexOf(HymnRepository.HYMNS_TITLE)
+            "Psalter" -> HymnRepository.bookTitles(this).indexOf(HymnRepository.PSALTERS_TITLE)
+            else -> HymnRepository.bookTitles(this).indexOf(HymnRepository.PSALMS_TITLE)
         }.coerceAtLeast(0)
         viewPager.setCurrentItem(index, false)
     }
@@ -70,7 +71,25 @@ class MainActivity : AppCompatActivity() {
             .find { it.arguments?.getString("BOOK_TYPE") == HymnRepository.PSALMS_TITLE }
 
     private fun refreshBookFragments() {
+        val currentTitles = HymnRepository.bookTitles(this)
+        if (currentTitles != attachedBookTitles) {
+            rebuildBookPager()
+            selectInitialBookTab()
+        }
         supportFragmentManager.fragments.filterIsInstance<BookFragment>().forEach { it.refresh() }
+    }
+
+    private fun rebuildBookPager() {
+        bookTabMediator?.detach()
+        attachedBookTitles = HymnRepository.bookTitles(this)
+        viewPager.adapter = BookPagerAdapter(this, attachedBookTitles)
+        if (bookTabMediator != null) attachBookTabs()
+    }
+
+    private fun attachBookTabs() {
+        bookTabMediator = TabLayoutMediator(tabLayout, viewPager) { tab, position ->
+            tab.text = HymnRepository.bookTitles(this)[position]
+        }.also { it.attach() }
     }
 
     companion object {

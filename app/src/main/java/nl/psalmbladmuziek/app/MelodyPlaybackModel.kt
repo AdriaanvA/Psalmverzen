@@ -6,24 +6,26 @@ import kotlin.math.pow
 
 /** Eén afspeel-event: een toon of stilte met een duur in seconden. */
 data class PlaybackEvent(
-    val frequencyHz: Double?,
-    val durationSec: Double
+    val frequenciesHz: List<Double>,
+    val durationBeats: Double,
+    val playbackId: String? = null
 )
 
 object MelodyPlaybackModel {
     // Relatieve schuiving: 100 in de UI klinkt als de eerdere 115-instelling.
     private const val BASE_BPM_AT_100_PERCENT = 115.0
 
+    fun beatsPerSecond(tempoPercent: Int): Double {
+        val safeTempo = tempoPercent.coerceIn(AppSettings.MIN_PLAYBACK_TEMPO, AppSettings.MAX_PLAYBACK_TEMPO)
+        return BASE_BPM_AT_100_PERCENT * (safeTempo / 100.0) / 60.0
+    }
+
     fun buildEvents(
         context: Context,
         verses: List<Verse>,
-        tempoPercent: Int,
         transposeSemitones: Int = 0
     ): List<PlaybackEvent> {
         if (verses.isEmpty()) return emptyList()
-        val safeTempo = tempoPercent.coerceIn(AppSettings.MIN_PLAYBACK_TEMPO, AppSettings.MAX_PLAYBACK_TEMPO)
-        val bpm = BASE_BPM_AT_100_PERCENT * (safeTempo / 100.0)
-        val quarterSec = 60.0 / bpm
 
         val events = ArrayList<PlaybackEvent>()
         verses.forEach { verse ->
@@ -38,32 +40,35 @@ object MelodyPlaybackModel {
                         val note = notes.optJSONObject(noteIndex) ?: continue
                         val beats = noteBeats(note)
                         if (beats <= 0.0) continue
-                        val durationSec = beats * quarterSec
                         if (note.optBoolean("rest")) {
-                            events += PlaybackEvent(frequencyHz = null, durationSec = durationSec)
+                            events += PlaybackEvent(frequenciesHz = emptyList(), durationBeats = beats)
                             continue
                         }
                         val step = note.optString("step")
                         val octave = note.optInt("octave", Int.MIN_VALUE)
                         if (step.isBlank() || octave == Int.MIN_VALUE) {
-                            events += PlaybackEvent(frequencyHz = null, durationSec = durationSec)
+                            events += PlaybackEvent(frequenciesHz = emptyList(), durationBeats = beats)
                             continue
                         }
                         val alter = if (note.isNull("alter")) 0 else note.optInt("alter", 0)
                         val midi = noteToMidi(step, alter, octave) + transposeSemitones
-                        events += PlaybackEvent(frequencyHz = midiToFrequencyHz(midi), durationSec = durationSec)
+                        events += PlaybackEvent(
+                            frequenciesHz = listOf(midiToFrequencyHz(midi)),
+                            durationBeats = beats,
+                            playbackId = note.optString("playbackId").ifBlank { null }
+                        )
                     }
                 }
             }
             // Kleine adempauze tussen verzen bij multi-verse playback.
             if (verses.size > 1) {
-                events += PlaybackEvent(frequencyHz = null, durationSec = quarterSec * 0.5)
+                events += PlaybackEvent(frequenciesHz = emptyList(), durationBeats = 0.5)
             }
         }
         return events
     }
 
-    private fun noteBeats(note: JSONObject): Double {
+    fun noteBeats(note: JSONObject): Double {
         val base = when (note.optString("type")) {
             "whole" -> 4.0
             "half" -> 2.0
@@ -89,7 +94,7 @@ object MelodyPlaybackModel {
         return 12 * (octave + 1) + base + alter
     }
 
-    private fun midiToFrequencyHz(midi: Int): Double {
+    fun midiToFrequencyHz(midi: Int): Double {
         return 440.0 * 2.0.pow((midi - 69) / 12.0)
     }
 }
