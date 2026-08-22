@@ -2,14 +2,17 @@ package nl.psalmbladmuziek.app
 
 import android.content.Intent
 import android.content.pm.ApplicationInfo
-import android.net.Uri
+import androidx.core.net.toUri
+import android.content.res.Configuration
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
+import android.widget.ImageButton
 import android.widget.LinearLayout
 import android.widget.ListView
 import android.widget.SeekBar
+import android.widget.Space
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -21,7 +24,15 @@ import java.util.Locale
 import kotlin.math.min
 
 /** Bestemming van de 'Steun de app'-knop (tip jar). */
-private const val SUPPORT_URL = "https://arianappel.github.io/Psalmverzen/"
+private const val SUPPORT_URL = "https://adriaanva.github.io/Psalmverzen/"
+
+private const val PSALM_RENDITIONS_ABOUT = """De Psalmberijming van 1773, ook wel de Oude Berijming, is de bekendste Nederlandse psalmberijming en wordt nog altijd in veel reformatorische en gereformeerde kerken gebruikt. Zij kwam tot stand uit eerdere berijmingen van onder anderen Johannes Eusebius Voet, Hendrik Ghijsen en het dichtgenootschap Laus Deo, Salus Populo, en werd in 1773 op last van de Staten-Generaal ingevoerd.
+
+De psalmberijming van Petrus Datheen (1566) was de eerste volledige Nederlandse gereformeerde psalmberijming. Datheen bewerkte de Franse psalmberijming van Clément Marot en Théodore de Bèze naar het Nederlands en gebruikte daarbij de Geneefse psalmmelodieën. De berijming speelde een grote rol tijdens de Reformatie en bleef tot ver in de achttiende eeuw de gangbare Nederlandse gereformeerde psalmberijming, totdat zij grotendeels werd vervangen door die van 1773.
+
+De psalmberijming van Jacobus Revius (1640) ontstond als een verbetering van de berijming van Datheen. Revius wilde Datheens psalmen verbeteren in zin en rijm: dichter bij de Bijbeltekst en tegelijk taalkundig en dichterlijk beter. Daarbij sloot hij bewust aan bij de Statenvertaling van 1637, die kort daarvoor was verschenen.
+
+De psalmberijming van Philips van Marnix van Sint Aldegonde (1591) is een Nederlandse psalmberijming. Marnix werkte rechtstreeks vanuit de Hebreeuwse grondtekst, zoals ook de oorspronkelijke titel vermeldt: Het boeck der Psalmen. Wt de Hebreische sprake in Nederduytsch dichte. Hij streefde daarmee naar een nauwkeurige weergave van de Hebreeuwse psalmtekst. De Statenvertaling was toen nog niet verschenen; die verscheen pas in 1637."""
 
 /**
  * Eén gedeeld instellingen-menu voor zowel het overzicht (MainActivity) als de
@@ -37,7 +48,7 @@ fun AppCompatActivity.showAppSettingsDialog(onChanged: () -> Unit = {}) {
         setPadding(dp(20), dp(8), dp(20), 0)
     }
 
-    fun toggleRow(label: String, initial: Boolean, onToggle: (Boolean) -> Unit) {
+    fun toggleRowWithInfo(label: String, initial: Boolean, onToggle: (Boolean) -> Unit, onInfo: (() -> Unit)?) {
         val row = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
@@ -47,7 +58,11 @@ fun AppCompatActivity.showAppSettingsDialog(onChanged: () -> Unit = {}) {
         val tv = TextView(this).apply {
             text = label
             textSize = 16f
-            layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+            layoutParams = if (onInfo == null) {
+                LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+            } else {
+                LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT)
+            }
         }
         val sw = SwitchCompat(this).apply {
             isChecked = initial
@@ -55,8 +70,29 @@ fun AppCompatActivity.showAppSettingsDialog(onChanged: () -> Unit = {}) {
         }
         row.setOnClickListener { sw.toggle() }
         row.addView(tv)
+        if (onInfo != null) {
+            val info = ImageButton(this).apply {
+                layoutParams = LinearLayout.LayoutParams(dp(28), dp(28)).apply {
+                    marginStart = dp(4)
+                    marginEnd = dp(4)
+                }
+                setBackgroundColor(android.graphics.Color.TRANSPARENT)
+                setImageResource(R.drawable.ic_info)
+                setColorFilter(ContextCompat.getColor(this@showAppSettingsDialog, R.color.app_text_secondary))
+                contentDescription = "Informatie over Schriftliederen"
+                setOnClickListener { onInfo() }
+            }
+            row.addView(info)
+            row.addView(Space(this).apply {
+                layoutParams = LinearLayout.LayoutParams(0, 1, 1f)
+            })
+        }
         row.addView(sw)
         root.addView(row)
+    }
+
+    fun toggleRow(label: String, initial: Boolean, onToggle: (Boolean) -> Unit) {
+        toggleRowWithInfo(label, initial, onToggle, null)
     }
 
     fun sectionHeader(title: String) {
@@ -88,7 +124,7 @@ fun AppCompatActivity.showAppSettingsDialog(onChanged: () -> Unit = {}) {
         root.addView(row)
     }
 
-    fun chooserRow(label: String, value: () -> String, onClick: (TextView) -> Unit) {
+    fun chooserRow(label: String, value: () -> String, onInfo: (() -> Unit)? = null, onClick: (TextView) -> Unit) {
         val row = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
@@ -98,8 +134,28 @@ fun AppCompatActivity.showAppSettingsDialog(onChanged: () -> Unit = {}) {
         row.addView(TextView(this).apply {
             text = label
             textSize = 16f
-            layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+            layoutParams = if (onInfo == null) {
+                LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+            } else {
+                LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT)
+            }
         })
+        if (onInfo != null) {
+            row.addView(ImageButton(this).apply {
+                layoutParams = LinearLayout.LayoutParams(dp(28), dp(28)).apply {
+                    marginStart = dp(4)
+                    marginEnd = dp(4)
+                }
+                setBackgroundColor(android.graphics.Color.TRANSPARENT)
+                setImageResource(R.drawable.ic_info)
+                setColorFilter(ContextCompat.getColor(this@showAppSettingsDialog, R.color.app_text_secondary))
+                contentDescription = "Informatie over de Psalmberijmingen"
+                setOnClickListener { onInfo() }
+            })
+            row.addView(Space(this).apply {
+                layoutParams = LinearLayout.LayoutParams(0, 1, 1f)
+            })
+        }
         val tv = android.util.TypedValue()
         val activeColor = if (theme.resolveAttribute(android.R.attr.colorControlActivated, tv, true)) tv.data
             else ContextCompat.getColor(this, R.color.settings_blue_bright)
@@ -120,17 +176,37 @@ fun AppCompatActivity.showAppSettingsDialog(onChanged: () -> Unit = {}) {
             valueView.text = displayModeName(AppSettings.displayMode(this)); onChanged()
         }
     }
-    chooserRow("Psalmberijming", { psalmVersionName(AppSettings.psalmVersion(this)) }) { valueView ->
-        showPsalmVersionChooser {
-            valueView.text = psalmVersionName(AppSettings.psalmVersion(this)); onChanged()
+    chooserRow("Raster grootte", { getString(R.string.grid_columns, AppSettings.psalmGridColumns(this)) }) { valueView ->
+        showPsalmGridColumnsChooser {
+            valueView.text = getString(R.string.grid_columns, AppSettings.psalmGridColumns(this)); onChanged()
         }
     }
     toggleRow("Scherm aan laten", AppSettings.keepScreenOn(this)) {
         AppSettings.setKeepScreenOn(this, it); onChanged()
     }
-    toggleRow("Schriftliederen", AppSettings.showSchriftliederen(this)) {
-        AppSettings.setShowSchriftliederen(this, it); onChanged()
+    chooserRow("Psalmberijming", { psalmVersionShortName(AppSettings.psalmVersion(this)) }, onInfo = {
+        AlertDialog.Builder(this)
+            .setTitle("Psalmberijmingen")
+            .setMessage(PSALM_RENDITIONS_ABOUT)
+            .setPositiveButton("Sluiten", null)
+            .show()
+    }) { valueView ->
+        showPsalmVersionChooser {
+            valueView.text = psalmVersionShortName(AppSettings.psalmVersion(this)); onChanged()
+        }
     }
+    toggleRowWithInfo(
+        "Schriftliederen",
+        AppSettings.showSchriftliederen(this),
+        { AppSettings.setShowSchriftliederen(this, it); onChanged() },
+        {
+            AlertDialog.Builder(this)
+                .setTitle("Schriftliederen")
+                .setMessage(SCHRIFTLIEDEREN_ABOUT)
+                .setPositiveButton("Sluiten", null)
+                .show()
+        }
+    )
 
     // --- Noten en muziek ---
     sectionHeader("Noten en muziek")
@@ -147,6 +223,11 @@ fun AppCompatActivity.showAppSettingsDialog(onChanged: () -> Unit = {}) {
     chooserRow("Afspeelsnelheid", { "${AppSettings.playbackTempo(this)}" }) { valueView ->
         showTempoChooser {
             valueView.text = "${AppSettings.playbackTempo(this)}"; onChanged()
+        }
+    }
+    chooserRow("Kleur huidige noot", { AppSettings.PLAYBACK_HIGHLIGHT_COLORS[AppSettings.playbackHighlightColor(this)].name }) { valueView ->
+        showPlaybackHighlightColorChooser {
+            valueView.text = AppSettings.PLAYBACK_HIGHLIGHT_COLORS[AppSettings.playbackHighlightColor(this)].name; onChanged()
         }
     }
     chooserRow("Registratie", { registrationName(AppSettings.playbackRegistration(this)) }) { valueView ->
@@ -190,7 +271,7 @@ fun AppCompatActivity.showAppSettingsDialog(onChanged: () -> Unit = {}) {
     sectionHeader("Over")
     linkRow("Informatie") {
         try {
-            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(SUPPORT_URL)))
+            startActivity(Intent(Intent.ACTION_VIEW, SUPPORT_URL.toUri()))
         } catch (_: Exception) {}
     }
 
@@ -249,8 +330,16 @@ private fun displayModeName(mode: Int): String = when (mode) {
 }
 
 private fun psalmVersionName(version: Int): String = when (version) {
+    AppSettings.PSALM_VERSION_DATHEEN -> "Datheen — 1566"
+    AppSettings.PSALM_VERSION_REVIUS -> "Revius — 1640"
+    AppSettings.PSALM_VERSION_MARNIX -> "Marnix — 1591"
+    else -> "1773 — Oude berijming"
+}
+
+private fun psalmVersionShortName(version: Int): String = when (version) {
     AppSettings.PSALM_VERSION_DATHEEN -> "Datheen"
     AppSettings.PSALM_VERSION_REVIUS -> "Revius"
+    AppSettings.PSALM_VERSION_MARNIX -> "Marnix"
     else -> "1773"
 }
 
@@ -262,6 +351,11 @@ private fun rhythmModeName(mode: Int): String = when (mode) {
 private fun topBarActionName(value: Int): String = when (value) {
     AppSettings.TOPBAR_ACTION_PLAY -> "Afspelen"
     else -> "Delen"
+}
+
+private fun playbackVoicingName(value: Int): String = when (value) {
+    AppSettings.PLAYBACK_VOICING_CHORDS -> "Akkoorden"
+    else -> "Discant"
 }
 
 private data class RegistrationOption(val label: String, val mask: Int, val weight: Int = 1) {
@@ -304,7 +398,7 @@ private fun AppCompatActivity.showDisplayModeChooser(onChanged: () -> Unit) {
 }
 
 private fun AppCompatActivity.showPsalmVersionChooser(onChanged: () -> Unit) {
-    val options = arrayOf("1773", "Datheen", "Revius")
+    val options = arrayOf("1773 — Oude berijming", "Datheen — 1566", "Revius — 1640", "Marnix — 1591")
     AlertDialog.Builder(this)
         .setTitle("Psalmberijming")
         .setSingleChoiceItems(options, AppSettings.psalmVersion(this)) { dialog, which ->
@@ -322,6 +416,18 @@ private fun AppCompatActivity.showRhythmModeChooser(onChanged: () -> Unit) {
         .setTitle("Ritme")
         .setSingleChoiceItems(options, AppSettings.rhythmMode(this)) { dialog, which ->
             AppSettings.setRhythmMode(this, which)
+            dialog.dismiss()
+            onChanged()
+        }
+        .show()
+}
+
+private fun AppCompatActivity.showPlaybackVoicingChooser(onChanged: () -> Unit) {
+    val options = arrayOf("Discant", "Akkoorden")
+    AlertDialog.Builder(this)
+        .setTitle("Afspeelwijze")
+        .setSingleChoiceItems(options, AppSettings.playbackVoicing(this)) { dialog, which ->
+            AppSettings.setPlaybackVoicing(this, which)
             dialog.dismiss()
             onChanged()
         }
@@ -350,7 +456,7 @@ private fun AppCompatActivity.showTempoChooser(onChanged: () -> Unit) {
     }
     val valueLabel = TextView(this).apply {
         textSize = 18f
-        text = "Tempo ${AppSettings.playbackTempo(this@showTempoChooser)}"
+        text = getString(R.string.tempo_value, AppSettings.playbackTempo(this@showTempoChooser))
         setPadding(0, 0, 0, dp(8))
     }
     val seekBar = SeekBar(this).apply {
@@ -359,7 +465,7 @@ private fun AppCompatActivity.showTempoChooser(onChanged: () -> Unit) {
         setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
                 val tempo = AppSettings.MIN_PLAYBACK_TEMPO + progress
-                valueLabel.text = "Tempo $tempo"
+                valueLabel.text = getString(R.string.tempo_value, tempo)
                 if (fromUser) {
                     AppSettings.setPlaybackTempo(this@showTempoChooser, tempo)
                 }
@@ -378,6 +484,65 @@ private fun AppCompatActivity.showTempoChooser(onChanged: () -> Unit) {
         .setTitle("Afspeelsnelheid")
         .setView(root)
         .setPositiveButton("Klaar", null)
+        .show()
+}
+
+private fun AppCompatActivity.showPlaybackHighlightColorChooser(onChanged: () -> Unit) {
+    val colors = AppSettings.PLAYBACK_HIGHLIGHT_COLORS
+    val adapter = object : ArrayAdapter<String>(
+        this,
+        android.R.layout.simple_list_item_single_choice,
+        colors.map { it.name }
+    ) {
+        override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
+            val view = super.getView(position, convertView, parent) as TextView
+            view.setTextColor(android.graphics.Color.parseColor(colors[position].hex))
+            return view
+        }
+    }
+    AlertDialog.Builder(this)
+        .setTitle("Kleur tijdens afspelen")
+        .setSingleChoiceItems(adapter, AppSettings.playbackHighlightColor(this)) { dialog, which ->
+            AppSettings.setPlaybackHighlightColor(this, which)
+            dialog.dismiss()
+            onChanged()
+        }
+        .show()
+}
+
+private fun AppCompatActivity.showPsalmGridColumnsChooser(onChanged: () -> Unit) {
+    val density = resources.displayMetrics.density
+    val root = LinearLayout(this).apply {
+        orientation = LinearLayout.VERTICAL
+        setPadding((24 * density).toInt(), (8 * density).toInt(), (24 * density).toInt(), 0)
+    }
+    val valueView = TextView(this).apply {
+        textSize = 16f
+        text = getString(R.string.grid_columns, AppSettings.psalmGridColumns(this@showPsalmGridColumnsChooser))
+    }
+    val seekBar = SeekBar(this).apply {
+        max = AppSettings.MAX_PSALM_GRID_COLUMNS - AppSettings.MIN_PSALM_GRID_COLUMNS
+        progress = AppSettings.psalmGridColumns(this@showPsalmGridColumnsChooser) - AppSettings.MIN_PSALM_GRID_COLUMNS
+        setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                val columns = AppSettings.MIN_PSALM_GRID_COLUMNS + progress
+                valueView.text = getString(R.string.grid_columns, columns)
+                if (fromUser) {
+                    AppSettings.setPsalmGridColumns(this@showPsalmGridColumnsChooser, columns)
+                    onChanged()
+                }
+            }
+
+            override fun onStartTrackingTouch(seekBar: SeekBar?) = Unit
+            override fun onStopTrackingTouch(seekBar: SeekBar?) = Unit
+        })
+    }
+    root.addView(valueView)
+    root.addView(seekBar)
+    AlertDialog.Builder(this)
+        .setTitle("Raster grootte")
+        .setView(root)
+        .setPositiveButton("Gereed", null)
         .show()
 }
 

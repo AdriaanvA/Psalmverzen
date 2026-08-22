@@ -2,12 +2,17 @@ package nl.psalmbladmuziek.app
 
 import android.annotation.SuppressLint
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
+import android.text.SpannableString
+import android.text.Spanned
+import android.text.style.ClickableSpan
 import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
+import android.widget.AbsListView
 import android.widget.GridView
 import android.widget.ListView
 import android.widget.TextView
@@ -38,6 +43,7 @@ class VerseListActivity : AppCompatActivity() {
         val aboutButton = findViewById<View>(R.id.aboutButton)
         if (about != null) {
             aboutButton.visibility = View.VISIBLE
+            aboutButton.contentDescription = "Over dit lied"
             aboutButton.setOnClickListener { showAboutDialog(title, about) }
         } else {
             aboutButton.visibility = View.GONE
@@ -51,8 +57,32 @@ class VerseListActivity : AppCompatActivity() {
             // zodat er minder gescrold hoeft te worden om een vers te kiezen.
             listView.visibility = View.GONE
             gridView.visibility = View.VISIBLE
-            gridView.adapter = ArrayAdapter(this, R.layout.item_number_grid, verses.map { it.verse.toString() })
+            gridView.numColumns = AppSettings.psalmGridColumns(this)
+            gridView.verticalSpacing = 0
+            gridView.horizontalSpacing = 0
+            gridView.stretchMode = GridView.STRETCH_COLUMN_WIDTH
+            gridView.adapter = object : ArrayAdapter<String>(
+                this,
+                R.layout.item_number_grid,
+                verses.map { it.verse.toString() }
+            ) {
+                override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
+                    val itemView = super.getView(position, convertView, parent)
+                    val columns = AppSettings.psalmGridColumns(this@VerseListActivity)
+                    val tileWidth = ((parent.width - parent.paddingLeft - parent.paddingRight) / columns.toFloat()).toInt()
+                    if (tileWidth > 0) {
+                        itemView.layoutParams = (itemView.layoutParams ?: AbsListView.LayoutParams(-1, -2)).apply {
+                            height = (tileWidth * 1.05f).toInt().coerceIn(dpToPx(48), dpToPx(104))
+                        }
+                    }
+                    return itemView
+                }
+            }
             gridView.setOnItemClickListener { _, _, position, _ -> openVerse(verses[position], returnToSheet) }
+            gridView.post {
+                gridView.requestLayout()
+                gridView.invalidateViews()
+            }
             focusVerseInGrid(gridView, verses, focusVerse)
         } else {
             listView.adapter = object : ArrayAdapter<Verse>(this, R.layout.item_verse_row, verses) {
@@ -147,7 +177,6 @@ class VerseListActivity : AppCompatActivity() {
         )
         overrideNumberTransition(previous)
         finish()
-        overrideNumberTransition(previous)
     }
 
     @Suppress("DEPRECATION")
@@ -160,11 +189,36 @@ class VerseListActivity : AppCompatActivity() {
     }
 
     private fun showAboutDialog(title: String, about: String) {
-        androidx.appcompat.app.AlertDialog.Builder(this)
+        val markdownPattern = Regex("\\[([^]]+)]\\((https://statenvertaling\\.nl/tekst\\.php\\?bb=\\d+&hf=\\d+&ind=4#starth)\\)")
+        val rawPattern = Regex("https://statenvertaling\\.nl/tekst\\.php\\?bb=\\d+&hf=\\d+&ind=4#starth")
+        val markdownMatch = markdownPattern.find(about)
+        val rawMatch = if (markdownMatch == null) rawPattern.find(about) else null
+        val linkRange = markdownMatch?.range ?: rawMatch?.range
+        val message = if (linkRange == null) {
+            SpannableString(about)
+        } else {
+            val label = markdownMatch?.groupValues?.get(1) ?: "Bijbeltekst"
+            val url = markdownMatch?.groupValues?.get(2) ?: rawMatch!!.value
+            val linkedText = about.replaceRange(linkRange!!, label)
+            val linkStart = linkRange.first
+            SpannableString(linkedText).apply {
+                setSpan(object : ClickableSpan() {
+                    override fun onClick(widget: View) {
+                        startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+                    }
+                }, linkStart, linkStart + label.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+            }
+        }
+        val dialog = androidx.appcompat.app.AlertDialog.Builder(this)
             .setTitle(title)
-            .setMessage(about)
+            .setMessage(message)
             .setPositiveButton("Sluiten", null)
-            .show()
+            .create()
+        dialog.setOnShowListener {
+            dialog.findViewById<TextView>(android.R.id.message)?.movementMethod =
+                android.text.method.LinkMovementMethod.getInstance()
+        }
+        dialog.show()
     }
 
     /** In de verskeuze verbergen we melisma-markering (underscores) voor rustiger lezen. */

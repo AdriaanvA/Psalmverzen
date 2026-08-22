@@ -24,13 +24,14 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.activity.OnBackPressedCallback
+import androidx.lifecycle.Lifecycle
 import android.widget.Button
-import android.widget.FrameLayout
 import android.widget.GridLayout
 import android.widget.ImageButton
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
+import androidx.core.widget.TextViewCompat
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -49,12 +50,40 @@ class SheetMusicActivity : AppCompatActivity() {
     private lateinit var pdfExporter: SheetPdfExporter
     private lateinit var gestureController: SheetGestureController
     private val melodyPlayer = LiveMelodyPlayer()
+    private data class PlaybackBuildRequest(
+        val verses: List<Verse>,
+        val transposeSemitones: Int,
+        val registration: List<MelodyTimbre>,
+        val effects: Set<MelodyEffect>,
+        val tempoPercent: Int
+    )
+
+    private data class PlaybackBuildResult(
+        val events: List<PlaybackEvent>,
+        val registration: List<MelodyTimbre>,
+        val effects: Set<MelodyEffect>,
+        val tempoPercent: Int
+    )
+
+    private val playbackBuildCoordinator by lazy {
+        PlaybackBuildCoordinator(
+            builder = ::buildPlayback,
+            starter = ::startBuiltPlayback,
+            resultDispatcher = { action -> runOnUiThread(action) },
+            isStartAllowed = {
+                lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED) &&
+                    !isFinishing && !isDestroyed
+            }
+        )
+    }
     private lateinit var fileName: String
     private var currentLyricTextScale = DEFAULT_TEXT_SCALE
     private var currentScoreVerticalScale = DEFAULT_NOTE_SCALE
     private var currentTransposition = 0
     private var lastPlaybackTempo = AppSettings.DEFAULT_PLAYBACK_TEMPO
     private var lastPlaybackRegistration = AppSettings.DEFAULT_PLAYBACK_REGISTRATION
+    private var lastPlaybackVoicing = AppSettings.PLAYBACK_VOICING_DISCANT
+    private var playbackHighlightGeneration = 0
     private var showNotes = true
     private var exportingPdf = false
     private var stackedVerseFileNames: LinkedHashSet<String>? = null
@@ -89,6 +118,7 @@ class SheetMusicActivity : AppCompatActivity() {
         fileName = intent.getStringExtra(EXTRA_FILE_NAME) ?: DEFAULT_FILE_NAME
         lastPlaybackTempo = AppSettings.playbackTempo(this)
         lastPlaybackRegistration = AppSettings.playbackRegistration(this)
+        lastPlaybackVoicing = AppSettings.playbackVoicing(this)
         currentLyricTextScale = roundScaleToGrid(AppSettings.textScale(this, DEFAULT_TEXT_SCALE), DEFAULT_TEXT_SCALE, TEXT_SCALE_STEP, MIN_TEXT_SCALE, MAX_TEXT_SCALE)
         currentScoreVerticalScale = roundScaleToGrid(AppSettings.noteScale(this, DEFAULT_NOTE_SCALE), DEFAULT_NOTE_SCALE, NOTE_SCALE_STEP, MIN_NOTE_SCALE, MAX_NOTE_SCALE)
         showNotes = !isTextOnlyAsset() && !AppSettings.textOnly(this)
@@ -226,6 +256,9 @@ class SheetMusicActivity : AppCompatActivity() {
         val previousRegistration = lastPlaybackRegistration
         val registrationChanged = newRegistration != lastPlaybackRegistration
         lastPlaybackRegistration = newRegistration
+        val newPlaybackVoicing = AppSettings.playbackVoicing(this)
+        val playbackVoicingChanged = newPlaybackVoicing != lastPlaybackVoicing
+        lastPlaybackVoicing = newPlaybackVoicing
 
         showNotes = !isTextOnlyAsset() && !AppSettings.textOnly(this)
         applyKeepScreenOn()
@@ -234,6 +267,9 @@ class SheetMusicActivity : AppCompatActivity() {
         updateLyricsText()
         updateContentMode()
         if (melodyPlayer.isPlaying && tempoChanged) {
+            melodyPlayer.updateTempo(newTempo)
+        }
+        if (melodyPlayer.isPlaying && playbackVoicingChanged) {
             startMelodyPlayback()
         } else if (melodyPlayer.isPlaying && registrationChanged && !hasSoundingRegistration(previousRegistration) && hasSoundingRegistration(newRegistration)) {
             startMelodyPlayback()
@@ -243,6 +279,7 @@ class SheetMusicActivity : AppCompatActivity() {
         if (showNotes) {
             webView.evaluateJavascript("updateScore();", null)
         }
+        webView.evaluateJavascript("setPlaybackHighlightColor(${JSONObject.quote(playbackHighlightColor())});", null)
     }
 
     /** Bladmuziek donker als de instelling aan staat én het donkere thema actief is. */
@@ -469,6 +506,7 @@ class SheetMusicActivity : AppCompatActivity() {
     }
 
     private fun openVerse(verse: Verse) {
+        playbackBuildCoordinator.cancel()
         if (melodyPlayer.isPlaying) {
             stopMelodyPlayback()
         }
@@ -499,6 +537,18 @@ class SheetMusicActivity : AppCompatActivity() {
         webView.evaluateJavascript("updateScore();", null)
     }
 
+    private fun currentKeyName(): String {
+        val verse = HymnRepository.verseByFileName(fileName) ?: return "-"
+        return try {
+            val model = JSONObject(ScoreBundleRenderer.readScoreModel(this, verse))
+            val originalFifths = model.optInt("fifths", 0)
+            val pitchClass = Math.floorMod(originalFifths * 7 + currentTransposition, 12)
+            KEY_NAMES_BY_PITCH_CLASS[pitchClass]
+        } catch (_: Exception) {
+            "-"
+        }
+    }
+
     private fun updateControls() {
         updateTitle()
         updateTextScaleLabel()
@@ -516,8 +566,11 @@ class SheetMusicActivity : AppCompatActivity() {
         val verses = HymnRepository.versesFor(currentVerse.type, currentVerse.number)
         if (verses.isEmpty()) return
 
-        verseMatrixGrid.columnCount = minOf(8, verses.size.coerceAtLeast(1))
-        verses.forEach { verse ->
+        val columns = AppSettings.psalmGridColumns(this)
+        verseMatrixGrid.columnCount = columns
+        val tileWidth = ((resources.displayMetrics.widthPixels - dpToPx(24)) / columns.toFloat()).toInt()
+        val tileHeight = (tileWidth * 1.05f).toInt()
+        verses.forEachIndexed { index, verse ->
             val isCurrent = verse.fileName == fileName
             val button = Button(this).apply {
                 text = verse.verse.toString()
@@ -539,9 +592,10 @@ class SheetMusicActivity : AppCompatActivity() {
             verseMatrixGrid.addView(
                 button,
                 GridLayout.LayoutParams().apply {
-                    width = dpToPx(36)
-                    height = dpToPx(32)
-                    setMargins(dpToPx(2), dpToPx(3), dpToPx(2), dpToPx(3))
+                    columnSpec = GridLayout.spec(index % columns)
+                    rowSpec = GridLayout.spec(index / columns)
+                    width = tileWidth
+                    height = tileHeight
                 }
             )
         }
@@ -685,7 +739,7 @@ class SheetMusicActivity : AppCompatActivity() {
         val icon = if (showDropdown) R.drawable.ic_arrow_drop_down else 0
         listOf(psalmPickerTextView, verseTitleTextView).forEach { view ->
             view.setCompoundDrawablesRelativeWithIntrinsicBounds(0, 0, icon, 0)
-            view.compoundDrawableTintList = ColorStateList.valueOf(Color.WHITE)
+            TextViewCompat.setCompoundDrawableTintList(view, ColorStateList.valueOf(Color.WHITE))
             view.compoundDrawablePadding = 0
         }
     }
@@ -722,27 +776,57 @@ class SheetMusicActivity : AppCompatActivity() {
         } else {
             listOf(currentVerse)
         }
-        val tempoPercent = AppSettings.playbackTempo(this)
-        val transposeSemitones = currentTransposition
-        val registration = currentRegistration()
-        val effects = currentEffects()
-        val appContext = applicationContext
-        // Events bouwen op een worker: bij stacked multi-verse worden meerdere verzen geparset,
-        // wat de UI-thread vlak voor het afspelen niet mag blokkeren.
-        Thread {
-            val events = MelodyPlaybackModel.buildEvents(
-                context = appContext,
+        playbackBuildCoordinator.request(
+            PlaybackBuildRequest(
                 verses = verses,
-                tempoPercent = tempoPercent,
-                transposeSemitones = transposeSemitones
+                transposeSemitones = currentTransposition,
+                registration = currentRegistration(),
+                effects = currentEffects(),
+                tempoPercent = AppSettings.playbackTempo(this)
             )
-            if (events.isEmpty()) return@Thread
-            melodyPlayer.play(events, registration, effects) { _ ->
-                runOnUiThread { updatePlayButtonIcon() }
-            }
-        }.apply { name = "MelodyEventBuilder" }.start()
+        )
         updatePlayButtonIcon()
     }
+
+    private fun buildPlayback(request: PlaybackBuildRequest): PlaybackBuildResult? {
+        val events = MelodyPlaybackModel.buildEvents(
+            context = applicationContext,
+            verses = request.verses,
+            transposeSemitones = request.transposeSemitones
+        )
+        if (events.isEmpty()) return null
+        return PlaybackBuildResult(
+            events = events,
+            registration = request.registration,
+            effects = request.effects,
+            tempoPercent = request.tempoPercent
+        )
+    }
+
+    private fun startBuiltPlayback(result: PlaybackBuildResult) {
+        melodyPlayer.play(
+            events = result.events,
+            timbres = result.registration,
+            effects = result.effects,
+            tempoPercent = result.tempoPercent,
+            onEventChanged = { playbackId -> updatePlaybackHighlight(playbackId) },
+            onStateChanged = { runOnUiThread { updatePlayButtonIcon() } }
+        )
+    }
+
+    private fun updatePlaybackHighlight(playbackId: String?) {
+        val encodedId = JSONObject.quote(playbackId ?: "")
+        runOnUiThread {
+            val generation = ++playbackHighlightGeneration
+            webView.postDelayed({
+                if (generation == playbackHighlightGeneration) {
+                    webView.evaluateJavascript("setPlaybackHighlight($encodedId);", null)
+                }
+            }, PLAYBACK_HIGHLIGHT_DELAY_MS)
+        }
+    }
+
+    private fun playbackHighlightColor(): String = AppSettings.playbackHighlightColorHex(this)
 
     // Eén centrale bron voor register-bit -> timbre, in vaste volgorde (16' -> laag -> solo/strings/tremulant).
     private val registerTimbreOrder: List<Pair<Int, MelodyTimbre>> = listOf(
@@ -782,11 +866,14 @@ class SheetMusicActivity : AppCompatActivity() {
         melodyPlayer.stop { _ ->
             runOnUiThread { updatePlayButtonIcon() }
         }
+        updatePlaybackHighlight(null)
         updatePlayButtonIcon()
     }
 
     private fun updatePlayButtonIcon() {
-        playMelodyButton.setImageResource(if (melodyPlayer.isPlaying) R.drawable.ic_pause else R.drawable.ic_play)
+        val isPlaying = melodyPlayer.isPlaying
+        playMelodyButton.setImageResource(if (isPlaying) R.drawable.ic_stop else R.drawable.ic_play)
+        playMelodyButton.contentDescription = if (isPlaying) "Afspelen stoppen" else "Melodie afspelen"
     }
 
     private fun resetToSingleVerseDefault() {
@@ -830,6 +917,35 @@ class SheetMusicActivity : AppCompatActivity() {
         }
 
         @JavascriptInterface
+        fun getHarmonyModel(): String {
+            return try {
+                val verse = HymnRepository.verseByFileName(fileName) ?: return "{}"
+                val model = HarmonyPlaybackModel.readHarmony(this@SheetMusicActivity, verse) ?: return "{}"
+                val sopranoLines = model.optJSONArray("parts")
+                    ?.optJSONObject(0)
+                    ?.optJSONArray("lines")
+                for (lineIndex in 0 until (sopranoLines?.length() ?: 0)) {
+                    val notes = sopranoLines?.optJSONArray(lineIndex) ?: continue
+                    for (noteIndex in 0 until notes.length()) {
+                        notes.optJSONObject(noteIndex)?.put(
+                            "playbackId",
+                            "${verse.fileName}:$lineIndex:$noteIndex"
+                        )
+                    }
+                }
+                if (currentTransposition != 0) {
+                    ScoreTransposer.transposeHarmony(model, currentTransposition)
+                }
+                model.toString()
+            } catch (_: Exception) {
+                "{}"
+            }
+        }
+
+        @JavascriptInterface
+        fun getShowFourPartScore(): Boolean = false
+
+        @JavascriptInterface
         fun getVerseMatrixItems(): String {
             val currentVerse = HymnRepository.verseByFileName(fileName) ?: return "[]"
             val verses = HymnRepository.versesFor(currentVerse.type, currentVerse.number)
@@ -870,7 +986,7 @@ class SheetMusicActivity : AppCompatActivity() {
         }
 
         @JavascriptInterface
-        fun getTranspositionLabel(): String = currentTransposition.toString()
+        fun getTranspositionLabel(): String = currentKeyName()
 
         @JavascriptInterface
         fun adjustTextScale(delta: Double) {
@@ -902,6 +1018,9 @@ class SheetMusicActivity : AppCompatActivity() {
 
         @JavascriptInterface
         fun getSheetDark(): Boolean = !exportingPdf && this@SheetMusicActivity.isSheetDark()
+
+        @JavascriptInterface
+        fun getPlaybackHighlightColor(): String = playbackHighlightColor()
 
         @JavascriptInterface
         fun getShowRests(): Boolean = AppSettings.showRests(this@SheetMusicActivity)
@@ -961,6 +1080,11 @@ class SheetMusicActivity : AppCompatActivity() {
     }
 
     companion object {
+        private val KEY_NAMES_BY_PITCH_CLASS = arrayOf(
+            "C", "Des", "D", "Es", "E", "F", "Fis", "G", "As", "A", "Bes", "B"
+        )
+
+        private const val PLAYBACK_HIGHLIGHT_DELAY_MS = 200L
         const val EXTRA_FILE_NAME = "nl.psalmbladmuziek.app.extra.FILE_NAME"
         private const val DEFAULT_FILE_NAME = "Psalm001_v1.json"
         private const val DEFAULT_TEXT_SCALE = 1.75
@@ -975,6 +1099,7 @@ class SheetMusicActivity : AppCompatActivity() {
     }
 
     override fun onStop() {
+        playbackBuildCoordinator.cancel()
         super.onStop()
         if (melodyPlayer.isPlaying) {
             stopMelodyPlayback()
@@ -982,6 +1107,7 @@ class SheetMusicActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
+        playbackBuildCoordinator.close()
         melodyPlayer.stop()
         super.onDestroy()
     }

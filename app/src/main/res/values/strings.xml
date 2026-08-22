@@ -1,4 +1,29 @@
 <resources>
     <string name="app_name">Psalmverzen</string>
     <string name="header_title">Psalmen &amp; gezangen</string>
+    <string name="about_psalms">Over de psalmen</string>
+    <string name="search">Zoeken</string>
+    <string name="settings">Instellingen</string>
+    <string name="back">Terug</string>
+    <string name="search_hint">Zoeken…</string>
+    <string name="default_psalm">Psalm 1</string>
+    <string name="default_verse">vers 1</string>
+    <string name="share_pdf">Delen als PDF</string>
+    <string name="play_melody">Melodie afspelen</string>
+    <string name="text">Tekst</string>
+    <string name="scale_default">100%</string>
+    <string name="decrease">−</string>
+    <string name="increase">+</string>
+    <string name="previous">Vorige</string>
+    <string name="next">Volgende</string>
+    <string name="verses">Verzen</string>
+    <string name="about_song">Over dit lied</string>
+    <string name="category_description">Beschrijving categorie</string>
+    <string name="no_verses_added">Nog geen verzen toegevoegd.</string>
+    <string name="scripture_songs_info">Informatie over Schriftliederen</string>
+    <string name="grid_columns">%1$d kolommen</string>
+    <string name="tempo_value">Tempo %1$d</string>
+    <string name="search_result_label">%1$s %2$d:%3$d</string>
+    <string name="verse_label">Vers %1$d - %2$s</string>
+    <string name="verse_number">%1$d</string>
 </resources>

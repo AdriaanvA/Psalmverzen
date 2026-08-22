@@ -20,9 +20,15 @@ class OrganReverb private constructor(
     )
 
     fun process(dry: Double): Double {
+        return applyDryLevel(dry) + processWet(dry)
+    }
+
+    fun applyDryLevel(dry: Double): Double = dry * dryLevel
+
+    fun processWet(input: Double): Double {
         var reverberated = 0.0
         for (comb in combs) {
-            reverberated += comb.process(dry)
+            reverberated += comb.process(input)
         }
         reverberated *= 0.25
 
@@ -30,7 +36,7 @@ class OrganReverb private constructor(
             reverberated = allPass.process(reverberated)
         }
 
-        return dry * dryLevel + reverberated * wetLevel
+        return reverberated * wetLevel
     }
 
     private class CombFilter(

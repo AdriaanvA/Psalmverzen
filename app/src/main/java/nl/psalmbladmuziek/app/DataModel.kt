@@ -19,11 +19,30 @@ data class VerseGroup(
     val verses: List<Verse>
 )
 
+const val SCHRIFTLIEDEREN_ABOUT = """Deze categorie bevat Schriftliederen: liederen die in de Bijbel zelf voorkomen of waarvan de Schrift vermeldt dat zij gezongen werden.
+
+Voorbeelden hiervan zijn de lofzangen van Mozes, Mirjam, Hanna, Maria, Zacharias en Simeon, maar ook de hemelse lofzangen uit het boek Openbaring. Deze liederen nemen binnen de Bijbel een bijzondere plaats in doordat zij zowel deel uitmaken van de Schrift als bedoeld zijn om gezongen te worden.
+
+De berijmingen zijn primair gebaseerd op de Statenvertaling. Daarbij is gestreefd naar een zo getrouw mogelijke weergave van de inhoud, woordkeus en beeldspraak van de brontekst.
+
+Het doel is een zingbare Schriftberijming te bieden in de stijl van de Psalmberijming van 1773 en de Enige Gezangen. Betekenis ging daarbij voor rijm en er is bewust vermeden om nieuwe gedachten, uitleg of toepassingen toe te voegen die niet in de brontekst aanwezig zijn.
+
+Waar de oorspronkelijke tekst weinig woorden bevatte, is gebruikgemaakt van herhaling, parallelismen of bijbelse formuleringen uit hetzelfde Schriftgedeelte om een goed zingbaar geheel te vormen.
+
+Deze berijmingen beogen de bijbelse liederen zo getrouw mogelijk weer te geven binnen de Nederlandse gereformeerde psalm- en gezangtraditie."""
+
+const val PSALTERS_ABOUT = """De Psalter van 1912 (The Psalter 1912) is een invloedrijk Engelstalig psalmboek met berijmde psalmen, oorspronkelijk uitgegeven door Noord-Amerikaanse kerken. Het wordt tot op de dag van vandaag veel gebruikt in orthodox-gereformeerde kerken van Nederlandse afkomst in Noord-Amerika en daarbuiten."""
+
+
 object HymnRepository {
     const val PSALMS_TITLE = "Psalmen"
     const val HYMNS_TITLE = "Enige gezangen"
+    const val PSALTERS_TITLE = "Psalters"
 
-    val bookTitles = listOf(PSALMS_TITLE, HYMNS_TITLE)
+    fun bookTitles(context: Context): List<String> = buildList {
+        add(PSALMS_TITLE)
+        add(HYMNS_TITLE)
+    }
 
     @Volatile
     var isReady = false
@@ -105,7 +124,7 @@ object HymnRepository {
 
         // Pre-build caches
         allVerses()
-        bookTitles.forEach { groupedVersesForBook(it) }
+        listOf(PSALMS_TITLE, HYMNS_TITLE).forEach { groupedVersesForBook(it) }
         computeHymnMeta(context)
         isReady = true
     }
@@ -237,6 +256,7 @@ object HymnRepository {
             parsed += Verse(
                 type = when (item.optString("book")) {
                     "hymns", "gezangen" -> "Gezang"
+                    "psalters", "psalter" -> "Psalter"
                     else -> "Psalm"
                 },
                 number = number,
@@ -252,6 +272,7 @@ object HymnRepository {
     private fun typeForBook(bookTitle: String): String = when (bookTitle) {
         PSALMS_TITLE -> "Psalm"
         HYMNS_TITLE -> "Gezang"
+        PSALTERS_TITLE -> "Psalter"
         else -> bookTitle.removeSuffix("en")
     }
 

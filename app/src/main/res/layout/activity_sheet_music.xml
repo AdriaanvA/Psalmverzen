@@ -226,17 +226,18 @@
                         android:background="@color/panel_bg"
                         android:gravity="center_horizontal"
                         android:orientation="horizontal"
+                        android:paddingStart="12dp"
+                        android:paddingEnd="12dp"
                         android:paddingBottom="6dp">
 
                         <GridLayout
                             android:id="@+id/verseMatrixGrid"
-                            android:layout_width="wrap_content"
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:alignmentMode="alignMargins"
-                            android:columnCount="8"
                             android:gravity="center_vertical"
-                            android:paddingStart="8dp"
-                            android:paddingEnd="8dp" />
+                            android:paddingStart="0dp"
+                            android:paddingEnd="0dp" />
                     </LinearLayout>
                 </LinearLayout>
             </ScrollView>

@@ -3,6 +3,9 @@ package nl.psalmbladmuziek.app
 import android.content.Context
 import androidx.appcompat.app.AppCompatDelegate
 
+/** Eén definitie van een highlight-kleur: weergavenaam + hex. */
+data class PlaybackHighlightColor(val name: String, val hex: String)
+
 /**
  * Eenvoudige app-instellingen (SharedPreferences).
  */
@@ -15,6 +18,8 @@ object AppSettings {
     private const val KEY_KEEP_SCREEN_ON = "keep_screen_on"
     private const val KEY_LARGE_TEXT = "large_text"
     private const val KEY_SHOW_SCHRIFTLIEDEREN = "show_schriftliederen"
+    private const val KEY_SHOW_PSALTERS = "show_psalters"
+    private const val KEY_PSALM_GRID_COLUMNS = "psalm_grid_columns"
     private const val KEY_ALLOW_LINE_WRAP = "allow_line_wrap"
     private const val KEY_DARK_SHEET = "dark_sheet"
     private const val KEY_SHOW_RESTS = "show_rests"
@@ -26,6 +31,9 @@ object AppSettings {
     private const val KEY_PLAYBACK_TEMPO = "playback_tempo"
     private const val KEY_PLAYBACK_TIMBRE = "playback_timbre"
     private const val KEY_PLAYBACK_REGISTRATION = "playback_registration"
+    private const val KEY_PLAYBACK_VOICING = "playback_voicing"
+    private const val KEY_PLAYBACK_HIGHLIGHT_COLOR = "playback_highlight_color"
+    private const val KEY_SHOW_FOUR_PART_SCORE = "show_four_part_score"
     /** Themamodus: 0 = systeem volgen, 1 = altijd licht, 2 = altijd donker. */
     const val THEME_SYSTEM = 0
     const val THEME_LIGHT = 1
@@ -42,10 +50,11 @@ object AppSettings {
     const val DISPLAY_NOTES = 2
     private const val KEY_DISPLAY_MODE = "display_mode"
 
-    /** Psalmberijming: 0 = 1773 (huidig), 1 = Datheen, 2 = Revius. */
+    /** Psalmberijming: 0 = 1773 (huidig), 1 = Datheen, 2 = Revius, 3 = Marnix 1591. */
     const val PSALM_VERSION_1773 = 0
     const val PSALM_VERSION_DATHEEN = 1
     const val PSALM_VERSION_REVIUS = 2
+    const val PSALM_VERSION_MARNIX = 3
 
     /** Ritme: 0 = ritmisch, 1 = iso-ritmisch (kwartnoten als halve noten). */
     const val RHYTHM_RHYTHMIC = 0
@@ -59,6 +68,16 @@ object AppSettings {
     const val MIN_PLAYBACK_TEMPO = 50
     const val MAX_PLAYBACK_TEMPO = 150
     const val DEFAULT_PLAYBACK_TEMPO = 100
+    const val PLAYBACK_VOICING_DISCANT = 0
+    const val PLAYBACK_VOICING_CHORDS = 1
+
+    /** Enige bron voor de highlight-kleuren: volgorde = opgeslagen keuze-index. */
+    val PLAYBACK_HIGHLIGHT_COLORS = listOf(
+        PlaybackHighlightColor("IJsblauw", "#00695C"),
+        PlaybackHighlightColor("Intensblauw", "#007C91"),
+        PlaybackHighlightColor("Oranje", "#FF9800"),
+        PlaybackHighlightColor("Rood", "#D32F2F"),
+    )
 
     /** Orgelregistratie: bitmask met afzonderlijk inschakelbare registers. */
     const val REGISTER_BOURDON16 = 1
@@ -163,6 +182,30 @@ object AppSettings {
         prefs(context).edit().putBoolean(KEY_SHOW_SCHRIFTLIEDEREN, value).apply()
     }
 
+    /** Psalters (1912 en later) tonen als afzonderlijke derde categorie. */
+    fun showPsalters(context: Context): Boolean =
+        prefs(context).getBoolean(KEY_SHOW_PSALTERS, false)
+
+    fun setShowPsalters(context: Context, value: Boolean) {
+        prefs(context).edit().putBoolean(KEY_SHOW_PSALTERS, value).apply()
+    }
+
+    /** Aantal kolommen in het psalmoverzicht. */
+    const val MIN_PSALM_GRID_COLUMNS = 4
+    const val MAX_PSALM_GRID_COLUMNS = 12
+    const val DEFAULT_PSALM_GRID_COLUMNS = 7
+
+    fun psalmGridColumns(context: Context): Int =
+        prefs(context)
+            .getInt(KEY_PSALM_GRID_COLUMNS, DEFAULT_PSALM_GRID_COLUMNS)
+            .coerceIn(MIN_PSALM_GRID_COLUMNS, MAX_PSALM_GRID_COLUMNS)
+
+    fun setPsalmGridColumns(context: Context, value: Int) {
+        prefs(context).edit()
+            .putInt(KEY_PSALM_GRID_COLUMNS, value.coerceIn(MIN_PSALM_GRID_COLUMNS, MAX_PSALM_GRID_COLUMNS))
+            .apply()
+    }
+
     /** Regelafbreking toestaan: lange notenregel over 2 rijen (2e rij rechts uitgelijnd),
      *  zodat de tekst groter blijft i.p.v. sterk terug te schalen. */
     fun allowLineWrap(context: Context): Boolean =
@@ -224,7 +267,7 @@ object AppSettings {
     }
 
     fun topBarActionIcon(context: Context): Int =
-        prefs(context).getInt(KEY_TOPBAR_ACTION_ICON, TOPBAR_ACTION_SHARE)
+        prefs(context).getInt(KEY_TOPBAR_ACTION_ICON, TOPBAR_ACTION_PLAY)
 
     fun setTopBarActionIcon(context: Context, value: Int) {
         prefs(context).edit().putInt(KEY_TOPBAR_ACTION_ICON, value).apply()
@@ -237,6 +280,35 @@ object AppSettings {
 
     fun setPlaybackTempo(context: Context, value: Int) {
         prefs(context).edit().putInt(KEY_PLAYBACK_TEMPO, value.coerceIn(MIN_PLAYBACK_TEMPO, MAX_PLAYBACK_TEMPO)).apply()
+    }
+
+    fun playbackVoicing(context: Context): Int =
+        prefs(context).getInt(KEY_PLAYBACK_VOICING, PLAYBACK_VOICING_DISCANT)
+            .coerceIn(PLAYBACK_VOICING_DISCANT, PLAYBACK_VOICING_CHORDS)
+
+    fun setPlaybackVoicing(context: Context, value: Int) {
+        prefs(context).edit().putInt(KEY_PLAYBACK_VOICING, value.coerceIn(PLAYBACK_VOICING_DISCANT, PLAYBACK_VOICING_CHORDS)).apply()
+    }
+
+    fun playbackHighlightColor(context: Context): Int =
+        prefs(context).getInt(KEY_PLAYBACK_HIGHLIGHT_COLOR, 0)
+            .coerceIn(0, PLAYBACK_HIGHLIGHT_COLORS.lastIndex)
+
+    fun setPlaybackHighlightColor(context: Context, value: Int) {
+        prefs(context).edit()
+            .putInt(KEY_PLAYBACK_HIGHLIGHT_COLOR, value.coerceIn(0, PLAYBACK_HIGHLIGHT_COLORS.lastIndex))
+            .apply()
+    }
+
+    /** Hex van de gekozen highlight-kleur (voor WebView/afspelen). */
+    fun playbackHighlightColorHex(context: Context): String =
+        PLAYBACK_HIGHLIGHT_COLORS[playbackHighlightColor(context)].hex
+
+    fun showFourPartScore(context: Context): Boolean =
+        prefs(context).getBoolean(KEY_SHOW_FOUR_PART_SCORE, false)
+
+    fun setShowFourPartScore(context: Context, value: Boolean) {
+        prefs(context).edit().putBoolean(KEY_SHOW_FOUR_PART_SCORE, value).apply()
     }
 
     fun playbackRegistration(context: Context): Int {

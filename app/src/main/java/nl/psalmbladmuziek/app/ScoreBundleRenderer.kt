@@ -6,6 +6,11 @@ import org.json.JSONException
 import org.json.JSONObject
 
 object ScoreBundleRenderer {
+    private data class ScoreSource(
+        val melody: JSONObject,
+        val text: JSONObject
+    )
+
     /**
      * Bouwt een schoon, tekst-eerst geschikt notenmodel (regels -> slots -> noten).
      * Een slot is één lettergreep met de noot/noten waarop die gezongen wordt
@@ -14,9 +19,13 @@ object ScoreBundleRenderer {
      */
     fun readScoreModel(context: Context, verse: Verse): String {
         return try {
-            val text = readTextForVerse(context, verse)
-            val melody = JSONObject(ContentStorage.readBundledAsset(context, melodyFilePath(text, verse)))
-            buildScoreModelOrNull(context, melody, text, verse)?.toString() ?: "{}"
+            val source = readScoreSource(context, verse)
+            transformScoreModel(
+                melody = source.melody,
+                text = source.text,
+                verse = verse,
+                useIsometricRhythm = AppSettings.rhythmMode(context) == AppSettings.RHYTHM_ISOMETRIC
+            )?.toString() ?: "{}"
         } catch (_: Exception) {
             "{}"
         }
@@ -28,16 +37,42 @@ object ScoreBundleRenderer {
      * Geeft null als er geen toelichting is.
      */    fun readAbout(context: Context, type: String, number: Int): String? {
         return try {
-            val path = if (type == "Gezang") {
-                canonicalTextAssetPath("Gezang", number)
-            } else {
-                textAssetPath(context, "Psalm", number)
-            }
+            val path = textAssetPath(context, type, number)
             val text = JSONObject(ContentStorage.readBundledAsset(context, path))
-            text.safeString("about").trim().ifBlank { null }
+            text.safeString("about").trim().ifBlank { null }?.let(::enrichMusicalInscription)
         } catch (_: Exception) {
             null
         }
+    }
+
+    private fun enrichMusicalInscription(about: String): String {
+        val terms = listOf(
+            "Neginoth" to "Hebreeuws: עַל־הַנְּגִינוֹת; doorgaans verbonden met snaarinstrumenten",
+            "Nehiloth" to "Hebreeuws: אֶל־הַנְּחִילוֹת; muzikale betekenis niet zeker",
+            "Scheminith" to "Hebreeuws: עַל־הַשְּׁמִינִית; ‘achtste’, muzikale betekenis niet zeker",
+            "Gittith" to "Hebreeuws: עַל־הַגִּתִּית; verbonden met een muziekinstrument of met Gath",
+            "Muth-labben" to "Hebreeuws: עַל־מוּת לַבֵּן; betekenis niet zeker",
+            "Aijeleth Schahar" to "Hebreeuws: עַל־אַיֶּלֶת הַשַּׁחַר; ‘hinde van de dageraad’",
+            "Jeduthun" to "Hebreeuws: לַיְדֻתוּן; naam van een Leviet en zanger, verbonden aan de tempeldienst",
+            "Alamoth" to "Hebreeuws: עַל־עֲלָמוֹת; ‘jonge vrouwen’ of ‘meisjes’",
+            "Mahalath Leannoth" to "Hebreeuws: עַל־מָחֲלַת לְעַנּוֹת; betekenis en muzikale functie niet zeker",
+            "Mahalath" to "Hebreeuws: עַל־מָחֲלַת; betekenis en muzikale functie niet zeker",
+            "Al-taschith" to "Hebreeuws: אַל־תַּשְׁחֵת; ‘verderf niet’ of ‘breng niet om’",
+            "Jonath-elem-rechokim" to "Hebreeuws: עַל־יוֹנַת אֵלֶם רְחֹקִים; betekenis niet zeker",
+            "Shushan-eduth" to "Hebreeuws: עַל־שׁוּשַׁן עֵדוּת; ‘lelie van het getuigenis’",
+            "Neginah" to "Hebreeuws: עַל־נְגִינָה; verbonden met muziek, waarschijnlijk in het bijzonder snaarinstrumenten."
+        )
+        val citationMarker = " De Statenvertaling luidt:"
+        val citationStart = about.indexOf(citationMarker)
+        val descriptivePart = if (citationStart >= 0) about.substring(0, citationStart) else about
+        val citationPart = if (citationStart >= 0) about.substring(citationStart) else ""
+        var result = descriptivePart
+        terms.forEach { (term, explanation) ->
+            if (result.contains(term) && !result.contains("$term (Hebreeuws:")) {
+                result = result.replace(term, "$term ($explanation)")
+            }
+        }
+        return result + citationPart
     }
 
     /**
@@ -46,13 +81,12 @@ object ScoreBundleRenderer {
      */
     fun readVerseLines(context: Context, type: String, number: Int): Map<Int, List<String>> {
         return try {
-            val texts = if (type == "Psalm" && AppSettings.psalmVersion(context) != AppSettings.PSALM_VERSION_1773) {
-                listOf(
+            val texts = when {
+                type == "Psalm" && AppSettings.psalmVersion(context) != AppSettings.PSALM_VERSION_1773 -> listOf(
                     JSONObject(ContentStorage.readBundledAsset(context, textAssetPath(context, type, number))),
                     JSONObject(ContentStorage.readBundledAsset(context, canonicalTextAssetPath(type, number)))
                 )
-            } else {
-                listOf(JSONObject(ContentStorage.readBundledAsset(context, textAssetPath(context, type, number))))
+                else -> listOf(JSONObject(ContentStorage.readBundledAsset(context, textAssetPath(context, type, number))))
             }
             val map = HashMap<Int, List<String>>()
             texts.asReversed().forEach { text ->
@@ -73,10 +107,20 @@ object ScoreBundleRenderer {
         }
     }
 
-    fun readVerseText(context: Context, verse: Verse): String =
-        readVerseLines(context, verse.type, verse.number)[verse.verse]
-            ?.joinToString("\n")
+    fun readVerseText(context: Context, verse: Verse): String = try {
+        val text = readTextForVerse(context, verse)
+        val verseLines = findVerse(text.safeJSONArray("verses"), verse.verse)
+            ?.safeJSONArray("lines")
+            ?.toRawLines()
             .orEmpty()
+        val refrainLines = text.safeJSONObject("refrain")
+            ?.safeJSONArray("lines")
+            ?.toRawLines()
+            .orEmpty()
+        (verseLines + refrainLines).joinToString("\n")
+    } catch (_: Exception) {
+        ""
+    }
 
     /** Metadata uit een gezang-JSON: uitschakel-vlag + korte header-afkorting (max ~10 tekens). */
     data class HymnMeta(val disabled: Boolean, val abbreviation: String?)
@@ -93,22 +137,31 @@ object ScoreBundleRenderer {
         }
     }
 
-    fun buildScoreModelOrNull(context: Context, melody: JSONObject, text: JSONObject, verse: Verse): JSONObject? {
+    internal fun transformScoreModel(
+        melody: JSONObject,
+        text: JSONObject,
+        verse: Verse,
+        useIsometricRhythm: Boolean
+    ): JSONObject? {
         return try {
-            val melodyLines = melody.safeJSONObject("melody")?.safeJSONArray("lines")
+            val melodyLines = combinedLines(melody.safeJSONObject("melody")?.safeJSONArray("lines"), melody.safeJSONObject("refrain")?.safeJSONArray("lines"))
             val verseSource = findVerse(text.safeJSONArray("verses"), verse.verse)
-            val lyricLines = verseSource?.safeJSONArray("lines")
+            val lyricLines = combinedLines(verseSource?.safeJSONArray("lines"), text.safeJSONObject("refrain")?.safeJSONArray("lines"))
             val lineCount = minOf(melodyLines?.length() ?: 0, lyricLines?.length() ?: 0)
-            val partName = if (verse.type == "Gezang") "Gezang" else "Psalm"
+            val partName = when (verse.type) {
+                "Gezang" -> "Gezang"
+                "Psalter" -> "Psalter"
+                else -> "Psalm"
+            }
             // Sommige liederen (bv. Gezang 26 'Ere zij God') houden hun ritmische notatie,
             // ongeacht de iso-ritmische instelling. Vlag staat in het lied-JSON zelf.
             val keepRhythm = text.safeBoolean("keepRhythm")
-            val isometric = AppSettings.rhythmMode(context) == AppSettings.RHYTHM_ISOMETRIC && !keepRhythm
+            val isometric = useIsometricRhythm && !keepRhythm
 
             val linesJson = JSONArray()
             for (lineIndex in 0 until lineCount) {
-                val notes = melodyLines?.safeJSONArray(lineIndex) ?: continue
-                val line = lyricLines?.safeJSONObject(lineIndex)
+                val notes = melodyLines?.optJSONArray(lineIndex) ?: continue
+                val line = lyricLines?.optJSONObject(lineIndex)
                 val tokens = line?.safeJSONArray("tokens") ?: JSONArray()
                 val slots = JSONArray()
                 var tokenIndex = 0
@@ -116,7 +169,8 @@ object ScoreBundleRenderer {
                 for (noteIndex in 0 until notes.length()) {
                     val note = notes.safeJSONObject(noteIndex) ?: continue
                     if (note.safeBoolean("hidden")) continue
-                    val noteJson = noteJsonModel(note, isometric)
+                    val playbackId = "${verse.fileName}:$lineIndex:$noteIndex"
+                    val noteJson = noteJsonModel(note, isometric, playbackId)
                     val isRest = note.safeBoolean("rest")
                     val isTrailingVerseRest = isRest && lineIndex == lineCount - 1 && !notes.hasVisibleNoteAfter(noteIndex)
                     val hasLyric = note.safeBoolean("lyricSlot") && tokenIndex < tokens.length()
@@ -173,11 +227,12 @@ object ScoreBundleRenderer {
         }
     }
 
-    private fun noteJsonModel(note: JSONObject, isometric: Boolean): JSONObject {
+    private fun noteJsonModel(note: JSONObject, isometric: Boolean, playbackId: String): JSONObject {
         val rest = note.safeBoolean("rest")
         val originalType = note.safeString("type")
         val type = if (isometric && !rest && originalType == "quarter") "half" else originalType
         return JSONObject()
+            .put("playbackId", playbackId)
             .put("step", note.safeString("step"))
             .put("alter", if (note.safeIsNull("alter")) 0 else note.safeInt("alter"))
             .put("octave", note.safeInt("octave"))
@@ -186,12 +241,30 @@ object ScoreBundleRenderer {
             .put("rest", rest)
     }
 
+    private fun combinedLines(primary: JSONArray?, appended: JSONArray?): JSONArray {
+        val result = JSONArray()
+        listOfNotNull(primary, appended).forEach { source ->
+            for (index in 0 until source.length()) result.put(source.opt(index))
+        }
+        return result
+    }
+
+    private fun JSONArray.toRawLines(): List<String> = List(length()) { index ->
+        safeJSONObject(index)?.safeString("raw").orEmpty()
+    }
+
     private fun JSONArray.hasVisibleNoteAfter(index: Int): Boolean {
         for (nextIndex in index + 1 until length()) {
             val note = safeJSONObject(nextIndex) ?: continue
             if (!note.safeBoolean("hidden") && !note.safeBoolean("rest")) return true
         }
         return false
+    }
+
+    private fun readScoreSource(context: Context, verse: Verse): ScoreSource {
+        val text = readTextForVerse(context, verse)
+        val melody = JSONObject(ContentStorage.readBundledAsset(context, melodyFilePath(text, verse)))
+        return ScoreSource(melody = melody, text = text)
     }
 
     private fun readTextForVerse(context: Context, verse: Verse): JSONObject {
@@ -206,17 +279,25 @@ object ScoreBundleRenderer {
         }
     }
 
-    private fun textAssetPath(context: Context, type: String, number: Int): String = when (type) {
+    private fun textAssetPath(
+        context: Context,
+        type: String,
+        number: Int,
+        verseNumber: Int? = null
+    ): String = when (type) {
         "Gezang" -> canonicalTextAssetPath(type, number)
+        "Psalter" -> "content/psalters/texts/Psalter${number}.json"
         else -> when (AppSettings.psalmVersion(context)) {
             AppSettings.PSALM_VERSION_DATHEEN -> "content/psalms/datheen/texts/Psalm${pad3(number)}.json"
             AppSettings.PSALM_VERSION_REVIUS -> "content/psalms/revius/texts/Psalm${pad3(number)}.json"
+            AppSettings.PSALM_VERSION_MARNIX -> "content/psalms/marnix/texts/Psalm${pad3(number)}.json"
             else -> canonicalTextAssetPath(type, number)
         }
     }
 
     private fun canonicalTextAssetPath(type: String, number: Int): String = when (type) {
         "Gezang" -> "content/gezangen/texts/Gezang${pad3(number)}.json"
+        "Psalter" -> "content/psalters/texts/Psalter${number}.json"
         else -> "content/psalms/texts/Psalm${pad3(number)}.json"
     }
 

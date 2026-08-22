@@ -17,10 +17,10 @@ Moeite met een te hoge of lage toonsoort? Transponeer de bladmuziek eenvoudig ee
 
 ### ▶️ Mini-speler voor melodie
 Beluister de melodie direct in het bladmuziekscherm via de afspeelknop in de bovenbalk. De speler werkt live (zonder losse audiobestanden) en volgt de noten uit de huidige melodiedata.
-- **Play/Pauze in de bovenbalk:** start of stop de melodie met één tik.
+- **Play/Stop in de bovenbalk:** start of stop de melodie met één tik.
 - **Transpositie inbegrepen:** wat je ziet na transponeren, hoor je ook terug.
 - **Meerdere verzen:** bij gestapelde verzen speelt de app ze achter elkaar af met een korte adempauze.
-- **Klankkeuze:** kies uit een gesimuleerde Prestant, Holpijp, Fluit, Strings of Plenum 16'.
+- **Klankkeuze:** kies uit een gesimuleerde orgel registers.
 - **Tempo-instelling:** regel de afspeelsnelheid van 50% tot 150%.
 
 ### 🔎 Zoeken
@@ -32,7 +32,7 @@ Houd in het bladmuziekscherm het verslabel ingedrukt om meerdere verzen van deze
 ### ⚙️ Uitgebreide Configuratie
 Personaliseer de app volledig naar jouw wens via het instellingenmenu:
 - **Weergavemodi:** kies uit tekst met noten, alleen tekst of alleen noten.
-- **Psalmberijmingen:** wissel tussen de volgende berijmingen 1773 (oude berijming), Datheen en Revius; 1773 is de standaard. Alle drie gebruiken dezelfde Geneefse melodieën.
+- **Psalmberijmingen:** wissel tussen de volgende berijmingen 1773 (oude berijming), Datheen, Revius en Marnix; 1773 is de standaard. Alle vier gebruiken dezelfde Geneefse melodieën.
 - **Ritme:** toon de melodieën ritmisch of iso-ritmisch.
 - **Bovenbalk-knop (portret):** kies of de knop delen of afspelen; in landscape zijn delen en afspelen beide zichtbaar.
 - **Afspeelinstellingen:** stel tempo en klank van de melodie-speler in.
