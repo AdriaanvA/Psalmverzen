@@ -5,7 +5,6 @@
     android:id="@+id/mainRoot"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/app_bg"
     android:orientation="vertical"
     tools:context=".MainActivity">
 
@@ -46,7 +45,7 @@
             android:background="?attr/selectableItemBackgroundBorderless"
             android:src="@drawable/ic_info"
             android:scaleType="centerInside"
-            android:contentDescription="Over de psalmen" />
+            android:contentDescription="@string/about_psalms" />
 
         <ImageButton
             android:id="@+id/searchButton"
@@ -55,7 +54,7 @@
             android:background="?attr/selectableItemBackgroundBorderless"
             android:src="@drawable/ic_search"
             android:scaleType="centerInside"
-            android:contentDescription="Zoeken" />
+            android:contentDescription="@string/search" />
 
         <ImageButton
             android:id="@+id/settingsButton"
@@ -64,7 +63,7 @@
             android:background="?attr/selectableItemBackgroundBorderless"
             android:src="@drawable/ic_settings"
             android:scaleType="centerInside"
-            android:contentDescription="Instellingen" />
+            android:contentDescription="@string/settings" />
     </LinearLayout>
 
     <com.google.android.material.tabs.TabLayout

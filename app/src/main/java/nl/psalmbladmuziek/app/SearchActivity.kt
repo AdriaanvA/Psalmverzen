@@ -40,7 +40,7 @@ class SearchActivity : AppCompatActivity() {
                 itemView.findViewById<TextView>(R.id.resultFirstLineTextView).text =
                     highlight(result.displayLine, currentQuery)
                 itemView.findViewById<TextView>(R.id.resultLabelTextView).text =
-                    "${result.verse.type} ${result.verse.number}:${result.verse.verse}"
+                    getString(R.string.search_result_label, result.verse.type, result.verse.number, result.verse.verse)
                 return itemView
             }
         }

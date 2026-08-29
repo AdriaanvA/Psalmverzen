@@ -87,6 +87,8 @@ class SheetMusicActivity : AppCompatActivity() {
     private var showNotes = true
     private var exportingPdf = false
     private var stackedVerseFileNames: LinkedHashSet<String>? = null
+    // Cache van het (dure) score-model per vers + ritme + berijming; sleutel dekt alle invoer.
+    private val scoreModelCache = HashMap<String, String>()
 
     private var isFullscreen = false
     private val fullscreenBackCallback = object : OnBackPressedCallback(false) {
@@ -537,10 +539,15 @@ class SheetMusicActivity : AppCompatActivity() {
         webView.evaluateJavascript("updateScore();", null)
     }
 
+    private fun scoreModelJson(verse: Verse): String {
+        val key = "${verse.fileName}|${AppSettings.rhythmMode(this)}|${AppSettings.psalmVersion(this)}"
+        return scoreModelCache.getOrPut(key) { ScoreBundleRenderer.readScoreModel(this, verse) }
+    }
+
     private fun currentKeyName(): String {
         val verse = HymnRepository.verseByFileName(fileName) ?: return "-"
         return try {
-            val model = JSONObject(ScoreBundleRenderer.readScoreModel(this, verse))
+            val model = JSONObject(scoreModelJson(verse))
             val originalFifths = model.optInt("fifths", 0)
             val pitchClass = Math.floorMod(originalFifths * 7 + currentTransposition, 12)
             KEY_NAMES_BY_PITCH_CLASS[pitchClass]
@@ -640,7 +647,7 @@ class SheetMusicActivity : AppCompatActivity() {
         val sb = SpannableStringBuilder()
         sb.append("Vers ${verse.verse}\n")
         try {
-            val model = JSONObject(ScoreBundleRenderer.readScoreModel(this, verse))
+            val model = JSONObject(scoreModelJson(verse))
             val lines = model.getJSONArray("lines")
             for (li in 0 until lines.length()) {
                 val slots = lines.getJSONObject(li).getJSONArray("slots")
@@ -905,7 +912,7 @@ class SheetMusicActivity : AppCompatActivity() {
                 val model = if (shouldRenderStackedScoreInNotes(verse)) {
                     buildMergedScoreModel(selectedVersesForCurrentSong(verse))
                 } else {
-                    JSONObject(ScoreBundleRenderer.readScoreModel(this@SheetMusicActivity, verse))
+                    JSONObject(scoreModelJson(verse))
                 }
                 if (currentTransposition != 0) {
                     ScoreTransposer.transpose(model, currentTransposition)
@@ -1055,11 +1062,11 @@ class SheetMusicActivity : AppCompatActivity() {
     private fun buildMergedScoreModel(verses: List<Verse>): JSONObject {
         if (verses.isEmpty()) return JSONObject()
 
-        val firstModel = JSONObject(ScoreBundleRenderer.readScoreModel(this, verses.first()))
+        val firstModel = JSONObject(scoreModelJson(verses.first()))
         val mergedLines = JSONArray()
 
         verses.forEach { selectedVerse ->
-            val verseModel = JSONObject(ScoreBundleRenderer.readScoreModel(this, selectedVerse))
+            val verseModel = JSONObject(scoreModelJson(selectedVerse))
             val verseLines = verseModel.optJSONArray("lines") ?: JSONArray()
             for (index in 0 until verseLines.length()) {
                 val copiedLine = JSONObject(verseLines.getJSONObject(index).toString())

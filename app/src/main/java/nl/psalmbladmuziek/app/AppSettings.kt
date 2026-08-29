@@ -39,10 +39,11 @@ object AppSettings {
     const val THEME_LIGHT = 1
     const val THEME_DARK = 2
 
-    /** Tekstuitlijning in de bladmuziek: 0 = links, 1 = centrisch, 2 = vullend. */
+    /** Tekstuitlijning in de bladmuziek: 0 = links, 1 = centrisch, 2 = vullend, 3 = doorlopend. */
     const val ALIGN_LEFT = 0
     const val ALIGN_CENTER = 1
     const val ALIGN_FILL = 2
+    const val ALIGN_CONTINUOUS = 3
 
     /** Weergave: 0 = beide (noten + tekst), 1 = alleen tekst, 2 = alleen noten. */
     const val DISPLAY_BOTH = 0
@@ -233,7 +234,7 @@ object AppSettings {
         prefs(context).edit().putBoolean(KEY_SHOW_RESTS, value).apply()
     }
 
-    /** Tekstuitlijning in de bladmuziek (0=links, 1=centrisch, 2=vullend). Standaard centrisch. */
+    /** Tekstuitlijning in de bladmuziek (0=links, 1=centrisch, 2=vullend, 3=doorlopend). Standaard centrisch. */
     fun textAlign(context: Context): Int =
         prefs(context).getInt(KEY_TEXT_ALIGN, ALIGN_CENTER)
 
@@ -352,7 +353,8 @@ object AppSettings {
         return result
     }
 
-    private fun playbackRegisterWeight(register: Int): Int = when (register) {
+    /** Gewicht van een register in de registratie-limiet. Enige bron; ook door de UI gebruikt. */
+    fun playbackRegisterWeight(register: Int): Int = when (register) {
         REGISTER_TREMULANT -> 0
         REGISTER_ORCHESTRAL_STRINGS -> 2
         else -> 1

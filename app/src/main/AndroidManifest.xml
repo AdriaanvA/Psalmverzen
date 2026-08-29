@@ -16,7 +16,8 @@
             android:name=".SheetMusicActivity"
             android:exported="false"
             android:configChanges="orientation|screenSize|screenLayout|keyboardHidden"
-            android:finishOnTaskLaunch="true" />
+            android:finishOnTaskLaunch="true"
+            android:theme="@style/Theme.PsalmenApp.SheetMusic" />
         <activity
             android:name=".VerseListActivity"
             android:exported="false" />

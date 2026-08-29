@@ -40,15 +40,14 @@ De psalmberijming van Philips van Marnix van Sint Aldegonde (1591) is een Nederl
  * zodat het actieve scherm zich direct kan bijwerken (bijv. alleen-tekst/scherm-aan).
  */
 fun AppCompatActivity.showAppSettingsDialog(onChanged: () -> Unit = {}) {
-    val density = resources.displayMetrics.density
-    fun dp(value: Int) = (value * density).toInt()
+    fun dp(value: Int) = dpToPx(value)
 
     val root = LinearLayout(this).apply {
         orientation = LinearLayout.VERTICAL
         setPadding(dp(20), dp(8), dp(20), 0)
     }
 
-    fun toggleRowWithInfo(label: String, initial: Boolean, onToggle: (Boolean) -> Unit, onInfo: (() -> Unit)?) {
+    fun toggleRowWithInfo(label: String, initial: Boolean, onToggle: (Boolean) -> Unit, onInfo: (() -> Unit)?): View {
         val row = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
@@ -89,16 +88,14 @@ fun AppCompatActivity.showAppSettingsDialog(onChanged: () -> Unit = {}) {
         }
         row.addView(sw)
         root.addView(row)
+        return row
     }
 
-    fun toggleRow(label: String, initial: Boolean, onToggle: (Boolean) -> Unit) {
+    fun toggleRow(label: String, initial: Boolean, onToggle: (Boolean) -> Unit): View =
         toggleRowWithInfo(label, initial, onToggle, null)
-    }
 
     fun sectionHeader(title: String) {
-        val tv = android.util.TypedValue()
-        val activeColor = if (theme.resolveAttribute(android.R.attr.colorControlActivated, tv, true)) tv.data
-            else ContextCompat.getColor(this, R.color.settings_blue_bright)
+        val activeColor = settingsAccentColor()
         root.addView(TextView(this).apply {
             text = title
             textSize = 13f
@@ -156,9 +153,7 @@ fun AppCompatActivity.showAppSettingsDialog(onChanged: () -> Unit = {}) {
                 layoutParams = LinearLayout.LayoutParams(0, 1, 1f)
             })
         }
-        val tv = android.util.TypedValue()
-        val activeColor = if (theme.resolveAttribute(android.R.attr.colorControlActivated, tv, true)) tv.data
-            else ContextCompat.getColor(this, R.color.settings_blue_bright)
+        val activeColor = settingsAccentColor()
         val valueView = TextView(this).apply {
             text = value()
             textSize = 16f
@@ -185,11 +180,7 @@ fun AppCompatActivity.showAppSettingsDialog(onChanged: () -> Unit = {}) {
         AppSettings.setKeepScreenOn(this, it); onChanged()
     }
     chooserRow("Psalmberijming", { psalmVersionShortName(AppSettings.psalmVersion(this)) }, onInfo = {
-        AlertDialog.Builder(this)
-            .setTitle("Psalmberijmingen")
-            .setMessage(PSALM_RENDITIONS_ABOUT)
-            .setPositiveButton("Sluiten", null)
-            .show()
+        showInfoDialog("Psalmberijmingen", PSALM_RENDITIONS_ABOUT)
     }) { valueView ->
         showPsalmVersionChooser {
             valueView.text = psalmVersionShortName(AppSettings.psalmVersion(this)); onChanged()
@@ -200,11 +191,7 @@ fun AppCompatActivity.showAppSettingsDialog(onChanged: () -> Unit = {}) {
         AppSettings.showSchriftliederen(this),
         { AppSettings.setShowSchriftliederen(this, it); onChanged() },
         {
-            AlertDialog.Builder(this)
-                .setTitle("Schriftliederen")
-                .setMessage(SCHRIFTLIEDEREN_ABOUT)
-                .setPositiveButton("Sluiten", null)
-                .show()
+            showInfoDialog("Schriftliederen", SCHRIFTLIEDEREN_ABOUT)
         }
     )
 
@@ -241,20 +228,29 @@ fun AppCompatActivity.showAppSettingsDialog(onChanged: () -> Unit = {}) {
     toggleRow("Grote letters", AppSettings.largeText(this)) {
         AppSettings.setLargeText(this, it); onChanged()
     }
-    toggleRow("Regelafbreking toestaan", AppSettings.allowLineWrap(this)) {
+    val allowWrapRow = toggleRow("Regelafbreking toestaan", AppSettings.allowLineWrap(this)) {
         AppSettings.setAllowLineWrap(this, it); onChanged()
     }
-    toggleRow("Twee zinnen op één regel", AppSettings.combineLines(this)) {
+    val combineRow = toggleRow("Twee zinnen op één regel", AppSettings.combineLines(this)) {
         AppSettings.setCombineLines(this, it); onChanged()
+    }
+    // Regelafbreking/combineren doen niets bij doorlopende uitlijning; verberg ze dan.
+    fun applyAlignDependentVisibility() {
+        val hide = AppSettings.textAlign(this) == AppSettings.ALIGN_CONTINUOUS
+        allowWrapRow.visibility = if (hide) View.GONE else View.VISIBLE
+        combineRow.visibility = if (hide) View.GONE else View.VISIBLE
     }
     toggleRow("Rusttekens weergeven", AppSettings.showRests(this)) {
         AppSettings.setShowRests(this, it); onChanged()
     }
     chooserRow("Tekst uitlijning", { textAlignName(AppSettings.textAlign(this)) }) { valueView ->
         showTextAlignChooser {
-            valueView.text = textAlignName(AppSettings.textAlign(this)); onChanged()
+            valueView.text = textAlignName(AppSettings.textAlign(this))
+            applyAlignDependentVisibility()
+            onChanged()
         }
     }
+    applyAlignDependentVisibility()
 
     // --- Donker thema ---
     sectionHeader("Donker thema")
@@ -317,6 +313,13 @@ fun AppCompatActivity.showAppSettingsDialog(onChanged: () -> Unit = {}) {
     dialog.show()
 }
 
+/** Accentkleur van het instellingenmenu (thema-accent, met fallback). Eén bron. */
+private fun AppCompatActivity.settingsAccentColor(): Int {
+    val tv = android.util.TypedValue()
+    return if (theme.resolveAttribute(android.R.attr.colorControlActivated, tv, true)) tv.data
+        else ContextCompat.getColor(this, R.color.settings_blue_bright)
+}
+
 private fun themeModeName(mode: Int): String = when (mode) {
     AppSettings.THEME_LIGHT -> "Licht"
     AppSettings.THEME_DARK -> "Donker"
@@ -327,13 +330,6 @@ private fun displayModeName(mode: Int): String = when (mode) {
     AppSettings.DISPLAY_TEXT -> "Tekst"
     AppSettings.DISPLAY_NOTES -> "Noten"
     else -> "Beide"
-}
-
-private fun psalmVersionName(version: Int): String = when (version) {
-    AppSettings.PSALM_VERSION_DATHEEN -> "Datheen — 1566"
-    AppSettings.PSALM_VERSION_REVIUS -> "Revius — 1640"
-    AppSettings.PSALM_VERSION_MARNIX -> "Marnix — 1591"
-    else -> "1773 — Oude berijming"
 }
 
 private fun psalmVersionShortName(version: Int): String = when (version) {
@@ -353,12 +349,8 @@ private fun topBarActionName(value: Int): String = when (value) {
     else -> "Delen"
 }
 
-private fun playbackVoicingName(value: Int): String = when (value) {
-    AppSettings.PLAYBACK_VOICING_CHORDS -> "Akkoorden"
-    else -> "Discant"
-}
-
-private data class RegistrationOption(val label: String, val mask: Int, val weight: Int = 1) {
+private data class RegistrationOption(val label: String, val mask: Int) {
+    val weight: Int get() = AppSettings.playbackRegisterWeight(mask)
     override fun toString(): String = label
 }
 
@@ -371,9 +363,9 @@ private val registrationOptions = arrayOf(
     RegistrationOption("Octaaf 4'", AppSettings.REGISTER_OCTAAF4),
     RegistrationOption("Fluit 4'", AppSettings.REGISTER_FLUIT4),
     RegistrationOption("Quintfluit 3'", AppSettings.REGISTER_QUINTFLUIT),
-    RegistrationOption("Tremulant", AppSettings.REGISTER_TREMULANT, weight = 0),
+    RegistrationOption("Tremulant", AppSettings.REGISTER_TREMULANT),
     RegistrationOption("Fluit solo", AppSettings.REGISTER_FLUIT_SOLO),
-    RegistrationOption("Orchestral strings", AppSettings.REGISTER_ORCHESTRAL_STRINGS, weight = 2)
+    RegistrationOption("Orchestral strings", AppSettings.REGISTER_ORCHESTRAL_STRINGS)
 )
 
 private fun registrationName(value: Int): String {
@@ -385,70 +377,48 @@ private fun registrationName(value: Int): String {
     }
 }
 
-private fun AppCompatActivity.showDisplayModeChooser(onChanged: () -> Unit) {
-    val options = arrayOf("Beide", "Tekst", "Noten")
+/** Eén generieke single-choice instellingdialoog; vervangt de losse chooser-boilerplate. */
+private fun AppCompatActivity.showSingleChoiceSetting(
+    title: String,
+    options: Array<String>,
+    current: Int,
+    onSelect: (Int) -> Unit
+) {
     AlertDialog.Builder(this)
-        .setTitle("Weergave")
-        .setSingleChoiceItems(options, AppSettings.displayMode(this)) { dialog, which ->
-            AppSettings.setDisplayMode(this, which)
+        .setTitle(title)
+        .setSingleChoiceItems(options, current) { dialog, which ->
+            onSelect(which)
             dialog.dismiss()
-            onChanged()
         }
         .show()
 }
 
-private fun AppCompatActivity.showPsalmVersionChooser(onChanged: () -> Unit) {
-    val options = arrayOf("1773 — Oude berijming", "Datheen — 1566", "Revius — 1640", "Marnix — 1591")
-    AlertDialog.Builder(this)
-        .setTitle("Psalmberijming")
-        .setSingleChoiceItems(options, AppSettings.psalmVersion(this)) { dialog, which ->
-            AppSettings.setPsalmVersion(this, which)
-            VerseSearchIndex.clear()
-            dialog.dismiss()
-            onChanged()
-        }
-        .show()
-}
+private fun AppCompatActivity.showDisplayModeChooser(onChanged: () -> Unit) =
+    showSingleChoiceSetting("Weergave", arrayOf("Beide", "Tekst", "Noten"), AppSettings.displayMode(this)) {
+        AppSettings.setDisplayMode(this, it); onChanged()
+    }
 
-private fun AppCompatActivity.showRhythmModeChooser(onChanged: () -> Unit) {
-    val options = arrayOf("Ritmisch", "Iso-ritmisch")
-    AlertDialog.Builder(this)
-        .setTitle("Ritme")
-        .setSingleChoiceItems(options, AppSettings.rhythmMode(this)) { dialog, which ->
-            AppSettings.setRhythmMode(this, which)
-            dialog.dismiss()
-            onChanged()
-        }
-        .show()
-}
+private fun AppCompatActivity.showPsalmVersionChooser(onChanged: () -> Unit) =
+    showSingleChoiceSetting(
+        "Psalmberijming",
+        arrayOf("1773 — Oude berijming", "Datheen — 1566", "Revius — 1640", "Marnix — 1591"),
+        AppSettings.psalmVersion(this)
+    ) {
+        AppSettings.setPsalmVersion(this, it); VerseSearchIndex.clear(); onChanged()
+    }
 
-private fun AppCompatActivity.showPlaybackVoicingChooser(onChanged: () -> Unit) {
-    val options = arrayOf("Discant", "Akkoorden")
-    AlertDialog.Builder(this)
-        .setTitle("Afspeelwijze")
-        .setSingleChoiceItems(options, AppSettings.playbackVoicing(this)) { dialog, which ->
-            AppSettings.setPlaybackVoicing(this, which)
-            dialog.dismiss()
-            onChanged()
-        }
-        .show()
-}
+private fun AppCompatActivity.showRhythmModeChooser(onChanged: () -> Unit) =
+    showSingleChoiceSetting("Ritme", arrayOf("Ritmisch", "Iso-ritmisch"), AppSettings.rhythmMode(this)) {
+        AppSettings.setRhythmMode(this, it); onChanged()
+    }
 
-private fun AppCompatActivity.showTopBarActionChooser(onChanged: () -> Unit) {
-    val options = arrayOf("Delen", "Afspelen")
-    AlertDialog.Builder(this)
-        .setTitle("Bovenbalk knop")
-        .setSingleChoiceItems(options, AppSettings.topBarActionIcon(this)) { dialog, which ->
-            AppSettings.setTopBarActionIcon(this, which)
-            dialog.dismiss()
-            onChanged()
-        }
-        .show()
-}
+private fun AppCompatActivity.showTopBarActionChooser(onChanged: () -> Unit) =
+    showSingleChoiceSetting("Bovenbalk knop", arrayOf("Delen", "Afspelen"), AppSettings.topBarActionIcon(this)) {
+        AppSettings.setTopBarActionIcon(this, it); onChanged()
+    }
 
 private fun AppCompatActivity.showTempoChooser(onChanged: () -> Unit) {
-    val density = resources.displayMetrics.density
-    fun dp(value: Int) = (value * density).toInt()
+    fun dp(value: Int) = dpToPx(value)
 
     val root = LinearLayout(this).apply {
         orientation = LinearLayout.VERTICAL
@@ -511,10 +481,9 @@ private fun AppCompatActivity.showPlaybackHighlightColorChooser(onChanged: () ->
 }
 
 private fun AppCompatActivity.showPsalmGridColumnsChooser(onChanged: () -> Unit) {
-    val density = resources.displayMetrics.density
     val root = LinearLayout(this).apply {
         orientation = LinearLayout.VERTICAL
-        setPadding((24 * density).toInt(), (8 * density).toInt(), (24 * density).toInt(), 0)
+        setPadding(dpToPx(24), dpToPx(8), dpToPx(24), 0)
     }
     val valueView = TextView(this).apply {
         textSize = 16f
@@ -547,8 +516,7 @@ private fun AppCompatActivity.showPsalmGridColumnsChooser(onChanged: () -> Unit)
 }
 
 private fun AppCompatActivity.showRegistrationChooser(onChanged: () -> Unit) {
-    val density = resources.displayMetrics.density
-    fun dp(value: Int) = (value * density).toInt()
+    fun dp(value: Int) = dpToPx(value)
 
     var selectedMask = AppSettings.playbackRegistration(this)
     fun selectedWeight(): Int = registrationOptions.sumOf { if (selectedMask and it.mask != 0) it.weight else 0 }
@@ -605,33 +573,23 @@ private fun AppCompatActivity.showRegistrationChooser(onChanged: () -> Unit) {
         .show()
 }
 
-private fun AppCompatActivity.showThemeChooser(onChanged: () -> Unit) {
-    val options = arrayOf("Systeem volgen", "Licht", "Donker")
-    AlertDialog.Builder(this)
-        .setTitle("Thema (bladmuziek blijft licht)")
-        .setSingleChoiceItems(options, AppSettings.themeMode(this)) { dialog, which ->
-            AppSettings.setThemeMode(this, which)
-            AppSettings.applyThemeMode(this)
-            dialog.dismiss()
-            onChanged()
-        }
-        .show()
-}
+private fun AppCompatActivity.showThemeChooser(onChanged: () -> Unit) =
+    showSingleChoiceSetting(
+        "Thema (bladmuziek blijft licht)",
+        arrayOf("Systeem volgen", "Licht", "Donker"),
+        AppSettings.themeMode(this)
+    ) {
+        AppSettings.setThemeMode(this, it); AppSettings.applyThemeMode(this); onChanged()
+    }
 
 private fun textAlignName(align: Int): String = when (align) {
     AppSettings.ALIGN_LEFT -> "Links"
     AppSettings.ALIGN_FILL -> "Vullend"
+    AppSettings.ALIGN_CONTINUOUS -> "Doorlopend"
     else -> "Centrisch"
 }
 
-private fun AppCompatActivity.showTextAlignChooser(onChanged: () -> Unit) {
-    val options = arrayOf("Links", "Centrisch", "Vullend")
-    AlertDialog.Builder(this)
-        .setTitle("Tekst uitlijning")
-        .setSingleChoiceItems(options, AppSettings.textAlign(this)) { dialog, which ->
-            AppSettings.setTextAlign(this, which)
-            dialog.dismiss()
-            onChanged()
-        }
-        .show()
-}
+private fun AppCompatActivity.showTextAlignChooser(onChanged: () -> Unit) =
+    showSingleChoiceSetting("Tekst uitlijning", arrayOf("Links", "Centrisch", "Vullend", "Doorlopend"), AppSettings.textAlign(this)) {
+        AppSettings.setTextAlign(this, it); onChanged()
+    }

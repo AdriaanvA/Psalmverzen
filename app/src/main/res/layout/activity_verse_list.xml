@@ -3,7 +3,6 @@
     android:id="@+id/verseListRoot"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/app_bg"
     android:orientation="vertical">
 
     <View
@@ -28,7 +27,7 @@
             android:background="?attr/selectableItemBackgroundBorderless"
             android:src="@drawable/ic_arrow_back"
             android:scaleType="centerInside"
-            android:contentDescription="Terug" />
+            android:contentDescription="@string/back" />
 
         <TextView
             android:id="@+id/titleTextView"
@@ -36,7 +35,7 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
             android:layout_weight="1"
-            android:text="Verzen"
+            android:text="@string/verses"
             android:textColor="#FFFFFF"
             android:textSize="20sp"
             android:textStyle="bold" />
@@ -49,7 +48,7 @@
             android:src="@drawable/ic_info"
             android:scaleType="centerInside"
             android:visibility="gone"
-            android:contentDescription="Over dit lied" />
+            android:contentDescription="@string/about_song" />
     </LinearLayout>
 
     <ListView

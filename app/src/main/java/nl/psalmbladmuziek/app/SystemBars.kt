@@ -2,8 +2,8 @@ package nl.psalmbladmuziek.app
 
 import android.app.Activity
 import android.content.Context
-import android.os.Build
 import android.view.View
+import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.ColorUtils
 import androidx.core.view.ViewCompat
@@ -31,12 +31,9 @@ private fun Activity.applyLegacyBarColors(statusBarColor: Int, navigationBarColo
     window.navigationBarColor = navigationBarColor
 }
 
-@Suppress("DEPRECATION")
 private fun Activity.applyBarContrastPolicy() {
-    if (Build.VERSION.SDK_INT >= 29) {
-        window.isStatusBarContrastEnforced = true
-        window.isNavigationBarContrastEnforced = false
-    }
+    window.isStatusBarContrastEnforced = true
+    window.isNavigationBarContrastEnforced = false
 }
 
 /** Laat de statusbalk-achtergrond even hoog worden als de systeem-statusbalk (edge-to-edge). */
@@ -51,3 +48,12 @@ fun Activity.bindStatusBarBackground(root: View, statusBarBackground: View) {
 }
 
 fun Context.dpToPx(value: Int): Int = (value * resources.displayMetrics.density).toInt()
+
+/** Eenvoudige informatiedialoog (titel + tekst + Sluiten); één bron voor de 'over'-popups. */
+fun Context.showInfoDialog(title: CharSequence, message: CharSequence) {
+    AlertDialog.Builder(this)
+        .setTitle(title)
+        .setMessage(message)
+        .setPositiveButton("Sluiten", null)
+        .show()
+}

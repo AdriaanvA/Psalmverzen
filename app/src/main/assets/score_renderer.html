@@ -587,7 +587,7 @@
             lines: preprocessRests(model.lines || [], showRests)
         });
 
-        var TEXT_ALIGN = 1; // 0=links, 1=centrisch, 2=vullend
+        var TEXT_ALIGN = 1; // 0=links, 1=centrisch, 2=vullend, 3=doorlopend
         try { TEXT_ALIGN = Android.getTextAlign(); } catch (e) { TEXT_ALIGN = 1; }
 
         var width = document.getElementById("root").clientWidth || window.innerWidth || 360;
@@ -620,8 +620,56 @@
         // Fysieke rijen: normaal 1 rij per modelregel. Met 'regelafbreking toestaan'
         // wordt een te lange regel over 2 rijen verdeeld (2e rij rechts uitgelijnd),
         // zodat de tekst groter kan blijven i.p.v. sterk terug te schalen.
-        function buildRows() {
+        // Belangrijk: de wrap-breuk wordt berekend met de actuele, effectieve metrics
+        // (na zoom/schaal), niet alleen met de basis-waarden. Anders blijft de split
+        // vast staan bij in-/uitzoomen.
+        function buildRows(layoutMetrics) {
+            var metrics = layoutMetrics || baseMetrics;
             var rows = [];
+
+            if (TEXT_ALIGN === 3 && model.multiVerse !== true) {
+                // Doorlopend: alle slots van het vers als één stroom; greedy over de
+                // balken verdeeld. Een regelbreuk mag op elke slot-grens vallen.
+                var flow = [];
+                var flowVerseNumber = null;
+                for (var li = 0; li < model.lines.length; li++) {
+                    var srcLine = model.lines[li] || {};
+                    if (srcLine.verseNumber != null && flowVerseNumber == null) {
+                        flowVerseNumber = srcLine.verseNumber;
+                    }
+                    var lineSlots = srcLine.slots || [];
+                    for (var si = 0; si < lineSlots.length; si++) {
+                        flow.push(lineSlots[si]);
+                    }
+                }
+                var pos = 0;
+                while (pos < flow.length) {
+                    var showClefRow = (rows.length === 0);
+                    var availRow = Math.max(1, width - staffStartXFor(showClefRow) - RIGHT_MARGIN);
+                    var take = 1;
+                    while (pos + take < flow.length) {
+                        var candidate = flow.slice(pos, pos + take + 1);
+                        if (computeLayout({ slots: candidate }, metrics).naturalWidth > availRow) { break; }
+                        take++;
+                    }
+                    // Breuk midden in een woord: volgende slot zet hetzelfde woord voort.
+                    var nextSlot = (pos + take < flow.length) ? flow[pos + take] : null;
+                    var hyphenEnd = !!(nextSlot && !startsNewWord(nextSlot) && nextSlot.text);
+                    rows.push({
+                        slots: flow.slice(pos, pos + take),
+                        showClef: showClefRow,
+                        cont: false,
+                        verseStart: rows.length === 0,
+                        verseNumber: rows.length === 0 ? flowVerseNumber : undefined,
+                        verseEnd: false,
+                        hyphenEnd: hyphenEnd
+                    });
+                    pos += take;
+                }
+                if (rows.length) { rows[rows.length - 1].verseEnd = true; }
+                return rows;
+            }
+
             // 'Twee zinnen op één regel': combineer opeenvolgende regels (max 2) als ze
             // samen op de breedte passen (handig in landscape/op tablets).
             if (COMBINE_LINES && model.multiVerse !== true) {
@@ -632,7 +680,7 @@
                     var slotsK = (model.lines[k].slots || []).slice();
                     if (k + 1 < model.lines.length) {
                         var combinedK = slotsK.concat(model.lines[k + 1].slots || []);
-                        var natK = computeLayout({ slots: combinedK }, baseMetrics).naturalWidth;
+                        var natK = computeLayout({ slots: combinedK }, metrics).naturalWidth;
                         if (natK <= availK) {
                             rows.push({
                                 slots: combinedK,
@@ -663,7 +711,7 @@
                 var slots = sourceLine.slots || [];
                 var showClefLine = (i === 0);
                 var avail = Math.max(1, width - staffStartXFor(showClefLine) - RIGHT_MARGIN);
-                var natural = computeLayout(model.lines[i], baseMetrics).naturalWidth;
+                var natural = computeLayout(model.lines[i], metrics).naturalWidth;
                 if (ALLOW_WRAP && natural > avail && slots.length >= 4) {
                     var half = slots.length / 2;
                     var best = -1, bestd = 1e9;
@@ -704,7 +752,7 @@
             }
             return rows;
         }
-        var rows = buildRows();
+        var rows = buildRows(baseMetrics);
 
         var extents = rows.map(function(r) { return lineVerticalExtent({ slots: r.slots }); });
         var staffTops = [];
@@ -785,10 +833,11 @@
             minSlot: MIN_SLOT * globalScale
         };
 
-        // Links en centrisch gebruiken dezelfde compacte spatiering: de langste regel
-        // bepaalt de schaal; centrisch verplaatst daarna alleen de complete regel.
+        // Links, centrisch en doorlopend gebruiken dezelfde compacte spatiering: de
+        // langste regel bepaalt de schaal; daarna wordt de complete regel links of
+        // gecentreerd geplaatst. Bij doorlopend blijven vervolgregels als één stroom lopen.
         var leftFillStretch = 1;
-        if (TEXT_ALIGN === 0 || TEXT_ALIGN === 1) {
+        if (TEXT_ALIGN === 0 || TEXT_ALIGN === 1 || TEXT_ALIGN === 3) {
             var maxNat = 0, availAtMax = 1;
             rows.forEach(function(r) {
                 if (r.cont) return;
@@ -811,9 +860,16 @@
                 : 1;
             var stretch, xOffset;
             if (r.cont) {
-                // 2e rij van een afgebroken regel: niet oprekken, rechts uitlijnen.
-                stretch = Math.min(1, rawStretch);
-                xOffset = Math.max(0, available - layout.naturalWidth * stretch);
+                if (TEXT_ALIGN === 3) {
+                    // Doorlopend: vervolgregels blijven in dezelfde stroom lopen in plaats
+                    // van als een losse tweede regel rechts uitgelijnd te worden.
+                    stretch = Math.min(relativeShortLineStretch * leftFillStretch, rawStretch);
+                    xOffset = 0;
+                } else {
+                    // 2e rij van een afgebroken regel: niet oprekken, rechts uitlijnen.
+                    stretch = Math.min(1, rawStretch);
+                    xOffset = Math.max(0, available - layout.naturalWidth * stretch);
+                }
             } else if (TEXT_ALIGN === 2) {
                 // Vullend: rek elke regel op tot de volle breedte.
                 stretch = rawStretch;
@@ -821,6 +877,11 @@
             } else if (TEXT_ALIGN === 0) {
                 // Links: langste regel bepaalt de schaal; korte regels krijgen beperkte extra ruimte.
                 stretch = Math.min(relativeShortLineStretch * leftFillStretch, rawStretch);
+                xOffset = 0;
+            } else if (TEXT_ALIGN === 3) {
+                // Doorlopend: natuurlijke links-uitlijning; nooit kunstmatig oprekken,
+                // zodat de laatste (kortere) regel gewoon links eindigt.
+                stretch = Math.min(1, rawStretch);
                 xOffset = 0;
             } else {
                 // Centrisch: dezelfde relatieve verruiming als links, als geheel gecentreerd.
@@ -843,7 +904,8 @@
                     verseStart: r.verseStart,
                     verseNumber: r.verseNumber,
                     verseEnd: r.verseEnd,
-                    showVerseLabel: showVerseLabels
+                    showVerseLabel: showVerseLabels,
+                    hyphenEnd: r.hyphenEnd
                 },
                 index === rows.length - 1
             );
@@ -1052,6 +1114,12 @@
                 if (versePrefixPending) {
                     syllables[0].text = versePrefix + syllables[0].text;
                     versePrefixPending = false;
+                }
+                // Woordbreuk over regels: koppelteken achter de laatste lettergreep.
+                if (j === layout.items.length - 1 && rowMeta && rowMeta.hyphenEnd) {
+                    for (var hs = syllables.length - 1; hs >= 0; hs--) {
+                        if (!syllables[hs].dash) { syllables[hs].text += "-"; break; }
+                    }
                 }
                 var wordW = 0;
                 for (var w = 0; w < syllables.length; w++) {

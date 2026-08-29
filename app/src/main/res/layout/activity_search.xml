@@ -3,7 +3,6 @@
     android:id="@+id/searchRoot"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/app_bg"
     android:orientation="vertical">
 
     <View
@@ -28,7 +27,7 @@
             android:background="?attr/selectableItemBackgroundBorderless"
             android:src="@drawable/ic_arrow_back"
             android:scaleType="centerInside"
-            android:contentDescription="Terug" />
+            android:contentDescription="@string/back" />
 
         <EditText
             android:id="@+id/searchEditText"
@@ -37,9 +36,10 @@
             android:layout_marginStart="4dp"
             android:layout_weight="1"
             android:background="@android:color/transparent"
-            android:hint="Zoeken..."
+            android:hint="@string/search_hint"
             android:imeOptions="actionSearch"
             android:inputType="text"
+            android:importantForAutofill="no"
             android:maxLines="1"
             android:textColor="#FFFFFF"
             android:textColorHint="#D8E0DA"

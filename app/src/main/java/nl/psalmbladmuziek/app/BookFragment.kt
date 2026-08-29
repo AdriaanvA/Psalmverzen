@@ -1,7 +1,7 @@
 package nl.psalmbladmuziek.app
 
 import android.content.Intent
-import android.net.Uri
+import androidx.core.net.toUri
 import android.graphics.Typeface
 import android.os.Bundle
 import android.text.SpannableStringBuilder
@@ -216,17 +216,15 @@ class BookFragment : Fragment() {
             message.append("\n\n")
             val quoteStart = message.length
             message.append(quote)
-            message.setSpan(StyleSpan(Typeface.BOLD), quoteStart, message.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+            message.setSpan(StyleSpan(Typeface.ITALIC), quoteStart, message.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
 
             message.append("\n\n")
             val attributionStart = message.length
             message.append("— Johannes Calvijn, Voorrede bij het Geneefse Psalter (1543)")
-            message.setSpan(StyleSpan(Typeface.ITALIC), attributionStart, message.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
 
             message.append("\n\n")
             val signatureStart = message.length
             message.append("S.D.G.")
-            message.setSpan(StyleSpan(Typeface.ITALIC), signatureStart, message.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
         }
         message.append("\n\n")
         val linkStart = message.length
@@ -234,7 +232,7 @@ class BookFragment : Fragment() {
         message.setSpan(object : ClickableSpan() {
             override fun onClick(widget: View) {
                 try {
-                    startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://adriaanva.github.io/Psalmverzen/")))
+                    startActivity(Intent(Intent.ACTION_VIEW, "https://adriaanva.github.io/Psalmverzen/".toUri()))
                 } catch (_: Exception) {
                     // Geen browser beschikbaar.
                 }
@@ -254,7 +252,6 @@ class BookFragment : Fragment() {
     fun showCategoryChooser() {
         val context = requireContext()
         val currentCat = activeCategory
-        val density = resources.displayMetrics.density
 
         class Entry(val category: PsalmCategory?, val label: String, val isHeader: Boolean = false)
 
@@ -290,14 +287,14 @@ class BookFragment : Fragment() {
                         setTypeface(null, Typeface.BOLD)
                         isAllCaps = true
                         setTextColor(ContextCompat.getColor(context, R.color.app_text_secondary))
-                        setPadding((16*density).toInt(), (14*density).toInt(), (16*density).toInt(), (2*density).toInt())
+                        setPadding(context.dpToPx(16), context.dpToPx(14), context.dpToPx(16), context.dpToPx(2))
                     }
                 } else {
                     (convertView as? TextView ?: TextView(context)).apply {
                         text = entry.label
                         textSize = 15f
                         setTypeface(null, if (entry.category == currentCat) Typeface.BOLD else Typeface.NORMAL)
-                        setPadding((32*density).toInt(), (10*density).toInt(), (16*density).toInt(), (10*density).toInt())
+                        setPadding(context.dpToPx(32), context.dpToPx(10), context.dpToPx(16), context.dpToPx(10))
                     }
                 }
             }
@@ -340,19 +337,11 @@ class BookFragment : Fragment() {
     }
 
     private fun showSchriftliederenAbout() {
-        AlertDialog.Builder(requireContext())
-            .setTitle("Schriftliederen")
-            .setMessage(SCHRIFTLIEDEREN_ABOUT)
-            .setPositiveButton("Sluiten", null)
-            .show()
+        requireContext().showInfoDialog("Schriftliederen", SCHRIFTLIEDEREN_ABOUT)
     }
 
     private fun showPsaltersAbout() {
-        AlertDialog.Builder(requireContext())
-            .setTitle("Psalters")
-            .setMessage(PSALTERS_ABOUT)
-            .setPositiveButton("Sluiten", null)
-            .show()
+        requireContext().showInfoDialog("Psalters", PSALTERS_ABOUT)
     }
 
     private fun psalterRows(): List<HymnRow> = buildList {
@@ -361,15 +350,6 @@ class BookFragment : Fragment() {
             val number = group.verses.firstOrNull()?.number ?: return@mapNotNull null
             HymnRow(number.toString(), group.title, KIND_NORMAL, number)
         })
-    }
-
-    private fun openFirstAvailableVerseOrExplain(type: String, number: Int) {
-        val firstVerse = HymnRepository.versesFor(type, number).firstOrNull()
-        if (firstVerse == null) {
-            Toast.makeText(requireContext(), "$type $number heeft nog geen noten.", Toast.LENGTH_SHORT).show()
-        } else {
-            openVerse(firstVerse)
-        }
     }
 
     private fun openPsalmOrGezang(type: String, number: Int) {

@@ -49,7 +49,7 @@ class VerseExpandableListAdapter(
     ): View {
         val verse = getChild(groupPosition, childPosition)
         return (convertView as? TextView ?: createTextView()).apply {
-            text = "Vers ${verse.verse} - ${verse.firstLine}"
+            text = context.getString(R.string.verse_label, verse.verse, verse.firstLine)
             typeface = Typeface.DEFAULT
             textSize = 16f
             setPadding(80, 24, 24, 24)

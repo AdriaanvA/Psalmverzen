@@ -2,7 +2,7 @@ package nl.psalmbladmuziek.app
 
 import android.annotation.SuppressLint
 import android.content.Intent
-import android.net.Uri
+import androidx.core.net.toUri
 import android.os.Bundle
 import android.text.SpannableString
 import android.text.Spanned
@@ -89,7 +89,7 @@ class VerseListActivity : AppCompatActivity() {
                 override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
                     val itemView = convertView ?: layoutInflater.inflate(R.layout.item_verse_row, parent, false)
                     val verse = getItem(position) ?: return itemView
-                    itemView.findViewById<TextView>(R.id.verseNumberTextView).text = verse.verse.toString()
+                    itemView.findViewById<TextView>(R.id.verseNumberTextView).text = getString(R.string.verse_number, verse.verse)
                     val firstDisplayLine = displayLinesByVerse[verse.verse]
                         ?.firstOrNull()
                         ?.takeIf { it.isNotBlank() }
@@ -204,7 +204,7 @@ class VerseListActivity : AppCompatActivity() {
             SpannableString(linkedText).apply {
                 setSpan(object : ClickableSpan() {
                     override fun onClick(widget: View) {
-                        startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+                        startActivity(Intent(Intent.ACTION_VIEW, url.toUri()))
                     }
                 }, linkStart, linkStart + label.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
             }
