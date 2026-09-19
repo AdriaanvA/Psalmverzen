@@ -70,3 +70,6 @@ Dit project is gebouwd met de volgende Android-technieken:
 
 ## Licentie
 Dit project is bedoeld voor persoonlijk- en gemeenschapsgebruik. Neem gerust contact op via de GitHub-pagina, persoonlijk contact of middels een Play Store review voor toevoegingen of verbeter suggesties.
+
+## Playstore
+[Link naar de Google Play Store](https://play.google.com/store/apps/details?id=nl.psalmbladmuziek.app)
