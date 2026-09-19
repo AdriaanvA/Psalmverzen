@@ -2,6 +2,7 @@ package nl.psalmbladmuziek.app
 
 import android.content.Context
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.content.edit
 
 /** Eén definitie van een highlight-kleur: weergavenaam + hex. */
 data class PlaybackHighlightColor(val name: String, val hex: String)
@@ -16,7 +17,6 @@ object AppSettings {
     private const val KEY_THEME_MODE = "theme_mode"
     private const val KEY_TEXT_ONLY = "text_only"
     private const val KEY_KEEP_SCREEN_ON = "keep_screen_on"
-    private const val KEY_LARGE_TEXT = "large_text"
     private const val KEY_SHOW_SCHRIFTLIEDEREN = "show_schriftliederen"
     private const val KEY_SHOW_PSALTERS = "show_psalters"
     private const val KEY_PSALM_GRID_COLUMNS = "psalm_grid_columns"
@@ -119,7 +119,7 @@ object AppSettings {
         prefs(context).getFloat(KEY_TEXT_SCALE, default.toFloat()).toDouble()
 
     fun setTextScale(context: Context, value: Double) {
-        prefs(context).edit().putFloat(KEY_TEXT_SCALE, value.toFloat()).apply()
+        prefs(context).edit { putFloat(KEY_TEXT_SCALE, value.toFloat()) }
     }
 
     /** Onthouden noten-schaal (blijft bewaard na herstart). */
@@ -127,7 +127,7 @@ object AppSettings {
         prefs(context).getFloat(KEY_NOTE_SCALE, default.toFloat()).toDouble()
 
     fun setNoteScale(context: Context, value: Double) {
-        prefs(context).edit().putFloat(KEY_NOTE_SCALE, value.toFloat()).apply()
+        prefs(context).edit { putFloat(KEY_NOTE_SCALE, value.toFloat()) }
     }
 
     /** Themavoorkeur (0=systeem, 1=licht, 2=donker). Bladmuziek zelf blijft altijd licht.
@@ -136,7 +136,7 @@ object AppSettings {
         prefs(context).getInt(KEY_THEME_MODE, THEME_SYSTEM)
 
     fun setThemeMode(context: Context, value: Int) {
-        prefs(context).edit().putInt(KEY_THEME_MODE, value).apply()
+        prefs(context).edit { putInt(KEY_THEME_MODE, value) }
     }
 
     /** Standaard 'alleen tekst' tonen (geen notenbalk) bij het openen van een vers. */
@@ -152,7 +152,7 @@ object AppSettings {
     }
 
     fun setDisplayMode(context: Context, value: Int) {
-        prefs(context).edit().putInt(KEY_DISPLAY_MODE, value).apply()
+        prefs(context).edit { putInt(KEY_DISPLAY_MODE, value) }
     }
 
     /** Lettergrepen onder de noten tonen (weergave 'beide'); bij 'noten' verborgen. */
@@ -164,15 +164,7 @@ object AppSettings {
         prefs(context).getBoolean(KEY_KEEP_SCREEN_ON, false)
 
     fun setKeepScreenOn(context: Context, value: Boolean) {
-        prefs(context).edit().putBoolean(KEY_KEEP_SCREEN_ON, value).apply()
-    }
-
-    /** Grote letters: minimale woordafstand in de bladmuziek, zodat de tekst groter oogt. */
-    fun largeText(context: Context): Boolean =
-        prefs(context).getBoolean(KEY_LARGE_TEXT, false)
-
-    fun setLargeText(context: Context, value: Boolean) {
-        prefs(context).edit().putBoolean(KEY_LARGE_TEXT, value).apply()
+        prefs(context).edit { putBoolean(KEY_KEEP_SCREEN_ON, value) }
     }
 
     /** Schriftliederen (Gezang 13 en verder) tonen in de lijst met enige gezangen. */
@@ -180,7 +172,7 @@ object AppSettings {
         prefs(context).getBoolean(KEY_SHOW_SCHRIFTLIEDEREN, false)
 
     fun setShowSchriftliederen(context: Context, value: Boolean) {
-        prefs(context).edit().putBoolean(KEY_SHOW_SCHRIFTLIEDEREN, value).apply()
+        prefs(context).edit { putBoolean(KEY_SHOW_SCHRIFTLIEDEREN, value) }
     }
 
     /** Psalters (1912 en later) tonen als afzonderlijke derde categorie. */
@@ -188,7 +180,7 @@ object AppSettings {
         prefs(context).getBoolean(KEY_SHOW_PSALTERS, false)
 
     fun setShowPsalters(context: Context, value: Boolean) {
-        prefs(context).edit().putBoolean(KEY_SHOW_PSALTERS, value).apply()
+        prefs(context).edit { putBoolean(KEY_SHOW_PSALTERS, value) }
     }
 
     /** Aantal kolommen in het psalmoverzicht. */
@@ -202,9 +194,9 @@ object AppSettings {
             .coerceIn(MIN_PSALM_GRID_COLUMNS, MAX_PSALM_GRID_COLUMNS)
 
     fun setPsalmGridColumns(context: Context, value: Int) {
-        prefs(context).edit()
-            .putInt(KEY_PSALM_GRID_COLUMNS, value.coerceIn(MIN_PSALM_GRID_COLUMNS, MAX_PSALM_GRID_COLUMNS))
-            .apply()
+        prefs(context).edit {
+            putInt(KEY_PSALM_GRID_COLUMNS, value.coerceIn(MIN_PSALM_GRID_COLUMNS, MAX_PSALM_GRID_COLUMNS))
+        }
     }
 
     /** Regelafbreking toestaan: lange notenregel over 2 rijen (2e rij rechts uitgelijnd),
@@ -213,7 +205,7 @@ object AppSettings {
         prefs(context).getBoolean(KEY_ALLOW_LINE_WRAP, false)
 
     fun setAllowLineWrap(context: Context, value: Boolean) {
-        prefs(context).edit().putBoolean(KEY_ALLOW_LINE_WRAP, value).apply()
+        prefs(context).edit { putBoolean(KEY_ALLOW_LINE_WRAP, value) }
     }
 
     /** Bladmuziek ook donker maken wanneer het donkere thema actief is.
@@ -222,7 +214,7 @@ object AppSettings {
         prefs(context).getBoolean(KEY_DARK_SHEET, false)
 
     fun setDarkSheet(context: Context, value: Boolean) {
-        prefs(context).edit().putBoolean(KEY_DARK_SHEET, value).apply()
+        prefs(context).edit { putBoolean(KEY_DARK_SHEET, value) }
     }
 
     /** Rusttekens (rusten) in de bladmuziek tonen. Standaard uit voor maximale regelbreedte.
@@ -231,7 +223,7 @@ object AppSettings {
         prefs(context).getBoolean(KEY_SHOW_RESTS, false)
 
     fun setShowRests(context: Context, value: Boolean) {
-        prefs(context).edit().putBoolean(KEY_SHOW_RESTS, value).apply()
+        prefs(context).edit { putBoolean(KEY_SHOW_RESTS, value) }
     }
 
     /** Tekstuitlijning in de bladmuziek (0=links, 1=centrisch, 2=vullend, 3=doorlopend). Standaard centrisch. */
@@ -239,7 +231,7 @@ object AppSettings {
         prefs(context).getInt(KEY_TEXT_ALIGN, ALIGN_CENTER)
 
     fun setTextAlign(context: Context, value: Int) {
-        prefs(context).edit().putInt(KEY_TEXT_ALIGN, value).apply()
+        prefs(context).edit { putInt(KEY_TEXT_ALIGN, value) }
     }
 
     /** Twee opeenvolgende (korte) tekstregels op één notenregel combineren als ze passen
@@ -248,7 +240,7 @@ object AppSettings {
         prefs(context).getBoolean(KEY_COMBINE_LINES, false)
 
     fun setCombineLines(context: Context, value: Boolean) {
-        prefs(context).edit().putBoolean(KEY_COMBINE_LINES, value).apply()
+        prefs(context).edit { putBoolean(KEY_COMBINE_LINES, value) }
     }
 
     /** Psalmberijming voor de psalmen. Gezangen blijven ongewijzigd. */
@@ -256,7 +248,7 @@ object AppSettings {
         prefs(context).getInt(KEY_PSALM_VERSION, PSALM_VERSION_1773)
 
     fun setPsalmVersion(context: Context, value: Int) {
-        prefs(context).edit().putInt(KEY_PSALM_VERSION, value).apply()
+        prefs(context).edit { putInt(KEY_PSALM_VERSION, value) }
     }
 
     /** Ritmische of iso-ritmische notatie. */
@@ -264,14 +256,14 @@ object AppSettings {
         prefs(context).getInt(KEY_RHYTHM_MODE, RHYTHM_RHYTHMIC)
 
     fun setRhythmMode(context: Context, value: Int) {
-        prefs(context).edit().putInt(KEY_RHYTHM_MODE, value).apply()
+        prefs(context).edit { putInt(KEY_RHYTHM_MODE, value) }
     }
 
     fun topBarActionIcon(context: Context): Int =
         prefs(context).getInt(KEY_TOPBAR_ACTION_ICON, TOPBAR_ACTION_PLAY)
 
     fun setTopBarActionIcon(context: Context, value: Int) {
-        prefs(context).edit().putInt(KEY_TOPBAR_ACTION_ICON, value).apply()
+        prefs(context).edit { putInt(KEY_TOPBAR_ACTION_ICON, value) }
     }
 
     fun playbackTempo(context: Context): Int =
@@ -280,7 +272,7 @@ object AppSettings {
             .coerceIn(MIN_PLAYBACK_TEMPO, MAX_PLAYBACK_TEMPO)
 
     fun setPlaybackTempo(context: Context, value: Int) {
-        prefs(context).edit().putInt(KEY_PLAYBACK_TEMPO, value.coerceIn(MIN_PLAYBACK_TEMPO, MAX_PLAYBACK_TEMPO)).apply()
+        prefs(context).edit { putInt(KEY_PLAYBACK_TEMPO, value.coerceIn(MIN_PLAYBACK_TEMPO, MAX_PLAYBACK_TEMPO)) }
     }
 
     fun playbackVoicing(context: Context): Int =
@@ -288,7 +280,7 @@ object AppSettings {
             .coerceIn(PLAYBACK_VOICING_DISCANT, PLAYBACK_VOICING_CHORDS)
 
     fun setPlaybackVoicing(context: Context, value: Int) {
-        prefs(context).edit().putInt(KEY_PLAYBACK_VOICING, value.coerceIn(PLAYBACK_VOICING_DISCANT, PLAYBACK_VOICING_CHORDS)).apply()
+        prefs(context).edit { putInt(KEY_PLAYBACK_VOICING, value.coerceIn(PLAYBACK_VOICING_DISCANT, PLAYBACK_VOICING_CHORDS)) }
     }
 
     fun playbackHighlightColor(context: Context): Int =
@@ -296,9 +288,9 @@ object AppSettings {
             .coerceIn(0, PLAYBACK_HIGHLIGHT_COLORS.lastIndex)
 
     fun setPlaybackHighlightColor(context: Context, value: Int) {
-        prefs(context).edit()
-            .putInt(KEY_PLAYBACK_HIGHLIGHT_COLOR, value.coerceIn(0, PLAYBACK_HIGHLIGHT_COLORS.lastIndex))
-            .apply()
+        prefs(context).edit {
+            putInt(KEY_PLAYBACK_HIGHLIGHT_COLOR, value.coerceIn(0, PLAYBACK_HIGHLIGHT_COLORS.lastIndex))
+        }
     }
 
     /** Hex van de gekozen highlight-kleur (voor WebView/afspelen). */
@@ -309,7 +301,7 @@ object AppSettings {
         prefs(context).getBoolean(KEY_SHOW_FOUR_PART_SCORE, false)
 
     fun setShowFourPartScore(context: Context, value: Boolean) {
-        prefs(context).edit().putBoolean(KEY_SHOW_FOUR_PART_SCORE, value).apply()
+        prefs(context).edit { putBoolean(KEY_SHOW_FOUR_PART_SCORE, value) }
     }
 
     fun playbackRegistration(context: Context): Int {
@@ -323,7 +315,7 @@ object AppSettings {
     }
 
     fun setPlaybackRegistration(context: Context, value: Int) {
-        prefs(context).edit().putInt(KEY_PLAYBACK_REGISTRATION, coercePlaybackRegistration(value)).apply()
+        prefs(context).edit { putInt(KEY_PLAYBACK_REGISTRATION, coercePlaybackRegistration(value)) }
     }
 
     private fun registrationFromLegacyTimbre(value: Int): Int = when (value.coerceIn(0, 7)) {

@@ -1,19 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
+<FrameLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/sheetMusicRoot"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
     tools:context=".SheetMusicActivity">
 
-    <View
-        android:id="@+id/statusBarBackground"
+    <!-- Kolom start op y=0; mainColumn krijgt normaal een topmarge zo hoog als de statusbalk.
+         In volledig scherm (overlay-modus) valt die marge weg zodat de inhoud zelf doorloopt
+         onder de (dan doorzichtige) statusBarBackground hierboven. -->
+    <LinearLayout
+        android:id="@+id/mainColumn"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:background="@color/psalm_toolbar" />
+        android:layout_height="match_parent"
+        android:orientation="vertical">
 
     <LinearLayout
         android:id="@+id/topBar"
@@ -253,4 +255,15 @@
         android:layout_height="0dp"
         android:background="@color/app_bg" />
 
-</LinearLayout>
+    </LinearLayout>
+
+    <!-- Overlay bovenop mainColumn: normaal ondoorzichtig (blauw), in fullscreen-overlaymodus
+         doorzichtig zodat gescrolde inhoud eronder zichtbaar wordt. -->
+    <View
+        android:id="@+id/statusBarBackground"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_gravity="top"
+        android:background="@color/psalm_toolbar" />
+
+</FrameLayout>

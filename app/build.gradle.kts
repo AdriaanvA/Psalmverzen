@@ -16,14 +16,14 @@ val keystoreProperties = Properties().apply {
 
 android {
     namespace = "nl.psalmbladmuziek.app"
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "nl.psalmbladmuziek.app"
         minSdk = 31
-        targetSdk = 36
-        versionCode = 7
-        versionName = "1.1.0"
+        targetSdk = 37
+        versionCode = 11
+        versionName = "1.1.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

@@ -1,6 +1,7 @@
 <!DOCTYPE html>
-<html>
+<html lang="nl">
 <head>
+    <title>Bladmuziek</title>
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
     <style>
         html, body {
@@ -91,9 +92,6 @@
             font: 600 15px sans-serif;
             color: #4a4f4a;
         }
-        .ctrl-row .label-icon {
-            display: none;
-        }
         .ctrl-row .value {
             min-width: 56px;
             text-align: center;
@@ -151,6 +149,7 @@
 <body>
     <div id="root">
         <div id="controls-top"></div>
+        <div id="topInsetSpacer" style="height: 0"></div>
         <div id="main">
             <svg id="score" xmlns="http://www.w3.org/2000/svg"></svg>
             <div id="controls-bottom"></div>
@@ -179,7 +178,6 @@
     var RIGHT_MARGIN = 5;
     var CLEF_WIDTH = 26;      // gereserveerde ruimte voor sleutel + voortekening
     var WORD_GAP = S * 1.3;   // ruimte tussen woorden
-    var LARGE_TEXT = false;   // 'grote letters'-modus: minimale woordafstand
     var ALLOW_WRAP = false;   // 'regelafbreking toestaan': lange regel over 2 rijen
     var SHOW_LYRICS = true;   // weergave 'noten': tekst onder de noten verbergen
     var HAS_EIGHTH_NOTES = false; // bij achtste-noten-muziek geen kwart-cursief en rusten altijd tonen
@@ -187,6 +185,7 @@
     var SYL_GAP = S * 0.12;   // minieme ruimte binnen een woord
     var MIN_SLOT = S * 1.1;
     var NOTE_STEP = S * 2.25; // minimale afstand tussen melisma-noten binnen één lettergreep
+    var MAX_WORD_GAP_STRETCH = 1.3; // begrenst hoeveel de ruimte TUSSEN woorden meegroeit bij oprekken (centrisch/vullend)
 
     var STAFF_LINE_TOP = 38;    // diatonische waarde bovenste balklijn (F5)
     var STAFF_LINE_MID = 34;    // middelste balklijn (B4)
@@ -197,7 +196,7 @@
         FONT_SIZE = BASE_FONT * textScale;
         ASCENT = 4.6 * S;
         DESCENT = 3.6 * S;
-        WORD_GAP = FONT_SIZE * (LARGE_TEXT ? 0.42 : 0.55);
+        WORD_GAP = FONT_SIZE * 0.55;
         SYL_GAP = FONT_SIZE * 0.02;
         MIN_SLOT = S * 1.1;
         NOTE_STEP = S * 2.25;
@@ -307,6 +306,35 @@
     function setPlaybackHighlightColor(color) {
         var safe = /^#[0-9A-Fa-f]{6}$/.test(color) ? color : "#00695C";
         document.documentElement.style.setProperty("--playback-highlight", safe);
+    }
+
+    // Scrolt voorbij de bovenste knoppen (Tekstgrootte/Notenbalk/Toonsoort) zodat de balk/tekst
+    // bovenaan het scherm staan. Meet de echte rand (bounding rect), dus onafhankelijk van
+    // de eventuele #topInsetSpacer in fullscreen-overlaymodus.
+    function scrollScoreIntoView() {
+        var top = document.getElementById("controls-top");
+        if (!top) return;
+        var target = top.getBoundingClientRect().bottom + (window.scrollY || window.pageYOffset || 0);
+        window.scrollTo(0, target);
+    }
+
+    // Fullscreen-overlaymodus: een lege #topInsetSpacer tussen de knoppen en de balk krijgt
+    // dezelfde hoogte als de statusbalk. Na het scrollen (zie scrollScoreIntoView) staat die
+    // spacer bovenaan het scherm, zichtbaar onder de doorzichtige statusbalk, terwijl de balk/tekst
+    // daaronder op dezelfde plek blijven staan als buiten fullscreen. #controls-top krijgt dezelfde
+    // bovenruimte, zodat de Tekstgrootte/Notenbalk/Toonsoort-knoppen ook bruikbaar blijven wanneer
+    // je verder terugscrolt (helemaal naar boven) en ze anders onder de statusbalk zouden vallen.
+    // Het wijzigen van de WebView-hoogte aan de Android-kant kan de scrollpositie resetten, dus
+    // herstellen we die na de layout.
+    function setTopInsetPx(cssPx) {
+        var px = (cssPx > 0 ? cssPx : 0) + "px";
+        var spacer = document.getElementById("topInsetSpacer");
+        if (spacer) spacer.style.height = px;
+        var top = document.getElementById("controls-top");
+        if (top) top.style.paddingTop = px;
+        window.requestAnimationFrame(function() {
+            window.requestAnimationFrame(scrollScoreIntoView);
+        });
     }
 
     // Rusten: standaard aan het EIND van de vorige regel (niet vóór een zin). Wanneer
@@ -571,9 +599,11 @@
                 renderControls();
                 setPlaybackHighlight(ACTIVE_PLAYBACK_ID);
                 window.requestAnimationFrame(function() {
-                    var top = document.getElementById("controls-top");
-                    var topH = top ? top.offsetHeight : 0;
-                    window.scrollTo(0, scrollToScore ? topH : previousScroll);
+                    if (scrollToScore) {
+                        scrollScoreIntoView();
+                    } else {
+                        window.scrollTo(0, previousScroll);
+                    }
                 });
                 return;
             }
@@ -594,7 +624,6 @@
         var fifths = model.fifths || 0;
         var noteScale = readNumber(function() { return Android.getScoreVerticalScale(); }, 1);
         var textScale = readNumber(function() { return Android.getLyricTextScale(); }, 1);
-        try { LARGE_TEXT = (Android.getLargeText() === true); } catch (e) { LARGE_TEXT = false; }
         try { ALLOW_WRAP = (Android.getAllowLineWrap() === true); } catch (e) { ALLOW_WRAP = false; }
         try { SHOW_LYRICS = (Android.getShowLyrics() !== false); } catch (e) { SHOW_LYRICS = true; }
         var COMBINE_LINES = false;
@@ -833,19 +862,17 @@
             minSlot: MIN_SLOT * globalScale
         };
 
-        // Links, centrisch en doorlopend gebruiken dezelfde compacte spatiering: de
-        // langste regel bepaalt de schaal; daarna wordt de complete regel links of
-        // gecentreerd geplaatst. Bij doorlopend blijven vervolgregels als één stroom lopen.
-        var leftFillStretch = 1;
+        // Links, centrisch en doorlopend blijven op hun natuurlijke (compacte) spatiëring
+        // staan i.p.v. de langste regel over de volle breedte uit te rekken: bij psalmen met
+        // korte regels gaf dat te veel witruimte tussen woorden. Marge links/rechts is het
+        // gevolg (xOffset), niet opgevuld met extra woordafstand.
+        var maxNat = 0;
         if (TEXT_ALIGN === 0 || TEXT_ALIGN === 1 || TEXT_ALIGN === 3) {
-            var maxNat = 0, availAtMax = 1;
             rows.forEach(function(r) {
                 if (r.cont) return;
-                var av = Math.max(1, width - staffStartXFor(r.showClef) - RIGHT_MARGIN);
                 var nat = computeLayout({ slots: r.slots }, metrics).naturalWidth;
-                if (nat > maxNat) { maxNat = nat; availAtMax = av; }
+                if (nat > maxNat) { maxNat = nat; }
             });
-            leftFillStretch = maxNat > 0 ? Math.max(1, availAtMax / maxNat) : 1;
         }
 
         var showVerseLabels = (model.multiVerse === true);
@@ -863,7 +890,7 @@
                 if (TEXT_ALIGN === 3) {
                     // Doorlopend: vervolgregels blijven in dezelfde stroom lopen in plaats
                     // van als een losse tweede regel rechts uitgelijnd te worden.
-                    stretch = Math.min(relativeShortLineStretch * leftFillStretch, rawStretch);
+                    stretch = Math.min(relativeShortLineStretch, rawStretch);
                     xOffset = 0;
                 } else {
                     // 2e rij van een afgebroken regel: niet oprekken, rechts uitlijnen.
@@ -876,7 +903,7 @@
                 xOffset = 0;
             } else if (TEXT_ALIGN === 0) {
                 // Links: langste regel bepaalt de schaal; korte regels krijgen beperkte extra ruimte.
-                stretch = Math.min(relativeShortLineStretch * leftFillStretch, rawStretch);
+                stretch = Math.min(relativeShortLineStretch, rawStretch);
                 xOffset = 0;
             } else if (TEXT_ALIGN === 3) {
                 // Doorlopend: natuurlijke links-uitlijning; nooit kunstmatig oprekken,
@@ -885,7 +912,7 @@
                 xOffset = 0;
             } else {
                 // Centrisch: dezelfde relatieve verruiming als links, als geheel gecentreerd.
-                stretch = Math.min(relativeShortLineStretch * leftFillStretch, rawStretch);
+                stretch = Math.min(relativeShortLineStretch, rawStretch);
                 xOffset = Math.max(0, (available - layout.naturalWidth * stretch) / 2);
             }
             renderLine(
@@ -920,12 +947,10 @@
         // De onderste knoppen staan via de flex-layout (#main min-height:100vh +
         // margin-top:auto) onderaan het scherm, of na de muziek bij lange verzen.
         window.requestAnimationFrame(function() {
-            var top = document.getElementById("controls-top");
-            var topH = top ? top.offsetHeight : 0;
             if (window.__pdfExport) {
                 window.scrollTo(0, 0);
             } else if (scrollToScore) {
-                window.scrollTo(0, topH);
+                scrollScoreIntoView();
             } else {
                 window.scrollTo(0, previousScroll);
             }
@@ -967,6 +992,7 @@
         var slots = line.slots || [];
         var items = [];
         var cursor = 0;
+        var wordGapAccum = 0;
         slots.forEach(function(slot, i) {
             var isRest = !!slot.rest;
             var italic = isQuarterSlot(slot);
@@ -979,11 +1005,16 @@
                 // Rust dicht tegen de omringende noot (kleine tussenruimte).
                 if (isRest || slots[i - 1].rest) {
                     cursor += metrics.sylGap * 0.5;
+                } else if (startsNewWord(slot)) {
+                    cursor += metrics.wordGap;
+                    wordGapAccum += metrics.wordGap;
                 } else {
-                    cursor += startsNewWord(slot) ? metrics.wordGap : metrics.sylGap;
+                    cursor += metrics.sylGap;
                 }
             }
-            items.push({ slot: slot, center: cursor + slotW / 2, width: slotW, italic: italic });
+            // wordGapBefore: cumulatieve woord-tussenruimte tot nu toe, apart bijgehouden
+            // zodat renderLine die later begrensd kan oprekken (zie MAX_WORD_GAP_STRETCH).
+            items.push({ slot: slot, center: cursor + slotW / 2, width: slotW, italic: italic, wordGapBefore: wordGapAccum });
             cursor += slotW;
         });
         return { items: items, naturalWidth: cursor || 1 };
@@ -1044,8 +1075,12 @@
         var lineNotes = [];
         // Eerst alle lettergreep-centra bepalen (nodig om melisma-noten gelijkmatig
         // tussen deze en de volgende lettergreepnoot te kunnen verdelen).
+        // Woord-tussenruimtes rekken minder mee dan de rest: bij oprekken (centrisch/vullend)
+        // groeit zo vooral de ruimte binnen/tussen noten, niet de witruimte tussen woorden.
+        var wordGapStretch = Math.min(stretch, MAX_WORD_GAP_STRETCH);
         layout.items.forEach(function(item) {
-            item.cx = staffStartX + xOffset + item.center * stretch;
+            var plain = item.center - item.wordGapBefore;
+            item.cx = staffStartX + xOffset + plain * stretch + item.wordGapBefore * wordGapStretch;
         });
         layout.items.forEach(function(item, idx) {
             var notes = item.slot.notes || [];
@@ -1367,16 +1402,16 @@
         section.innerHTML = "";
 
         // Boven de balk: tekst/notengrootte eerst; toonsoort het dichtst bij de noten.
-        top.appendChild(stepperRow("", "Tekstgrootte", safeCall(function() { return Android.getTextScaleLabel(); }, ""),
-            "text_decrease", function() { Android.adjustTextScale(-0.2); },
-            "text_increase", function() { Android.adjustTextScale(0.2); }));
-        var notenRow = stepperRow("", "Notenbalk", safeCall(function() { return Android.getNoteScaleLabel(); }, ""),
-            "zoom_out", function() { Android.adjustNoteScale(-0.1); },
-            "zoom_in", function() { Android.adjustNoteScale(0.1); });
+        top.appendChild(stepperRow("Tekstgrootte", safeCall(function() { return Android.getTextScaleLabel(); }, ""),
+            function() { Android.adjustTextScale(-0.2); },
+            function() { Android.adjustTextScale(0.2); }));
+        var notenRow = stepperRow("Notenbalk", safeCall(function() { return Android.getNoteScaleLabel(); }, ""),
+            function() { Android.adjustNoteScale(-0.1); },
+            function() { Android.adjustNoteScale(0.1); });
         top.appendChild(notenRow);
-        top.appendChild(stepperRow("", "Toonsoort", safeCall(function() { return Android.getTranspositionLabel(); }, ""),
-            "chevron_left", function() { Android.transposeBy(-1); },
-            "chevron_right", function() { Android.transposeBy(1); }));
+        top.appendChild(stepperRow("Toonsoort", safeCall(function() { return Android.getTranspositionLabel(); }, ""),
+            function() { Android.transposeBy(-1); },
+            function() { Android.transposeBy(1); }));
 
         // Onder de balk: gebruik ná de muziek/zang (Vorige/Volgende + versnummers).
         var items = [];
@@ -1420,29 +1455,7 @@
         }
     }
 
-    var MATERIAL_PATHS = {
-        format_size: "M5 4v3h5.5v12h3V7H19V4H5z",
-        text_decrease: "M2 4h14v2H2V4zm0 7h10v2H2v-2zm0 7h7v2H2v-2zm18-8v2h-2v2h-2v-2h-2v-2h2V8h2v2h2z",
-        text_increase: "M2 4h14v2H2V4zm0 7h10v2H2v-2zm0 7h7v2H2v-2zm16-8V7h-2V5h2V2h2v3h2v2h-2v3h-2z",
-        music_note: "M12 3v10.55A4 4 0 1 0 14 17V7h4V3h-6z",
-        queue_music: "M15 6H3v2h12V6zm0 4H3v2h12v-2zM3 16h8v2H3v-2zm13-5v8.5c0 .83-.67 1.5-1.5 1.5S13 20.33 13 19.5s.67-1.5 1.5-1.5c.18 0 .34.03.5.09V9h5v2h-3z",
-        zoom_out: "M9 4a5 5 0 1 0 3.54 8.54L16.5 16.5l1.5-1.5-3.96-3.96A5 5 0 0 0 9 4zm0 2a3 3 0 1 1 0 6 3 3 0 0 1 0-6zm-2 2v2h4V8H7z",
-        zoom_in: "M9 4a5 5 0 1 0 3.54 8.54L16.5 16.5l1.5-1.5-3.96-3.96A5 5 0 0 0 9 4zm0 2a3 3 0 1 1 0 6 3 3 0 0 1 0-6zm-1 1v2H6v2h2v2h2v-2h2V9h-2V7H8z",
-        chevron_left: "M15.41 7.41 14 6l-6 6 6 6 1.41-1.41L10.83 12z",
-        chevron_right: "M10 6 8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"
-    };
-
-    function materialIcon(name, className) {
-        var svg = document.createElementNS(SVGNS, "svg");
-        svg.setAttribute("viewBox", "0 0 24 24");
-        svg.setAttribute("class", className || "");
-        var path = document.createElementNS(SVGNS, "path");
-        path.setAttribute("d", MATERIAL_PATHS[name] || MATERIAL_PATHS.music_note);
-        svg.appendChild(path);
-        return svg;
-    }
-
-    function stepperRow(iconName, label, value, minusIcon, onMinus, plusIcon, onPlus) {
+    function stepperRow(label, value, onMinus, onPlus) {
         var row = document.createElement("div");
         row.className = "ctrl-row";
 
@@ -1480,7 +1493,7 @@
     }
 
     function showError(message) {
-        document.getElementById("controls").innerHTML =
+        document.getElementById("controls-top").innerHTML =
             '<div class="error">' + message + "</div>";
     }
 

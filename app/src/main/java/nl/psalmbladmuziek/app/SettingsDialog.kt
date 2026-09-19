@@ -3,7 +3,6 @@ package nl.psalmbladmuziek.app
 import android.content.Intent
 import android.content.pm.ApplicationInfo
 import androidx.core.net.toUri
-import android.content.res.Configuration
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
@@ -18,6 +17,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SwitchCompat
 import androidx.core.content.ContextCompat
+import androidx.core.graphics.toColorInt
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -225,9 +225,6 @@ fun AppCompatActivity.showAppSettingsDialog(onChanged: () -> Unit = {}) {
 
     // --- Schermgrootte ---
     sectionHeader("Schermgrootte")
-    toggleRow("Grote letters", AppSettings.largeText(this)) {
-        AppSettings.setLargeText(this, it); onChanged()
-    }
     val allowWrapRow = toggleRow("Regelafbreking toestaan", AppSettings.allowLineWrap(this)) {
         AppSettings.setAllowLineWrap(this, it); onChanged()
     }
@@ -466,7 +463,7 @@ private fun AppCompatActivity.showPlaybackHighlightColorChooser(onChanged: () ->
     ) {
         override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
             val view = super.getView(position, convertView, parent) as TextView
-            view.setTextColor(android.graphics.Color.parseColor(colors[position].hex))
+            view.setTextColor(colors[position].hex.toColorInt())
             return view
         }
     }
@@ -538,7 +535,7 @@ private fun AppCompatActivity.showRegistrationChooser(onChanged: () -> Unit) {
     val adapter = object : ArrayAdapter<RegistrationOption>(this, android.R.layout.simple_list_item_multiple_choice, registrationOptions) {
         override fun areAllItemsEnabled(): Boolean = false
 
-        override fun isEnabled(position: Int): Boolean = isPossible(getItem(position)!!)
+        override fun isEnabled(position: Int): Boolean = getItem(position)?.let(::isPossible) ?: false
 
         override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
             val view = super.getView(position, convertView, parent)

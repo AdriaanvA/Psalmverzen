@@ -181,11 +181,9 @@ class VerseListActivity : AppCompatActivity() {
 
     @Suppress("DEPRECATION")
     private fun overrideNumberTransition(previous: Boolean) {
-        if (previous) {
-            overridePendingTransition(R.anim.slide_in_from_left, R.anim.slide_out_to_right)
-        } else {
-            overridePendingTransition(R.anim.slide_in_from_right, R.anim.slide_out_to_left)
-        }
+        val enter = if (previous) R.anim.slide_in_from_left else R.anim.slide_in_from_right
+        val exit = if (previous) R.anim.slide_out_to_right else R.anim.slide_out_to_left
+        overridePendingTransition(enter, exit)
     }
 
     private fun showAboutDialog(title: String, about: String) {
@@ -198,8 +196,8 @@ class VerseListActivity : AppCompatActivity() {
             SpannableString(about)
         } else {
             val label = markdownMatch?.groupValues?.get(1) ?: "Bijbeltekst"
-            val url = markdownMatch?.groupValues?.get(2) ?: rawMatch!!.value
-            val linkedText = about.replaceRange(linkRange!!, label)
+            val url = markdownMatch?.groupValues?.get(2) ?: rawMatch?.value.orEmpty()
+            val linkedText = about.replaceRange(linkRange, label)
             val linkStart = linkRange.first
             SpannableString(linkedText).apply {
                 setSpan(object : ClickableSpan() {

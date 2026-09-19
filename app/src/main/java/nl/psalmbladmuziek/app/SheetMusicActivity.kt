@@ -11,13 +11,14 @@ import android.text.Spannable
 import android.text.SpannableStringBuilder
 import android.text.style.StyleSpan
 import android.util.TypedValue
-import android.view.Gravity
+import android.view.Menu
 import android.view.View
 import android.view.WindowManager
 import android.webkit.JavascriptInterface
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.PopupMenu
 import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
@@ -26,10 +27,10 @@ import androidx.core.view.WindowInsetsControllerCompat
 import androidx.activity.OnBackPressedCallback
 import androidx.lifecycle.Lifecycle
 import android.widget.Button
+import android.widget.FrameLayout
 import android.widget.GridLayout
 import android.widget.ImageButton
 import android.widget.LinearLayout
-import android.widget.ScrollView
 import android.widget.TextView
 import androidx.core.widget.TextViewCompat
 import org.json.JSONArray
@@ -91,9 +92,20 @@ class SheetMusicActivity : AppCompatActivity() {
     private val scoreModelCache = HashMap<String, String>()
 
     private var isFullscreen = false
+    private var statusBarInsetPx = 0
+    private lateinit var statusBarBackground: View
+    private lateinit var mainColumn: View
     private val fullscreenBackCallback = object : OnBackPressedCallback(false) {
         override fun handleOnBackPressed() {
             exitFullscreen()
+        }
+    }
+
+    // Voorkomt crashes wanneer een JS-bridge/audio-callback nog binnenkomt nadat de activity
+    // al aan het afsluiten of vernietigd is.
+    private fun runOnUiThreadIfAlive(action: () -> Unit) {
+        runOnUiThread {
+            if (!isFinishing && !isDestroyed) action()
         }
     }
 
@@ -102,17 +114,20 @@ class SheetMusicActivity : AppCompatActivity() {
         configureReadableSystemBars()
         setContentView(R.layout.activity_sheet_music)
         supportActionBar?.hide()
-        val statusBarBackground = findViewById<View>(R.id.statusBarBackground)
+        statusBarBackground = findViewById(R.id.statusBarBackground)
+        mainColumn = findViewById(R.id.mainColumn)
         val navigationBarBackground = findViewById<View>(R.id.navigationBarBackground)
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.sheetMusicRoot)) { root, insets ->
             val statusBars = insets.getInsets(WindowInsetsCompat.Type.statusBars())
             val navigationBars = insets.getInsets(WindowInsetsCompat.Type.navigationBars())
+            statusBarInsetPx = statusBars.top
             statusBarBackground.layoutParams = statusBarBackground.layoutParams.apply {
                 height = statusBars.top
             }
             navigationBarBackground.layoutParams = navigationBarBackground.layoutParams.apply {
                 height = navigationBars.bottom
             }
+            applyMainColumnTopInset()
             root.setPadding(0, 0, 0, 0)
             insets
         }
@@ -171,8 +186,15 @@ class SheetMusicActivity : AppCompatActivity() {
 
     private fun setupButtons() {
         findViewById<View>(R.id.backToIndexButton).setOnClickListener { openMainOverview() }
-        findViewById<View>(R.id.sharePdfButton).setOnClickListener { pdfExporter.shareCurrentVerseAsPdf() }
+        val sharePdfButton = findViewById<View>(R.id.sharePdfButton)
+        sharePdfButton.setOnClickListener { pdfExporter.shareCurrentVerseAsPdf() }
         playMelodyButton.setOnClickListener { toggleMelodyPlayback() }
+        listOf(sharePdfButton, playMelodyButton).forEach { button ->
+            button.setOnLongClickListener {
+                showTopBarActionChooser(button)
+                true
+            }
+        }
         val optionsButton = findViewById<View>(R.id.optionsButton)
         optionsButton.setOnClickListener { showAppSettingsDialog { onSettingsChanged() } }
         psalmPickerTextView.setOnClickListener { openMainOverview() }
@@ -214,6 +236,7 @@ class SheetMusicActivity : AppCompatActivity() {
         isFullscreen = true
         findViewById<View>(R.id.topBar).visibility = View.GONE
         applyFullscreenSystemBars()
+        applyFullscreenLayout()
         fullscreenBackCallback.isEnabled = true
     }
 
@@ -223,7 +246,30 @@ class SheetMusicActivity : AppCompatActivity() {
         findViewById<View>(R.id.topBar).visibility = View.VISIBLE
         WindowCompat.getInsetsController(window, window.decorView)
             .show(WindowInsetsCompat.Type.statusBars())
+        applyFullscreenLayout()
         fullscreenBackCallback.isEnabled = false
+    }
+
+    /** mainColumn valt normaal onder de statusbalk-ruimte; in fullscreen loopt hij door tot y=0. */
+    private fun applyMainColumnTopInset() {
+        val params = mainColumn.layoutParams as FrameLayout.LayoutParams
+        params.topMargin = if (isFullscreen) 0 else statusBarInsetPx
+        mainColumn.layoutParams = params
+    }
+
+    /**
+     * In fullscreen wordt statusBarBackground doorzichtig (kleurt mee met de onderliggende
+     * inhoud) en krijgt de WebView-pagina (via JS, #topInsetSpacer) evenveel bovenruimte als de
+     * statusbalk, een fractie kleiner zodat de balk/tekst net iets hoger komen te staan.
+     */
+    private fun applyFullscreenLayout() {
+        applyMainColumnTopInset()
+        val insetPx = if (isFullscreen) (statusBarInsetPx - dpToPx(FULLSCREEN_INSET_TRIM_DP)).coerceAtLeast(0) else 0
+        val insetCssPx = insetPx / resources.displayMetrics.density
+        webView.evaluateJavascript("if (typeof setTopInsetPx === 'function') { setTopInsetPx($insetCssPx); }", null)
+        statusBarBackground.setBackgroundColor(
+            if (isFullscreen) Color.TRANSPARENT else ContextCompat.getColor(this, R.color.psalm_toolbar)
+        )
     }
 
     /** Statusbalk alleen verbergen bij volledig scherm én landscape; anders tonen. */
@@ -238,10 +284,11 @@ class SheetMusicActivity : AppCompatActivity() {
         }
     }
 
-    override fun onConfigurationChanged(newConfig: android.content.res.Configuration) {
+    override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
         // Statusbalk opnieuw toepassen (landscape verbergt, portrait toont).
         applyFullscreenSystemBars()
+        applyFullscreenLayout()
         updateTopBarActionButtons()
         updateHeaderDropdownIndicators()
         // De bladmuziek herberekenen zodat die op de nieuwe breedte past.
@@ -357,26 +404,6 @@ class SheetMusicActivity : AppCompatActivity() {
         return "${verse.type} ${verse.number} vers ${verse.verse}"
     }
 
-    private fun showVerseMenu() {
-        val currentVerse = HymnRepository.verseByFileName(fileName) ?: return
-        val verses = HymnRepository.versesFor(currentVerse.type, currentVerse.number)
-        if (verses.isEmpty()) return
-
-        val currentIndex = verses.indexOfFirst { it.fileName == currentVerse.fileName }.coerceAtLeast(0)
-        val labels = verses.map { "vers ${it.verse}" }.toTypedArray()
-        AlertDialog.Builder(this)
-            .setTitle("Kies vers")
-            .setSingleChoiceItems(labels, currentIndex) { dialog, position ->
-                dialog.dismiss()
-                val verse = verses[position]
-                if (verse.fileName != currentVerse.fileName) {
-                    stackedVerseFileNames = null
-                    openVerse(verse)
-                }
-            }
-            .show()
-    }
-
     private fun openCurrentVerseOverview() {
         val currentVerse = HymnRepository.verseByFileName(fileName) ?: return
         startActivity(
@@ -441,12 +468,6 @@ class SheetMusicActivity : AppCompatActivity() {
                 }
             }
             .show()
-    }
-
-    private fun openNumber(type: String, number: Int) {
-        val first = HymnRepository.versesFor(type, number).firstOrNull() ?: return
-        stackedVerseFileNames = null
-        openVerse(first)
     }
 
     private fun setupWebView() {
@@ -591,7 +612,7 @@ class SheetMusicActivity : AppCompatActivity() {
                     setTextColor(Color.WHITE)
                     setBackgroundResource(R.drawable.bg_verse_current)
                 } else {
-                    setTextColor(androidx.core.content.ContextCompat.getColor(this@SheetMusicActivity, R.color.app_text_secondary))
+                    setTextColor(ContextCompat.getColor(this@SheetMusicActivity, R.color.app_text_secondary))
                     setBackgroundColor(Color.TRANSPARENT)
                 }
                 setOnClickListener { openVerse(verse) }
@@ -609,7 +630,6 @@ class SheetMusicActivity : AppCompatActivity() {
     }
 
     private fun updateContentMode() {
-        val verse = HymnRepository.verseByFileName(fileName)
         val notesVisible = showNotes && !isTextOnlyAsset()
         webView.visibility = if (notesVisible) View.VISIBLE else View.GONE
         lyricsContainer.visibility = if (notesVisible) View.GONE else View.VISIBLE
@@ -679,7 +699,7 @@ class SheetMusicActivity : AppCompatActivity() {
                 }
                 if (li < lines.length() - 1) sb.append("\n")
             }
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             return "Vers ${verse.verse}\n" +
                 ScoreBundleRenderer.readVerseText(this, verse).ifBlank { verse.firstLine }
         }
@@ -768,6 +788,28 @@ class SheetMusicActivity : AppCompatActivity() {
         }
     }
 
+    /** Lang indrukken op het actie-icoon toont beide acties (afspelen en delen). */
+    private fun showTopBarActionChooser(anchor: View) {
+        val popup = PopupMenu(this, anchor)
+        val playTitle = if (melodyPlayer.isPlaying) "Afspelen stoppen" else "Melodie afspelen"
+        popup.menu.add(Menu.NONE, MENU_ACTION_PLAY, 0, playTitle)
+        popup.menu.add(Menu.NONE, MENU_ACTION_SHARE, 1, "Bladmuziek delen (pdf)")
+        popup.setOnMenuItemClickListener { item ->
+            when (item.itemId) {
+                MENU_ACTION_PLAY -> {
+                    toggleMelodyPlayback()
+                    true
+                }
+                MENU_ACTION_SHARE -> {
+                    pdfExporter.shareCurrentVerseAsPdf()
+                    true
+                }
+                else -> false
+            }
+        }
+        popup.show()
+    }
+
     private fun toggleMelodyPlayback() {
         if (melodyPlayer.isPlaying) {
             stopMelodyPlayback()
@@ -817,13 +859,13 @@ class SheetMusicActivity : AppCompatActivity() {
             effects = result.effects,
             tempoPercent = result.tempoPercent,
             onEventChanged = { playbackId -> updatePlaybackHighlight(playbackId) },
-            onStateChanged = { runOnUiThread { updatePlayButtonIcon() } }
+            onStateChanged = { runOnUiThreadIfAlive { updatePlayButtonIcon() } }
         )
     }
 
     private fun updatePlaybackHighlight(playbackId: String?) {
         val encodedId = JSONObject.quote(playbackId ?: "")
-        runOnUiThread {
+        runOnUiThreadIfAlive {
             val generation = ++playbackHighlightGeneration
             webView.postDelayed({
                 if (generation == playbackHighlightGeneration) {
@@ -871,7 +913,7 @@ class SheetMusicActivity : AppCompatActivity() {
 
     private fun stopMelodyPlayback() {
         melodyPlayer.stop { _ ->
-            runOnUiThread { updatePlayButtonIcon() }
+            runOnUiThreadIfAlive { updatePlayButtonIcon() }
         }
         updatePlaybackHighlight(null)
         updatePlayButtonIcon()
@@ -966,7 +1008,7 @@ class SheetMusicActivity : AppCompatActivity() {
 
         @JavascriptInterface
         fun openVerseFile(nextFileName: String) {
-            runOnUiThread {
+            runOnUiThreadIfAlive {
                 HymnRepository.verseByFileName(nextFileName)?.let { openVerse(it) }
             }
         }
@@ -979,17 +1021,17 @@ class SheetMusicActivity : AppCompatActivity() {
 
         @JavascriptInterface
         fun openPreviousVerse() {
-            runOnUiThread { openAdjacentVerse(previous = true) }
+            runOnUiThreadIfAlive { openAdjacentVerse(previous = true) }
         }
 
         @JavascriptInterface
         fun openNextVerse() {
-            runOnUiThread { openAdjacentVerse(previous = false) }
+            runOnUiThreadIfAlive { openAdjacentVerse(previous = false) }
         }
 
         @JavascriptInterface
         fun transposeBy(semitones: Int) {
-            runOnUiThread { this@SheetMusicActivity.transposeBy(semitones) }
+            runOnUiThreadIfAlive { this@SheetMusicActivity.transposeBy(semitones) }
         }
 
         @JavascriptInterface
@@ -997,12 +1039,12 @@ class SheetMusicActivity : AppCompatActivity() {
 
         @JavascriptInterface
         fun adjustTextScale(delta: Double) {
-            runOnUiThread { adjustLyricTextScale(delta) }
+            runOnUiThreadIfAlive { adjustLyricTextScale(delta) }
         }
 
         @JavascriptInterface
         fun adjustNoteScale(delta: Double) {
-            runOnUiThread { adjustScoreVerticalScale(delta) }
+            runOnUiThreadIfAlive { adjustScoreVerticalScale(delta) }
         }
 
         @JavascriptInterface
@@ -1016,9 +1058,6 @@ class SheetMusicActivity : AppCompatActivity() {
 
         @JavascriptInterface
         fun getScoreVerticalScale(): Double = currentScoreVerticalScale
-
-        @JavascriptInterface
-        fun getLargeText(): Boolean = AppSettings.largeText(this@SheetMusicActivity)
 
         @JavascriptInterface
         fun getAllowLineWrap(): Boolean = AppSettings.allowLineWrap(this@SheetMusicActivity)
@@ -1043,7 +1082,7 @@ class SheetMusicActivity : AppCompatActivity() {
 
         @JavascriptInterface
         fun toggleFullscreen() {
-            runOnUiThread { this@SheetMusicActivity.toggleFullscreen() }
+            runOnUiThreadIfAlive { this@SheetMusicActivity.toggleFullscreen() }
         }
     }
 
@@ -1092,6 +1131,8 @@ class SheetMusicActivity : AppCompatActivity() {
         )
 
         private const val PLAYBACK_HIGHLIGHT_DELAY_MS = 200L
+        private const val MENU_ACTION_PLAY = 1
+        private const val MENU_ACTION_SHARE = 2
         const val EXTRA_FILE_NAME = "nl.psalmbladmuziek.app.extra.FILE_NAME"
         private const val DEFAULT_FILE_NAME = "Psalm001_v1.json"
         private const val DEFAULT_TEXT_SCALE = 1.75
@@ -1103,6 +1144,7 @@ class SheetMusicActivity : AppCompatActivity() {
         private const val MIN_NOTE_SCALE = 0.5
         private const val MAX_NOTE_SCALE = 1.2
         private const val NOTE_SCALE_STEP = 0.1
+        private const val FULLSCREEN_INSET_TRIM_DP = 6
     }
 
     override fun onStop() {

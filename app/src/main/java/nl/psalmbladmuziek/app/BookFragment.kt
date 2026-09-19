@@ -95,7 +95,7 @@ class BookFragment : Fragment() {
                     }
                     val n = psalmNumbers[position].toInt()
                     val inAccentedBook = n in 42..72 || n in 90..106
-                    (itemView as TextView).setTextColor(
+                    (itemView as? TextView)?.setTextColor(
                         if (inAccentedBook) bookNumberAccent else ContextCompat.getColor(
                             requireContext(),
                             R.color.app_text_primary
@@ -120,8 +120,8 @@ class BookFragment : Fragment() {
             gridView.visibility = View.VISIBLE
             gridView.numColumns = 1
             gridView.verticalSpacing = 0
-            val secondary = androidx.core.content.ContextCompat.getColor(requireContext(), R.color.app_text_secondary)
-            val primary = androidx.core.content.ContextCompat.getColor(requireContext(), R.color.app_text_primary)
+            val secondary = ContextCompat.getColor(requireContext(), R.color.app_text_secondary)
+            val primary = ContextCompat.getColor(requireContext(), R.color.app_text_primary)
             gridView.adapter = object : ArrayAdapter<HymnRow>(requireContext(), R.layout.item_hymn_list, rows) {
                 override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
                     val itemView = convertView ?: layoutInflater.inflate(R.layout.item_hymn_list, parent, false)
@@ -219,11 +219,9 @@ class BookFragment : Fragment() {
             message.setSpan(StyleSpan(Typeface.ITALIC), quoteStart, message.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
 
             message.append("\n\n")
-            val attributionStart = message.length
             message.append("— Johannes Calvijn, Voorrede bij het Geneefse Psalter (1543)")
 
             message.append("\n\n")
-            val signatureStart = message.length
             message.append("S.D.G.")
         }
         message.append("\n\n")

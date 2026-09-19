@@ -35,7 +35,7 @@ class BundledContentIntegrationTest {
             .filterNot { it.fileName.endsWith(".txt", ignoreCase = true) }
             .filter { verse ->
                 val model = JSONObject(ScoreBundleRenderer.readScoreModel(context, verse))
-                model.optJSONArray("lines")?.length() ?: 0 == 0
+                (model.optJSONArray("lines")?.length() ?: 0) == 0
             }
 
         assertTrue("Invalid score models: ${failures.take(10)}", failures.isEmpty())
